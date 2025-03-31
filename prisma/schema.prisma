@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 属性定义表
+model property {
+  id          String    @id @default(uuid()) // 属性ID，主键
+  name        String                         // 属性名称
+  description String?                        // 属性描述，可选
+  type        String                         // 属性类型，如text、number、select等
+  config      Json?                          // 属性配置信息，如选项列表、校验规则等
+  deletable   Boolean   @default(true)       // property 本身是否可删除，默认可删除
+  nullable    Boolean                        // 该 property 对应的 property_value 是否可为空
+  readonly    Boolean                        // 该 property 对应的 property_value 是否只读
+  createdAt   DateTime  @default(now())      // 创建时间
+  updatedAt   DateTime  @updatedAt           // 更新时间
+  deletedAt   DateTime?                      // 软删除时间，为null表示未删除
+
+  @@map("property")
+}
+
+// 单值属性表 - 用于存储单一值的属性，如文本、数字、布尔值等
+model property_single_value {
+  id            String    @id @default(uuid()) // 属性值ID，主键
+  issue_id      String                         // 关联的 issue ID
+  property_id   String                         // 关联的属性ID
+  property_type String                         // 属性类型，冗余存储便于查询
+  value         String?                        // 属性值，通用存储
+  number_value  Float?                         // 数值类型值，用于数值类搜索和排序
+  createdAt     DateTime  @default(now())      // 创建时间
+  updatedAt     DateTime  @updatedAt           // 更新时间
+  deletedAt     DateTime?                      // 软删除时间，为null表示未删除
+
+  @@unique([issue_id, property_id])            // 每个issue的每个属性只能有一个单值
+  @@index([issue_id])                          // 按工单ID索引，提高查询效率
+  @@index([property_id])                       // 按属性ID索引，提高查询效率
+  @@map("property_single_value")
+}
+
+// 多值属性表 - 用于存储多值属性，如多选、标签列表等
+model property_multi_value {
+  id            String    @id @default(uuid()) // 属性值ID，主键
+  issue_id      String                         // 关联的 issue ID
+  property_id   String                         // 关联的属性ID
+  property_type String                         // 属性类型，冗余存储便于查询
+  value         String?                        // 属性值，通用存储
+  number_value  Float?                         // 数值类型值，用于数值类搜索和排序
+  position      Int       @default(0)          // 在多选列表中的位置
+  createdAt     DateTime  @default(now())      // 创建时间
+  updatedAt     DateTime  @updatedAt           // 更新时间
+  deletedAt     DateTime?                      // 软删除时间，为null表示未删除
+
+  @@unique([issue_id, property_id, position])  // 确保每个位置只有一个值
+  @@index([issue_id])                          // 按工单ID索引，提高查询效率
+  @@index([property_id])                       // 按属性ID索引，提高查询效率
+  @@map("property_multi_value")
+}
