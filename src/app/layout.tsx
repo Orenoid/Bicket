@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Sidebar from "@/components/Sidebar";
+import Sidebar from "@/app/components/Sidebar";
 import { MdInbox, MdViewList, MdSettings } from "react-icons/md";
 import { FaCode, FaServer } from "react-icons/fa";
 import "./globals.css";
