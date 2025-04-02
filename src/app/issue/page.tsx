@@ -13,6 +13,22 @@ interface PropertyHeaderCellProps {
 
 type PropertyHeaderCellComponent = React.FC<PropertyHeaderCellProps>;
 
+/**
+ * 状态选项的定义
+ */
+interface StatusOption {
+    id: string;                // 选项ID
+    name: string;              // 选项名称
+    color: string;             // 选项颜色（可以是CSS颜色值，如 #FF5733 或 rgb(255, 87, 51)）
+}
+
+/**
+ * 单选类型属性的配置结构
+ */
+interface SelectPropertyConfig extends Record<string, unknown> {
+    options: StatusOption[];           // 所有可选项
+}
+
 const TextPropertyHeaderCell: PropertyHeaderCellComponent = ({ 
     propertyName, 
     propertyConfig 
@@ -67,10 +83,57 @@ const TextPropertyCell: PropertyCellComponent = ({
     return <span>{textValue}</span>;
 };
 
+// 单选类型的单元格组件
+const SelectPropertyCell: PropertyCellComponent = ({ 
+    value, 
+    propertyConfig 
+}) => {
+    // 处理空值显示
+    if (value === null || value === undefined || value === "") {
+        return <span className="text-gray-400 italic">未设置</span>;
+    }
+    
+    // 获取选项配置
+    const options = (propertyConfig?.options as StatusOption[]) || [];
+    // 查找匹配的选项
+    const selectedOption = options.find(option => option.id === value);
+    
+    if (!selectedOption) {
+        return <span className="text-gray-400 italic">无效选项</span>;
+    }
+
+    // 原始样式：圆点 + 文本
+    /*
+    return (
+        <div className="flex items-center space-x-2">
+            <span 
+                className="inline-block w-3 h-3 rounded-full" 
+                style={{ backgroundColor: selectedOption.color }}
+            />
+            <span>{selectedOption.name}</span>
+        </div>
+    );
+    */
+
+    // 新样式：扁平风格，完全圆角
+    return (
+        <span 
+            className="inline-block px-3 py-0.5 rounded-full text-xs font-medium"
+            style={{ 
+                backgroundColor: selectedOption.color,
+                color: selectedOption.color === '#e5e5e5' ? '#666666' : 'white'
+            }}
+        >
+            {selectedOption.name}
+        </span>
+    );
+};
+
 // 表头组件映射
 export const PROPERTY_HEADER_COMPONENTS: Record<string, PropertyHeaderCellComponent> = {
     [PropertyType.ID]: TextPropertyHeaderCell,
     [PropertyType.TEXT]: TextPropertyHeaderCell,
+    [PropertyType.SELECT]: TextPropertyHeaderCell,
     // 其他类型的表头组件可以在这里添加
 };
 
@@ -78,6 +141,7 @@ export const PROPERTY_HEADER_COMPONENTS: Record<string, PropertyHeaderCellCompon
 export const PROPERTY_CELL_COMPONENTS: Record<string, PropertyCellComponent> = {
     [PropertyType.ID]: TextPropertyCell,
     [PropertyType.TEXT]: TextPropertyCell,
+    [PropertyType.SELECT]: SelectPropertyCell,
     // 其他类型的单元格组件可以在这里添加
 };
 
@@ -204,170 +268,164 @@ interface Issue {
     property_values: PropertyValue[];
 }
 
+// 属性定义接口
+interface PropertyDefinition {
+    id: string;
+    name: string;
+    type: string;
+    config?: Record<string, unknown>;
+}
+
+// 定义状态选项
+const statusOptions: StatusOption[] = [
+    { id: 'todo', name: '待处理', color: '#e5e5e5' },
+    { id: 'in_progress', name: '进行中', color: '#0052cc' },
+    { id: 'testing', name: '测试中', color: '#fbca04' },
+    { id: 'done', name: '已完成', color: '#36b37e' }
+];
+
+// 属性定义数据（从服务端获取）
+const mockPropertyDefinitions: PropertyDefinition[] = [
+    { 
+        id: 'id', 
+        name: 'ID', 
+        type: PropertyType.ID
+    },
+    { 
+        id: 'title', 
+        name: '标题', 
+        type: PropertyType.TEXT
+    },
+    { 
+        id: 'status', 
+        name: '状态', 
+        type: PropertyType.SELECT,
+        config: { options: statusOptions } as SelectPropertyConfig
+    }
+];
+
 // 模拟数据
 const mockData: Issue[] = [
     {
         issue_id: 1,
         property_values: [
             { property_id: 'id', property_type: PropertyType.ID, value: 1 },
-            { property_id: 'title', property_type: PropertyType.TEXT, value: '实现登录功能' }
+            { property_id: 'title', property_type: PropertyType.TEXT, value: '实现登录功能' },
+            { property_id: 'status', property_type: PropertyType.SELECT, value: 'in_progress' }
         ]
     },
     {
         issue_id: 2,
         property_values: [
             { property_id: 'id', property_type: PropertyType.ID, value: 2 },
-            { property_id: 'title', property_type: PropertyType.TEXT, value: '修复首页布局问题' }
+            { property_id: 'title', property_type: PropertyType.TEXT, value: '修复首页布局问题' },
+            { property_id: 'status', property_type: PropertyType.SELECT, value: 'todo' }
         ]
     },
     {
         issue_id: 3,
         property_values: [
             { property_id: 'id', property_type: PropertyType.ID, value: 3 },
-            { property_id: 'title', property_type: PropertyType.TEXT, value: '优化数据库查询性能' }
+            { property_id: 'title', property_type: PropertyType.TEXT, value: '优化数据库查询性能' },
+            { property_id: 'status', property_type: PropertyType.SELECT, value: 'testing' }
         ]
     },
     {
         issue_id: 4,
         property_values: [
             { property_id: 'id', property_type: PropertyType.ID, value: 4 },
-            { property_id: 'title', property_type: PropertyType.TEXT, value: '添加用户管理界面' }
+            { property_id: 'title', property_type: PropertyType.TEXT, value: '添加用户管理界面' },
+            { property_id: 'status', property_type: PropertyType.SELECT, value: 'done' }
         ]
     },
     {
         issue_id: 5,
         property_values: [
             { property_id: 'id', property_type: PropertyType.ID, value: 5 },
-            { property_id: 'title', property_type: PropertyType.TEXT, value: '完善错误处理机制' }
+            { property_id: 'title', property_type: PropertyType.TEXT, value: '完善错误处理机制' },
+            { property_id: 'status', property_type: PropertyType.SELECT, value: 'in_progress' }
         ]
     },
     {
         issue_id: 6,
         property_values: [
             { property_id: 'id', property_type: PropertyType.ID, value: 6 },
-            { property_id: 'title', property_type: PropertyType.TEXT, value: '实现数据导出功能' }
+            { property_id: 'title', property_type: PropertyType.TEXT, value: '实现数据导出功能' },
+            { property_id: 'status', property_type: PropertyType.SELECT, value: 'todo' }
         ]
     },
     {
         issue_id: 7,
         property_values: [
             { property_id: 'id', property_type: PropertyType.ID, value: 7 },
-            { property_id: 'title', property_type: PropertyType.TEXT, value: '添加多语言支持' }
+            { property_id: 'title', property_type: PropertyType.TEXT, value: '添加多语言支持' },
+            { property_id: 'status', property_type: PropertyType.SELECT, value: 'testing' }
         ]
     },
     {
         issue_id: 8,
         property_values: [
             { property_id: 'id', property_type: PropertyType.ID, value: 8 },
-            { property_id: 'title', property_type: PropertyType.TEXT, value: '修复移动端适配问题' }
+            { property_id: 'title', property_type: PropertyType.TEXT, value: '修复移动端适配问题' },
+            { property_id: 'status', property_type: PropertyType.SELECT, value: 'in_progress' }
         ]
     },
     {
         issue_id: 9,
         property_values: [
             { property_id: 'id', property_type: PropertyType.ID, value: 9 },
-            { property_id: 'title', property_type: PropertyType.TEXT, value: '优化页面加载速度' }
+            { property_id: 'title', property_type: PropertyType.TEXT, value: '优化页面加载速度' },
+            { property_id: 'status', property_type: PropertyType.SELECT, value: 'done' }
         ]
     },
     {
         issue_id: 10,
         property_values: [
             { property_id: 'id', property_type: PropertyType.ID, value: 10 },
-            { property_id: 'title', property_type: PropertyType.TEXT, value: '实现文件上传功能' }
+            { property_id: 'title', property_type: PropertyType.TEXT, value: '实现文件上传功能' },
+            { property_id: 'status', property_type: PropertyType.SELECT, value: 'todo' }
         ]
-    },
-    // {
-    //     issue_id: 11,
-    //     property_values: [
-    //         { property_id: 'id', property_type: PropertyType.ID, value: 11 },
-    //         { property_id: 'title', property_type: PropertyType.TEXT, value: '实现文件上传功能' }
-    //     ]
-    // },
-    // {
-    //     issue_id: 12,
-    //     property_values: [
-    //         { property_id: 'id', property_type: PropertyType.ID, value: 12 },
-    //         { property_id: 'title', property_type: PropertyType.TEXT, value: '实现文件上传功能' }
-    //     ]
-    // },
-    // {
-    //     issue_id: 13,
-    //     property_values: [
-    //         { property_id: 'id', property_type: PropertyType.ID, value: 13 },
-    //         { property_id: 'title', property_type: PropertyType.TEXT, value: '实现文件上传功能' }
-    //     ]
-    // },
-    // {
-    //     issue_id: 14,
-    //     property_values: [
-    //         { property_id: 'id', property_type: PropertyType.ID, value: 14 },
-    //         { property_id: 'title', property_type: PropertyType.TEXT, value: '实现文件上传功能' }
-    //     ]
-    // },
-    // {
-    //     issue_id: 15,
-    //     property_values: [
-    //         { property_id: 'id', property_type: PropertyType.ID, value: 15 },
-    //         { property_id: 'title', property_type: PropertyType.TEXT, value: '实现文件上传功能' }
-    //     ]
-    // },
-    // {
-    //     issue_id: 16,
-    //     property_values: [
-    //         { property_id: 'id', property_type: PropertyType.ID, value: 16 },
-    //         { property_id: 'title', property_type: PropertyType.TEXT, value: '实现文件上传功能' }
-    //     ]
-    // },
-    // {
-    //     issue_id: 17,
-    //     property_values: [
-    //         { property_id: 'id', property_type: PropertyType.ID, value: 17 },
-    //         { property_id: 'title', property_type: PropertyType.TEXT, value: '实现文件上传功能' }
-    //     ]
-    // },
-    // {
-    //     issue_id: 18,
-    //     property_values: [
-    //         { property_id: 'id', property_type: PropertyType.ID, value: 18 },
-    //         { property_id: 'title', property_type: PropertyType.TEXT, value: '实现文件上传功能' }
-    //     ]
-    // }
+    }
 ];
 
 export default function IssuePage() {
     // 状态管理
     const [data] = useState(mockData);
-    
-    // 表格列定义
-    const columns: TableColumn[] = [
-        { id: 'id', title: 'ID', minWidth: 80 },
-        { id: 'title', title: '标题', minWidth: 200 }
-    ];
+    const [propertyDefinitions] = useState(mockPropertyDefinitions);
 
-    // 获取行中特定属性的值和类型
-    const getPropertyInfo = (issue: Issue, propertyId: string): PropertyValue | null => {
+    // 表格列定义
+    const columns: TableColumn[] = propertyDefinitions.map(prop => ({
+        id: prop.id,
+        title: prop.name,
+        minWidth: prop.id === 'id' ? 80 : prop.id === 'title' ? 200 : 120
+    }));
+
+    // 获取行中特定属性的值
+    const getPropertyValue = (issue: Issue, propertyId: string): PropertyValue | null => {
         return issue.property_values.find(p => p.property_id === propertyId) || null;
+    };
+
+    // 获取属性定义
+    const getPropertyDefinition = (propertyId: string): PropertyDefinition | null => {
+        return propertyDefinitions.find(p => p.id === propertyId) || null;
     };
 
     // 渲染表头
     const renderHeader = (column: TableColumn) => {
-        // 假设所有行的属性类型都相同，从第一行获取属性类型
-        if (data.length === 0) return column.title;
-        
-        const propertyInfo = getPropertyInfo(data[0], column.id);
-        if (!propertyInfo) return column.title;
+        const propertyDef = getPropertyDefinition(column.id);
+        if (!propertyDef) return column.title;
         
         // 从映射中获取对应的表头组件
-        const HeaderComponent = PROPERTY_HEADER_COMPONENTS[propertyInfo.property_type];
+        const HeaderComponent = PROPERTY_HEADER_COMPONENTS[propertyDef.type];
         if (!HeaderComponent) return column.title;
         
         // 渲染表头组件
         return (
             <HeaderComponent
-                propertyID={propertyInfo.property_id}
-                propertyType={propertyInfo.property_type}
+                propertyID={propertyDef.id}
+                propertyType={propertyDef.type}
                 propertyName={column.title}
-                propertyConfig={{}}
+                propertyConfig={propertyDef.config}
             />
         );
     };
@@ -375,26 +433,28 @@ export default function IssuePage() {
     // 渲染单元格
     const renderCell = (column: TableColumn, row: Record<string, unknown>) => {
         const issue = row as unknown as Issue;
-        const propertyInfo = getPropertyInfo(issue, column.id);
-
-        if (!propertyInfo) return '';
+        const propertyValue = getPropertyValue(issue, column.id);
+        if (!propertyValue) return '';
+        
+        const propertyDef = getPropertyDefinition(column.id);
+        if (!propertyDef) return '';
         
         // 从映射中获取对应的单元格组件
-        const CellComponent = PROPERTY_CELL_COMPONENTS[propertyInfo.property_type];
+        const CellComponent = PROPERTY_CELL_COMPONENTS[propertyValue.property_type];
         if (!CellComponent) {
             // 默认处理，如果没有找到对应组件
-            return propertyInfo.value !== null && propertyInfo.value !== undefined 
-                ? String(propertyInfo.value) 
+            return propertyValue.value !== null && propertyValue.value !== undefined 
+                ? String(propertyValue.value) 
                 : '';
         }
         // 渲染单元格组件
         return (
             <CellComponent
-                propertyID={propertyInfo.property_id}
-                propertyType={propertyInfo.property_type}
-                value={propertyInfo.value}
+                propertyID={propertyValue.property_id}
+                propertyType={propertyValue.property_type}
+                value={propertyValue.value}
                 issueId={String(issue.issue_id)}
-                propertyConfig={{}}
+                propertyConfig={propertyDef.config}
                 rowData={issue as unknown as Record<string, unknown>}
             />
         );
