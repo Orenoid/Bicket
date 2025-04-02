@@ -1,13 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import React from 'react';
+import {
+    useReactTable,
+    getCoreRowModel,
+    ColumnDef,
+    flexRender
+} from '@tanstack/react-table';
 
 interface TableColumn {
     id: string;
     title: string;
     width?: number;
     minWidth?: number;
+}
+
+// 自定义列元数据类型
+interface CustomColumnMeta {
+    width: string;
+    originalColumn: TableColumn;
 }
 
 interface IssueTableProps {
@@ -64,6 +76,27 @@ const IssueTable: React.FC<IssueTableProps> = ({
         ? { maxHeight: `calc(100vh - 200px)` } // 数据多时限制高度并允许滚动，使用 vh 单位根据视口高度计算
         : {}; // 数据少时自动适应内容高度
 
+    // 将我们的列格式转换为TanStack Table需要的格式
+    const tableColumns = useMemo<ColumnDef<Record<string, unknown>, unknown>[]>(() => {
+        return columns.map((column) => ({
+            id: column.id,
+            accessorKey: column.id,
+            header: () => renderHeader(column),
+            cell: ({ row }) => renderCell(column, row.original, row.index),
+            meta: {
+                width: getColumnWidth(column),
+                originalColumn: column,
+            } as CustomColumnMeta,
+        }));
+    }, [columns, renderHeader, renderCell]);
+
+    // 初始化TanStack Table
+    const table = useReactTable({
+        data,
+        columns: tableColumns,
+        getCoreRowModel: getCoreRowModel(),
+    });
+
     return (
         <div 
             ref={setContainerRef}
@@ -74,36 +107,38 @@ const IssueTable: React.FC<IssueTableProps> = ({
                 <div className={needScroll ? 'overflow-hidden' : ''}>
                     <table className="min-w-full border-collapse table-fixed">
                         <thead className="bg-gray-50 sticky top-0 z-10">
-                            <tr>
-                                {columns.map((column, colIndex) => (
-                                    <th 
-                                        key={column.id} 
-                                        className={`relative px-3 py-3.5 text-left text-sm font-semibold text-gray-700 ${colIndex > 0 ? 'border-l border-gray-200' : ''}`}
-                                        style={{ width: getColumnWidth(column) }}
-                                    >
-                                        <div className="flex items-center">
-                                            {renderHeader(column)}
-                                        </div>
-                                    </th>
-                                ))}
-                            </tr>
+                            {table.getHeaderGroups().map(headerGroup => (
+                                <tr key={headerGroup.id}>
+                                    {headerGroup.headers.map((header, colIndex) => (
+                                        <th 
+                                            key={header.id}
+                                            className={`relative px-3 py-3.5 text-left text-sm font-semibold text-gray-700 ${colIndex > 0 ? 'border-l border-gray-200' : ''}`}
+                                            style={{ width: (header.column.columnDef.meta as CustomColumnMeta)?.width }}
+                                        >
+                                            <div className="flex items-center">
+                                                {flexRender(header.column.columnDef.header, header.getContext())}
+                                            </div>
+                                        </th>
+                                    ))}
+                                </tr>
+                            ))}
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {data.map((row, rowIndex) => (
+                            {table.getRowModel().rows.map((row) => (
                                 <tr 
-                                    key={rowIndex} 
+                                    key={row.id}
                                     className="hover:bg-gray-50 transition-colors"
                                 >
-                                    {columns.map((column, colIndex) => (
+                                    {row.getVisibleCells().map((cell, colIndex) => (
                                         <td 
-                                            key={`${rowIndex}-${column.id}`} 
+                                            key={cell.id}
                                             className={`px-3 py-3.5 text-sm text-gray-500 truncate ${colIndex > 0 ? 'border-l border-gray-200' : ''}`}
                                             style={{ 
-                                                width: getColumnWidth(column),
+                                                width: (cell.column.columnDef.meta as CustomColumnMeta)?.width,
                                                 height: '48px' // 固定行高
                                             }}
                                         >
-                                            {renderCell(column, row, rowIndex)}
+                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                         </td>
                                     ))}
                                 </tr>
