@@ -112,7 +112,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                                     {headerGroup.headers.map((header, colIndex) => (
                                         <th 
                                             key={header.id}
-                                            className={`relative px-3 py-3.5 text-left text-sm font-semibold text-gray-700 ${colIndex > 0 ? 'border-l border-gray-200' : ''}`}
+                                            className={`relative px-2 py-2 text-left text-sm font-semibold text-gray-700 ${colIndex > 0 ? 'border-l border-gray-200' : ''}`}
                                             style={{ width: (header.column.columnDef.meta as CustomColumnMeta)?.width }}
                                         >
                                             <div className="flex items-center">
@@ -132,10 +132,10 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                                     {row.getVisibleCells().map((cell, colIndex) => (
                                         <td 
                                             key={cell.id}
-                                            className={`px-3 py-3.5 text-sm text-gray-500 truncate ${colIndex > 0 ? 'border-l border-gray-200' : ''}`}
+                                            className={`px-2 py-2 text-sm text-gray-500 truncate ${colIndex > 0 ? 'border-l border-gray-200' : ''}`}
                                             style={{ 
                                                 width: (cell.column.columnDef.meta as CustomColumnMeta)?.width,
-                                                height: '48px' // 固定行高
+                                                height: '35px'
                                             }}
                                         >
                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
