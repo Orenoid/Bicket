@@ -59,7 +59,7 @@ export const AppliedFilterWrapper: React.FC<AppliedFilterWrapperProps> = ({
             </div>
             <button 
                 onClick={() => onRemove(filter.propertyId)}
-                className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                className="text-gray-500 hover:text-gray-700 focus:outline-none p-1 rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
                 aria-label={`移除${propertyDefinition.name}筛选`}
             >
                 <FiX size={14} />
