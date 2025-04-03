@@ -10,6 +10,10 @@ import { FilterCondition } from '@/app/property/types';
 import { FiFilter } from 'react-icons/fi';
 import { DropDownMenuV2 } from '../../components/ui/dropdownMenu';
 import { FilterConstructorPanel } from '@/app/property/components/filter-construction';
+import {
+    AppliedFilterWrapper,
+    APPLIED_FILTER_COMPONENTS
+} from '@/app/property/components/applied-filter';
 
 // 数据类型
 export interface PropertyValue {
@@ -56,14 +60,34 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
             });
         }
     }, [selectedProperty]);
+    
     // 筛选条件应用回调
-    const handleFilterApply = () => {
+    const handleFilterApply = (filter: FilterCondition | null) => {
+        if (filter) {
+            // 如果已有同一属性的筛选条件，则替换它
+            const existingFilterIndex = activeFilters.findIndex(f => f.propertyId === filter.propertyId);
+            if (existingFilterIndex >= 0) {
+                const newFilters = [...activeFilters];
+                newFilters[existingFilterIndex] = filter;
+                setActiveFilters(newFilters);
+            } else {
+                // 否则添加新的筛选条件
+                setActiveFilters([...activeFilters, filter]);
+            }
+        }
         setSelectedProperty(null); // 关闭筛选面板
     };
+    
     // 筛选条件取消回调
     const handleFilterCancel = () => {
         setSelectedProperty(null); // 关闭筛选面板
     };
+
+    // 移除筛选条件
+    const handleRemoveFilter = (filterId: string) => {
+        setActiveFilters(activeFilters.filter(f => f.propertyId !== filterId));
+    };
+    
     // 获取当前属性的筛选条件
     const getCurrentFilter = (propertyId: string): FilterCondition | null => {
         return activeFilters.find(f => f.propertyId === propertyId) || null;
@@ -162,16 +186,46 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
         </div>
     );
 
+    // 渲染已应用的筛选条件
+    const renderAppliedFilters = () => {
+        return activeFilters.map(filter => {
+            const propertyDef = getPropertyDefinition(filter.propertyId);
+            if (!propertyDef) return null;
+            
+            // 获取对应类型的筛选组件
+            const FilterComponent = APPLIED_FILTER_COMPONENTS[propertyDef.type];
+            if (!FilterComponent) return null;
+
+            return (
+                <AppliedFilterWrapper
+                    key={filter.propertyId}
+                    filter={filter}
+                    propertyDefinition={propertyDef}
+                    onRemove={handleRemoveFilter}
+                    FilterComponent={FilterComponent}
+                />
+            );
+        });
+    };
+
     return (
         <div className="p-8">
             {/* 工具栏 */}
-            <div className="flex mb-4 relative">
-                <DropDownMenuV2 
-                    entryLabel={FilterButton}
-                    menuItems={filterMenuItems}
-                    entryClassName="border border-gray-200 rounded"
-                    menuClassName="w-64"
-                />
+            <div className="mb-4 relative">
+                <div className="flex flex-wrap items-center">
+                    <div className="mr-2 mb-2">
+                        <DropDownMenuV2 
+                            entryLabel={FilterButton}
+                            menuItems={filterMenuItems}
+                            entryClassName="border border-gray-200 rounded"
+                            menuClassName="w-64"
+                        />
+                    </div>
+                    
+                    {/* 显示已应用的筛选条件 */}
+                    {renderAppliedFilters()}
+                </div>
+                
                 {/* 设置筛选条件的面板 */}
                 {selectedProperty && (
                     <FilterConstructorPanel
