@@ -1,10 +1,15 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import { IssueTable, TableColumn } from './IssueTable';
 import {
     PROPERTY_HEADER_COMPONENTS,
     PROPERTY_CELL_COMPONENTS
-} from '../../property/component';
+} from '../../property/components/table';
+import { FilterCondition } from '@/app/property/types';
+import { FiFilter } from 'react-icons/fi';
+import { DropDownMenuV2 } from '../../components/ui/dropdownMenu';
+import { FilterConstructorPanel } from '@/app/property/components/filter-construction';
 
 // 数据类型
 export interface PropertyValue {
@@ -32,6 +37,38 @@ interface IssuePageProps {
 }
 
 export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
+    // 当前选中的属性（用于显示筛选面板）
+    const [selectedProperty, setSelectedProperty] = useState<PropertyDefinition | null>(null);
+
+    // 筛选按钮引用
+    const filterButtonRef = useRef<HTMLDivElement>(null);
+    // 筛选面板位置状态
+    const [panelPosition, setPanelPosition] = useState({ top: 0, left: 0 });
+    // 活跃的筛选条件
+    const [activeFilters, setActiveFilters] = useState<FilterCondition[]>([]);
+    // 当按钮引用或选中属性改变时，更新面板位置
+    useEffect(() => {
+        if (filterButtonRef.current && selectedProperty) {
+            const rect = filterButtonRef.current.getBoundingClientRect();
+            setPanelPosition({
+                top: rect.height + 4, // 按钮底部 + 间距
+                left: 0
+            });
+        }
+    }, [selectedProperty]);
+    // 筛选条件应用回调
+    const handleFilterApply = () => {
+        setSelectedProperty(null); // 关闭筛选面板
+    };
+    // 筛选条件取消回调
+    const handleFilterCancel = () => {
+        setSelectedProperty(null); // 关闭筛选面板
+    };
+    // 获取当前属性的筛选条件
+    const getCurrentFilter = (propertyId: string): FilterCondition | null => {
+        return activeFilters.find(f => f.propertyId === propertyId) || null;
+    };
+
     // 表格列定义
     const columns: TableColumn[] = propertyDefinitions.map(prop => ({
         id: prop.id,
@@ -48,6 +85,7 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
     const getPropertyDefinition = (propertyId: string): PropertyDefinition | null => {
         return propertyDefinitions.find(p => p.id === propertyId) || null;
     };
+
 
     // 渲染表头
     const renderHeader = (column: TableColumn) => {
@@ -99,10 +137,52 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
         );
     };
 
+    // 筛选属性菜单项
+    const filterMenuItems = propertyDefinitions.map(prop => ({
+        label: (
+            <div className="flex items-center">
+                <span>{prop.name}</span>
+                <span className="ml-2 px-2 py-0.5 bg-gray-100 rounded text-xs text-gray-500">{prop.type}</span>
+            </div>
+        ),
+        onClick: () => {
+            console.log(`选择筛选属性: ${prop.name} (${prop.id})`);
+            setSelectedProperty(prop);
+        }
+    }));
+
+    // 自定义筛选按钮
+    const FilterButton = (
+        <div 
+            ref={filterButtonRef} 
+            className="flex items-center px-2 py-1 text-sm text-gray-700"
+        >
+            <FiFilter className="mr-2 h-4 w-4 text-gray-500" />
+            <span>筛选</span>
+        </div>
+    );
+
     return (
         <div className="p-8">
-            {/* 标题 */}
-            <h1 className="text-2xl font-bold mb-4">Issues</h1>
+            {/* 工具栏 */}
+            <div className="flex mb-4 relative">
+                <DropDownMenuV2 
+                    entryLabel={FilterButton}
+                    menuItems={filterMenuItems}
+                    entryClassName="border border-gray-200 rounded"
+                    menuClassName="w-64"
+                />
+                {/* 设置筛选条件的面板 */}
+                {selectedProperty && (
+                    <FilterConstructorPanel
+                        propertyDefinition={selectedProperty}
+                        currentFilter={getCurrentFilter(selectedProperty.id)}
+                        onApply={handleFilterApply}
+                        onCancel={handleFilterCancel}
+                        position={panelPosition}
+                    />
+                )}
+            </div>
 
             {/* 表格组件 */}
             <IssueTable 

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { PropertyType } from './constant';
+import { PropertyType } from '../constants';
 
 // 表头组件属性接口
 export interface PropertyHeaderCellProps {

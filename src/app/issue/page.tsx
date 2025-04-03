@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+// 导入共享的 Prisma 实例
+import { prisma } from '@/app/lib/prisma';
 import { IssuePage, Issue, PropertyValue, PropertyDefinition } from './components/IssuePage';
-
-// 初始化 Prisma 客户端
-const prisma = new PrismaClient();
 
 // 从数据库中获取属性定义
 async function getPropertyDefinitions(): Promise<PropertyDefinition[]> {

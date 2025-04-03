@@ -1,5 +1,5 @@
 import React from 'react';
-import Divider from './ui/Divider';
+import Divider from './ui/divider';
 
 interface SidebarItem {
   id: string;

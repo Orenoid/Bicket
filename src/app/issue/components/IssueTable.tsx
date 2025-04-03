@@ -9,20 +9,20 @@ import {
     flexRender
 } from '@tanstack/react-table';
 
-interface TableColumn {
+export interface TableColumn {
     id: string;
     title: string;
     width?: number;
     minWidth?: number;
 }
 
-// 自定义列元数据类型
+// 自定义列元数据类型，用于存储表格列的额外信息
 interface CustomColumnMeta {
-    width: string;
-    originalColumn: TableColumn;
+    width: string;  // 列的宽度，以字符串形式存储（如"150px"）
+    originalColumn: TableColumn;  // 原始的列定义，保留原始配置信息
 }
 
-interface IssueTableProps {
+export interface IssueTableProps {
     columns: TableColumn[];
     data: Record<string, unknown>[];
     renderHeader?: (column: TableColumn) => React.ReactNode;
@@ -30,11 +30,11 @@ interface IssueTableProps {
 }
 
 // 表格框架组件
-const IssueTable: React.FC<IssueTableProps> = ({ 
+export const IssueTable: React.FC<IssueTableProps> = ({ 
     columns, 
     data, 
     renderHeader = (col) => col.title, 
-    renderCell = () => null 
+    renderCell = () => null
 }) => {
     // 处理列宽
     const getColumnWidth = (column: TableColumn) => {
@@ -149,7 +149,4 @@ const IssueTable: React.FC<IssueTableProps> = ({
             </div>
         </div>
     );
-};
-
-export { IssueTable };
-export type { TableColumn, IssueTableProps }; 
+}; 
