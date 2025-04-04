@@ -206,7 +206,6 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
         label: (
             <div className="flex items-center">
                 <span>{prop.name}</span>
-                <span className="ml-2 px-2 py-0.5 bg-gray-100 rounded text-xs text-gray-500">{prop.type}</span>
             </div>
         ),
         onClick: () => {
@@ -257,7 +256,7 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
                             entryLabel={FilterButton}
                             menuItems={filterMenuItems}
                             entryClassName="border border-gray-200 rounded"
-                            menuClassName="w-64"
+                            menuClassName="w-64 bg-white border border-gray-200 rounded-md shadow-lg"
                         />
                     </div>
                     
