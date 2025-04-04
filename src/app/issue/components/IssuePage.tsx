@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { IssueTable, TableColumn } from './IssueTable';
 import {
     PROPERTY_HEADER_COMPONENTS,
@@ -40,7 +41,29 @@ interface IssuePageProps {
     propertyDefinitions: PropertyDefinition[];
 }
 
+// 序列化筛选条件为URL参数字符串
+function serializeFilters(filters: FilterCondition[]): string {
+    if (!filters.length) return '';
+
+    return filters.map(filter => {
+        // 根据值类型进行序列化处理
+        let valueStr: string;
+        if (Array.isArray(filter.value)) {
+            valueStr = filter.value.join(',');
+        } else if (filter.value === null) {
+            valueStr = 'null';
+        } else {
+            valueStr = String(filter.value);
+        }
+        
+        return `${filter.propertyId}:${filter.propertyType}:${filter.operator}:${encodeURIComponent(valueStr)}`;
+    }).join(';');
+}
+
 export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    
     // 当前选中的属性（用于显示筛选面板）
     const [selectedProperty, setSelectedProperty] = useState<PropertyDefinition | null>(null);
 
@@ -50,6 +73,7 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
     const [panelPosition, setPanelPosition] = useState({ top: 0, left: 0 });
     // 活跃的筛选条件
     const [activeFilters, setActiveFilters] = useState<FilterCondition[]>([]);
+    
     // 当按钮引用或选中属性改变时，更新面板位置
     useEffect(() => {
         if (filterButtonRef.current && selectedProperty) {
@@ -60,6 +84,22 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
             });
         }
     }, [selectedProperty]);
+    
+    // 当筛选条件变化时，更新URL
+    useEffect(() => {
+        const serialized = serializeFilters(activeFilters);
+        
+        // 构建新的 URL 查询参数
+        const params = new URLSearchParams(searchParams);
+        if (serialized) {
+            params.set('filters', serialized);
+        } else {
+            params.delete('filters');
+        }
+        
+        // 更新 URL，不触发页面刷新
+        router.push(`?${params.toString()}`, { scroll: false });
+    }, [activeFilters, router, searchParams]);
     
     // 筛选条件应用回调
     const handleFilterApply = (filter: FilterCondition | null) => {
@@ -82,7 +122,7 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
     const handleFilterCancel = () => {
         setSelectedProperty(null); // 关闭筛选面板
     };
-
+    
     // 移除筛选条件
     const handleRemoveFilter = (filterId: string) => {
         setActiveFilters(activeFilters.filter(f => f.propertyId !== filterId));
@@ -166,10 +206,10 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
         label: (
             <div className="flex items-center">
                 <span>{prop.name}</span>
+                <span className="ml-2 px-2 py-0.5 bg-gray-100 rounded text-xs text-gray-500">{prop.type}</span>
             </div>
         ),
         onClick: () => {
-            console.log(`选择筛选属性: ${prop.name} (${prop.id})`);
             setSelectedProperty(prop);
         }
     }));
@@ -194,7 +234,7 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
             // 获取对应类型的筛选组件
             const FilterComponent = APPLIED_FILTER_COMPONENTS[propertyDef.type];
             if (!FilterComponent) return null;
-
+            
             return (
                 <AppliedFilterWrapper
                     key={filter.propertyId}
@@ -217,7 +257,7 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
                             entryLabel={FilterButton}
                             menuItems={filterMenuItems}
                             entryClassName="border border-gray-200 rounded"
-                            menuClassName="w-64 bg-white border border-gray-200 rounded-md shadow-lg"
+                            menuClassName="w-64"
                         />
                     </div>
                     

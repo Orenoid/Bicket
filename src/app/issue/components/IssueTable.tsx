@@ -44,7 +44,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     // 使用 useState 和 useEffect 跟踪表格容器和视口高度
     const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
     const [needScroll, setNeedScroll] = useState(false);
-    
+
     // 计算表格是否需要滚动
     useEffect(() => {
         if (!containerRef) return;
