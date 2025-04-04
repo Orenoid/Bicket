@@ -282,13 +282,9 @@ export default async function Page({ searchParams }: { searchParams: { filters?:
             getIssues(filters)
         ]);
 
-        // 检查是否获取到了数据
+        // 检查是否获取到了属性定义
         if (propertyDefinitions.length === 0) {
             return <div className="p-8 text-red-500">错误：没有找到属性定义数据</div>;
-        }
-
-        if (issues.length === 0) {
-            return <div className="p-8 text-yellow-500">暂无工单数据</div>;
         }
 
         // 渲染客户端组件，传递数据

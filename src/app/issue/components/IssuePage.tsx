@@ -277,17 +277,22 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
             </div>
 
             {/* 表格组件 */}
-            <IssueTable 
-                columns={columns}
-                data={issues as unknown as Record<string, unknown>[]}
-                renderHeader={renderHeader}
-                renderCell={renderCell}
-            />
-
-            {/* 数据统计 */}
-            <div className="mt-4 text-sm text-gray-500">
-                Total {issues.length} issues
-            </div>
+            {issues.length > 0 ? (
+                <>
+                    <IssueTable 
+                        columns={columns}
+                        data={issues as unknown as Record<string, unknown>[]}
+                        renderHeader={renderHeader}
+                        renderCell={renderCell}
+                    />
+                    {/* 数据统计 */}
+                    <div className="mt-4 text-sm text-gray-500">
+                        Total {issues.length} issues
+                    </div>
+                </>
+            ) : (
+                <div className="p-4 text-gray-500 text-sm">暂无符合条件的工单</div>
+            )}
         </div>
     );
 } 
