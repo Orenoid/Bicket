@@ -13,7 +13,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 属性定义表
 model property {
   id          String    @id @default(uuid()) // 属性ID，主键
   name        String                         // 属性名称
@@ -21,7 +20,7 @@ model property {
   type        String                         // 属性类型，如text、number、select等
   config      Json?                          // 属性配置信息，如选项列表、校验规则等
   deletable   Boolean   @default(true)       // property 本身是否可删除，默认可删除
-  nullable    Boolean                        // 该 property 对应的 property_value 是否可为空
+  nullable    Boolean                        // (deprecated) 该 property 对应的 property_value 是否可为空
   readonly    Boolean                        // 该 property 对应的 property_value 是否只读
   createdAt   DateTime  @default(now())      // 创建时间
   updatedAt   DateTime  @updatedAt           // 更新时间
@@ -30,7 +29,6 @@ model property {
   @@map("property")
 }
 
-// 单值属性表 - 用于存储单一值的属性，如文本、数字、布尔值等
 model property_single_value {
   id            String    @id @default(uuid()) // 属性值ID，主键
   issue_id      String                         // 关联的 issue ID
@@ -48,7 +46,6 @@ model property_single_value {
   @@map("property_single_value")
 }
 
-// 多值属性表 - 用于存储多值属性，如多选、标签列表等
 model property_multi_value {
   id            String    @id @default(uuid()) // 属性值ID，主键
   issue_id      String                         // 关联的 issue ID
@@ -67,7 +64,6 @@ model property_multi_value {
   @@map("property_multi_value")
 }
 
-// issue 表
 model issue {
   id        String    @id @default(uuid()) // issue ID，主键
   createdAt DateTime  @default(now())      // 创建时间
@@ -75,4 +71,14 @@ model issue {
   deletedAt DateTime?                      // 软删除时间，为null表示未删除
 
   @@map("issue")
+}
+
+model counter {
+  entity_name   String   @id
+  current_value BigInt
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("counter")
 }
