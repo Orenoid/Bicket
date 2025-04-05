@@ -86,6 +86,53 @@ export const TextPropertyCell: PropertyCellComponent = ({
     return <span>{textValue}</span>;
 };
 
+// 富文本类型的单元格组件
+export const RichTextPropertyCell: PropertyCellComponent = ({ 
+    value, 
+    propertyConfig 
+}) => {
+    // 处理空值显示
+    if (value === null || value === undefined || value === "") {
+        return <span className="text-gray-400 italic">{propertyConfig?.emptyText as string || "空"}</span>;
+    }
+    
+    // 处理富文本值（Markdown格式）
+    const markdownValue = String(value);
+    const maxLength = (propertyConfig?.maxDisplayLength as number) || 150;
+    
+    // 将Markdown转换为纯文本
+    // 移除常见的Markdown标记：
+    // - 标题 # ## ###
+    // - 加粗 **text** 或 __text__
+    // - 斜体 *text* 或 _text_
+    // - 链接 [text](url)
+    // - 图片 ![alt](url)
+    // - 列表项 - 或 * 或 1.
+    // - 引用 >
+    // - 代码块 ``` 或 `
+    const plainText = markdownValue
+        .replace(/#+\s+/g, '') // 移除标题标记
+        .replace(/[*_]{2}(.+?)[*_]{2}/g, '$1') // 移除加粗标记
+        .replace(/[*_](.+?)[*_]/g, '$1') // 移除斜体标记
+        .replace(/\[(.+?)\]\(.+?\)/g, '$1') // 将链接转换为纯文本
+        .replace(/!\[.+?\]\(.+?\)/g, '[图片]') // 将图片转换为[图片]标识
+        .replace(/^[\-*]\s+/gm, '') // 移除无序列表标记
+        .replace(/^\d+\.\s+/gm, '') // 移除有序列表标记
+        .replace(/^>\s+/gm, '') // 移除引用标记
+        .replace(/`{1,3}([^`]+?)`{1,3}/g, '$1'); // 移除代码块标记
+    
+    // 如果文本过长，截断并显示省略号
+    if (plainText.length > maxLength) {
+        return (
+            <span title={plainText}>
+                {plainText.substring(0, maxLength)}...
+            </span>
+        );
+    }
+    
+    return <span>{plainText}</span>;
+};
+
 // 单选类型的单元格组件
 export const SelectPropertyCell: PropertyCellComponent = ({ 
     value, 
@@ -137,6 +184,7 @@ export const PROPERTY_HEADER_COMPONENTS: Record<string, PropertyHeaderCellCompon
     [PropertyType.ID]: TextPropertyHeaderCell,
     [PropertyType.TEXT]: TextPropertyHeaderCell,
     [PropertyType.SELECT]: TextPropertyHeaderCell,
+    [PropertyType.RICH_TEXT]: TextPropertyHeaderCell,
     // 其他类型的表头组件可以在这里添加
 };
 
@@ -145,5 +193,6 @@ export const PROPERTY_CELL_COMPONENTS: Record<string, PropertyCellComponent> = {
     [PropertyType.ID]: TextPropertyCell,
     [PropertyType.TEXT]: TextPropertyCell,
     [PropertyType.SELECT]: SelectPropertyCell,
+    [PropertyType.RICH_TEXT]: RichTextPropertyCell,
     // 其他类型的单元格组件可以在这里添加
 }; 

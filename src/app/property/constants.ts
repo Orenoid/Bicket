@@ -7,6 +7,7 @@ export enum SystemPropertyId {
     STATUS = 'property0003',         // 工单状态
     CREATED_AT = 'property0004',     // 创建时间
     UPDATED_AT = 'property0005',     // 更新时间
+    DESCRIPTION = 'property0006',    // 工单描述
 }
 
 
@@ -23,6 +24,7 @@ export enum PropertyType {
     BOOLEAN = 'boolean',     // 布尔类型
     USER = 'user',           // 用户类型
     RELATIONSHIP = 'relationship', // 关联类型
+    RICH_TEXT = 'rich_text', // 富文本类型
 }
 
 /**
@@ -34,6 +36,7 @@ export const PROPERTY_ID_TYPE_MAP = {
     [SystemPropertyId.STATUS]: PropertyType.SELECT,
     [SystemPropertyId.CREATED_AT]: PropertyType.DATETIME,
     [SystemPropertyId.UPDATED_AT]: PropertyType.DATETIME,
+    [SystemPropertyId.DESCRIPTION]: PropertyType.RICH_TEXT,
 };
 
 

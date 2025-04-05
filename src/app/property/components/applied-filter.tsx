@@ -194,6 +194,24 @@ export const SelectAppliedFilter: AppliedFilterComponent = ({ filter, propertyDe
 };
 
 /**
+ * 富文本类型的已应用筛选组件
+ * 
+ * 显示富文本类型属性的筛选条件
+ */
+export const RichTextAppliedFilter: AppliedFilterComponent = ({ filter }) => {
+    // 从筛选条件中获取值
+    const value = filter.value as string;
+    
+    // 富文本筛选当前只支持contains操作符
+    switch (filter.operator) {
+        case 'contains':
+            return <span>包含 &ldquo;{value}&rdquo;</span>;
+        default:
+            return <span>{value}</span>;
+    }
+};
+
+/**
  * 针对不同属性类型的已应用筛选组件映射
  * 
  * 类似于表格单元格和筛选面板，可以为不同属性类型注册专门的展示组件
@@ -204,5 +222,7 @@ export const APPLIED_FILTER_COMPONENTS: Record<string, AppliedFilterComponent> =
     // ID 类型使用 IdAppliedFilter 组件
     [PropertyType.ID]: IdAppliedFilter,
     // 单选类型使用 SelectAppliedFilter 组件
-    [PropertyType.SELECT]: SelectAppliedFilter
+    [PropertyType.SELECT]: SelectAppliedFilter,
+    // 富文本类型使用 RichTextAppliedFilter 组件
+    [PropertyType.RICH_TEXT]: RichTextAppliedFilter
 }; 
