@@ -8,6 +8,7 @@ import {
     ColumnDef,
     flexRender
 } from '@tanstack/react-table';
+import { SystemPropertyId } from '@/app/property/constants';
 
 export interface TableColumn {
     id: string;
@@ -38,6 +39,12 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     renderCell = () => null,
     onRowClick
 }) => {
+    // TODO tech dept 应该通过某种配置项来判断是否允许在表格里展示
+    // 过滤掉描述属性
+    const filteredColumns = useMemo(() => {
+        return columns.filter(column => column.id !== SystemPropertyId.DESCRIPTION);
+    }, [columns]);
+
     // 处理列宽
     const getColumnWidth = (column: TableColumn) => {
         return column.width ? `${column.width}px` : column.minWidth ? `${column.minWidth}px` : '150px';
@@ -80,7 +87,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
 
     // 将我们的列格式转换为TanStack Table需要的格式
     const tableColumns = useMemo<ColumnDef<Record<string, unknown>, unknown>[]>(() => {
-        return columns.map((column) => ({
+        return filteredColumns.map((column) => ({
             id: column.id,
             accessorKey: column.id,
             header: () => renderHeader(column),
@@ -90,7 +97,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                 originalColumn: column,
             } as CustomColumnMeta,
         }));
-    }, [columns, renderHeader, renderCell]);
+    }, [filteredColumns, renderHeader, renderCell]);
 
     // 初始化TanStack Table
     const table = useReactTable({
