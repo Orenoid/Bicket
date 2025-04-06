@@ -61,3 +61,47 @@ export function createRemoveOperation(propertyId: string) {
     {}
   );
 }
+
+/**
+ * 多选值属性的ADD操作负载
+ */
+export interface AddValuePayload extends Record<string, unknown> {
+  value: string;
+}
+
+/**
+ * 创建ADD操作负载
+ * @param value 要添加的属性值
+ * @returns ADD操作负载
+ */
+export function createAddValuePayload(value: string): AddValuePayload {
+  return { value };
+}
+
+/**
+ * 创建ADD属性值操作（用于多值属性）
+ * @param propertyId 属性ID
+ * @param value 要添加的属性值
+ * @returns 属性ADD操作对象
+ */
+export function createAddOperation(propertyId: string, value: string) {
+  return createPropertyOperation(
+    propertyId,
+    PropertyOperationType.ADD,
+    createAddValuePayload(value)
+  );
+}
+
+/**
+ * 创建UPDATE属性值操作（用于多值属性）
+ * @param propertyId 属性ID
+ * @param values 所有属性值数组
+ * @returns 属性UPDATE操作对象
+ */
+export function createUpdateOperation(propertyId: string, values: string[]) {
+  return createPropertyOperation(
+    propertyId,
+    PropertyOperationType.UPDATE,
+    { values }
+  );
+}

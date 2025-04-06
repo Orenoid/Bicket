@@ -85,9 +85,8 @@ async function getIssues(filters?: FilterCondition[]): Promise<Issue[]> {
         
         // 如果有筛选条件，应用筛选
         if (filters && filters.length > 0) {
-            // 由于 property_single_value 不是 issue 的直接关系字段，
-            // 我们需要先获取符合条件的 property_single_value 记录，
-            // 然后根据这些记录找到对应的 issue
+            // 由于 property_single_value 和 property_multi_value 不是 issue 的直接关系字段，
+            // 我们需要先获取符合条件的属性值记录，然后根据这些记录找到对应的 issue
             
             // 对于每个筛选条件，构建查询
             const issueIds = new Set<string>();
@@ -96,7 +95,6 @@ async function getIssues(filters?: FilterCondition[]): Promise<Issue[]> {
             let hasSearched = false;
             
             for (const filter of filters) {
-                // 构建 property_single_value 的查询条件
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 let valueCondition: any = {};
                 
@@ -124,21 +122,35 @@ async function getIssues(filters?: FilterCondition[]): Promise<Issue[]> {
                         throw new Error(`不支持的筛选操作符: ${filter.operator}`);
                 }
                 
-                // 构建完整查询条件
-                const whereCondition = {
+                // 构建基本查询条件
+                const baseCondition = {
                     property_id: filter.propertyId,
                     property_type: filter.propertyType,
                     value: valueCondition,
                     deletedAt: null
                 };
                 
-                // 查询符合条件的属性值
-                const propertyValues = await prisma.property_single_value.findMany({
-                    where: whereCondition,
-                    select: {
-                        issue_id: true
-                    }
-                });
+                // 根据属性类型确定查询表
+                let propertyValues: { issue_id: string }[] = [];
+                
+                if (filter.propertyType === 'multi_select') {
+                    // 多选类型存储在 property_multi_value 表中
+                    propertyValues = await prisma.property_multi_value.findMany({
+                        where: baseCondition,
+                        select: {
+                            issue_id: true
+                        },
+                        distinct: ['issue_id'] // 避免一个工单因为有多个匹配值而被重复计算
+                    });
+                } else {
+                    // 其他类型存储在 property_single_value 表中
+                    propertyValues = await prisma.property_single_value.findMany({
+                        where: baseCondition,
+                        select: {
+                            issue_id: true
+                        }
+                    });
+                }
                 
                 // 如果是首个筛选条件，初始化结果集
                 if (!hasSearched) {
@@ -183,8 +195,8 @@ async function getIssues(filters?: FilterCondition[]): Promise<Issue[]> {
                 const issueData: Issue[] = [];
                 
                 for (const issue of issues) {
-                    // 获取该工单的所有属性值
-                    const propertyValues = await prisma.property_single_value.findMany({
+                    // 获取该工单的所有单值属性
+                    const singlePropertyValues = await prisma.property_single_value.findMany({
                         where: {
                             issue_id: issue.id,
                             deletedAt: null
@@ -196,12 +208,48 @@ async function getIssues(filters?: FilterCondition[]): Promise<Issue[]> {
                         }
                     });
                     
-                    // 转换为前端需要的格式
-                    const values: PropertyValue[] = propertyValues.map(pv => ({
+                    // 获取该工单的所有多值属性
+                    const multiPropertyValues = await prisma.property_multi_value.findMany({
+                        where: {
+                            issue_id: issue.id,
+                            deletedAt: null
+                        },
+                        select: {
+                            property_id: true,
+                            property_type: true,
+                            value: true,
+                            position: true
+                        },
+                        orderBy: {
+                            position: 'asc'
+                        }
+                    });
+                    
+                    // 处理多值属性，将同一属性的多个值合并成数组
+                    const multiValueMap = new Map<string, string[]>();
+                    
+                    for (const mpv of multiPropertyValues) {
+                        if (!multiValueMap.has(mpv.property_id)) {
+                            multiValueMap.set(mpv.property_id, []);
+                        }
+                        if (mpv.value) {
+                            multiValueMap.get(mpv.property_id)?.push(mpv.value);
+                        }
+                    }
+                    
+                    // 转换为前端需要的格式，先处理单值属性
+                    const values: PropertyValue[] = singlePropertyValues.map(pv => ({
                         property_id: pv.property_id,
-                        property_type: pv.property_type,
                         value: pv.value
                     }));
+                    
+                    // 添加多值属性
+                    for (const [propertyId, valueArray] of multiValueMap.entries()) {
+                        values.push({
+                            property_id: propertyId,
+                            value: valueArray
+                        });
+                    }
                     
                     // 添加到工单数据中
                     issueData.push({
@@ -239,8 +287,8 @@ async function getIssuesWithoutFilter(baseWhere: Prisma.issueWhereInput): Promis
     const issueData: Issue[] = [];
     
     for (const issue of issues) {
-        // 获取该工单的所有属性值
-        const propertyValues = await prisma.property_single_value.findMany({
+        // 获取该工单的所有单值属性
+        const singlePropertyValues = await prisma.property_single_value.findMany({
             where: {
                 issue_id: issue.id,
                 deletedAt: null
@@ -252,12 +300,48 @@ async function getIssuesWithoutFilter(baseWhere: Prisma.issueWhereInput): Promis
             }
         });
         
-        // 转换为前端需要的格式
-        const values: PropertyValue[] = propertyValues.map(pv => ({
+        // 获取该工单的所有多值属性
+        const multiPropertyValues = await prisma.property_multi_value.findMany({
+            where: {
+                issue_id: issue.id,
+                deletedAt: null
+            },
+            select: {
+                property_id: true,
+                property_type: true,
+                value: true,
+                position: true
+            },
+            orderBy: {
+                position: 'asc'
+            }
+        });
+        
+        // 处理多值属性，将同一属性的多个值合并成数组
+        const multiValueMap = new Map<string, string[]>();
+        
+        for (const mpv of multiPropertyValues) {
+            if (!multiValueMap.has(mpv.property_id)) {
+                multiValueMap.set(mpv.property_id, []);
+            }
+            if (mpv.value) {
+                multiValueMap.get(mpv.property_id)?.push(mpv.value);
+            }
+        }
+        
+        // 转换为前端需要的格式，先处理单值属性
+        const values: PropertyValue[] = singlePropertyValues.map(pv => ({
             property_id: pv.property_id,
-            property_type: pv.property_type,
             value: pv.value
         }));
+        
+        // 添加多值属性
+        for (const [propertyId, valueArray] of multiValueMap.entries()) {
+            values.push({
+                property_id: propertyId,
+                value: valueArray
+            });
+        }
         
         // 添加到工单数据中
         issueData.push({

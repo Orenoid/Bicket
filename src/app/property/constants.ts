@@ -11,6 +11,7 @@ export enum SystemPropertyId {
     PRIORITY = 'property0007',       // 工单优先级
     CATEGORY = 'property0008',       // 工单类别
     DIAGNOSIS = 'property0009',      // 工单诊断
+    LABEL = 'property0010',          // 工单标签
 }
 
 
@@ -43,6 +44,7 @@ export const PROPERTY_ID_TYPE_MAP = {
     [SystemPropertyId.PRIORITY]: PropertyType.SELECT,
     [SystemPropertyId.CATEGORY]: PropertyType.SELECT,
     [SystemPropertyId.DIAGNOSIS]: PropertyType.SELECT,
+    [SystemPropertyId.LABEL]: PropertyType.MULTI_SELECT,
 };
 
 /**

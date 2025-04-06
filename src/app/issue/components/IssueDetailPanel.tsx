@@ -1,7 +1,7 @@
 'use client';
 
 import { SecondaryButton } from '../../components/ui/buttons';
-import { SelectPropertyDetail, TitlePropertyDetail } from '@/app/property/components/detail';
+import { SelectPropertyDetail, TitlePropertyDetail, MultiSelectPropertyDetail } from '@/app/property/components/detail';
 import { SystemPropertyId } from '@/app/property/constants';
 
 // 从IssuePage.tsx导入需要的接口
@@ -38,6 +38,8 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
     const categoryProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.CATEGORY);
     // 获取诊断属性
     const diagnosisProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.DIAGNOSIS);
+    // 获取标签属性
+    const labelProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.LABEL);
 
     // 获取标题属性值
     const getTitleValue = () => {
@@ -67,6 +69,12 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
     const getDiagnosisValue = () => {
         const diagnosisPropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.DIAGNOSIS);
         return diagnosisPropertyValue ? diagnosisPropertyValue.value : null;
+    };
+
+    // 获取标签属性值
+    const getLabelValue = () => {
+        const labelPropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.LABEL);
+        return labelPropertyValue ? labelPropertyValue.value : null;
     };
 
     // 处理属性更新
@@ -136,6 +144,14 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
                 <div className="flex flex-col w-1/3 h-full pl-5 pt-5">
                     <span className='text-md text-gray-500 whitespace-nowrap font-sans mb-10'>属性</span>
                     <div className='flex flex-col gap-2 pl-3'>
+                        {/* 标签属性组件 */}
+                        {labelProperty && (
+                            <MultiSelectPropertyDetail
+                                propertyDefinition={labelProperty}
+                                value={getLabelValue()}
+                                onUpdate={handlePropertyUpdate}
+                            />
+                        )}
                         {/* 状态属性组件 */}
                         {statusProperty && (
                             <SelectPropertyDetail

@@ -212,6 +212,76 @@ export const RichTextAppliedFilter: AppliedFilterComponent = ({ filter }) => {
 };
 
 /**
+ * 多选类型的已应用筛选组件
+ * 
+ * 显示多选类型属性的筛选条件，支持多个标签的展示
+ */
+export const MultiSelectAppliedFilter: AppliedFilterComponent = ({ filter, propertyDefinition }) => {
+    // 获取选项配置
+    const options = (propertyDefinition.config?.options || []) as { id: string; name: string; color: string }[];
+    
+    // 根据操作符显示不同的格式
+    switch (filter.operator) {
+        case 'in':
+            // 值为选项ID数组
+            const selectedIds = filter.value as string[];
+            // 找出选中的选项
+            const selectedOptions = options.filter(option => selectedIds.includes(option.id));
+            
+            if (selectedOptions.length === 0) {
+                return <span>无选中选项</span>;
+            } else if (selectedOptions.length === 1) {
+                // 单个选项情况
+                const option = selectedOptions[0];
+                return (
+                    <span className="flex items-center">
+                        <span 
+                            className="inline-block w-2 h-2 rounded-full mr-1" 
+                            style={{ backgroundColor: option.color }} 
+                        />
+                        {option.name}
+                    </span>
+                );
+            } else if (selectedOptions.length <= 3) {
+                // 显示所有选中的选项名称（最多3个）
+                return (
+                    <span className="flex items-center flex-wrap gap-x-2">
+                        {selectedOptions.map(option => (
+                            <span key={option.id} className="flex items-center">
+                                <span 
+                                    className="inline-block w-2 h-2 rounded-full mr-1" 
+                                    style={{ backgroundColor: option.color }} 
+                                />
+                                {option.name}
+                            </span>
+                        ))}
+                    </span>
+                );
+            } else {
+                // 超过3个选项，显示前2个和数量提示
+                return (
+                    <span className="flex items-center flex-wrap gap-x-2">
+                        {selectedOptions.slice(0, 2).map(option => (
+                            <span key={option.id} className="flex items-center">
+                                <span 
+                                    className="inline-block w-2 h-2 rounded-full mr-1" 
+                                    style={{ backgroundColor: option.color }} 
+                                />
+                                {option.name}
+                            </span>
+                        ))}
+                        <span className="text-xs text-gray-500">
+                            +{selectedOptions.length - 2}
+                        </span>
+                    </span>
+                );
+            }
+        default:
+            return <span>{String(filter.value)}</span>;
+    }
+};
+
+/**
  * 针对不同属性类型的已应用筛选组件映射
  * 
  * 类似于表格单元格和筛选面板，可以为不同属性类型注册专门的展示组件
@@ -224,5 +294,7 @@ export const APPLIED_FILTER_COMPONENTS: Record<string, AppliedFilterComponent> =
     // 单选类型使用 SelectAppliedFilter 组件
     [PropertyType.SELECT]: SelectAppliedFilter,
     // 富文本类型使用 RichTextAppliedFilter 组件
-    [PropertyType.RICH_TEXT]: RichTextAppliedFilter
+    [PropertyType.RICH_TEXT]: RichTextAppliedFilter,
+    // 多选类型使用 MultiSelectAppliedFilter 组件
+    [PropertyType.MULTI_SELECT]: MultiSelectAppliedFilter
 }; 

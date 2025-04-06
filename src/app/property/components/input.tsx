@@ -7,6 +7,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import { FaBold, FaItalic, FaListUl, FaListOl, FaQuoteLeft, FaImage, FaUndo, FaRedo, FaHeading, FaCode } from 'react-icons/fa';
 import { MdCancel } from 'react-icons/md';
+import { PropertyType } from '../constants';
 
 // 属性值接口，与API接口保持一致
 export interface PropertyValue {
@@ -489,17 +490,193 @@ export const SelectPropertyInput = React.forwardRef<
 
 SelectPropertyInput.displayName = 'SelectPropertyInput';
 
-// // 属性输入组件映射表
-// export const PROPERTY_INPUT_COMPONENTS: Record<
-//     string,
-//     React.ForwardRefExoticComponent<
-//         PropertyInputProps & React.RefAttributes<{
-//             onSubmit: () => { isValid: boolean; propertyValue: PropertyValue | null }
-//         }>
-//     >
-// > = {
-//     [PropertyType.TEXT]: TextPropertyInput,
-//     [PropertyType.TEXTAREA]: TextareaPropertyInput,
-//     [PropertyType.SELECT]: SelectPropertyInput,
-//     // 可以扩展更多属性类型...
-// }; 
+// 多选属性输入组件
+export const MultiSelectPropertyInput = React.forwardRef<
+    { onSubmit: () => { isValid: boolean; propertyValue: PropertyValue | null } },
+    PropertyInputProps
+>((props, ref) => {
+    const { propertyDefinition } = props;
+
+    // 存储组件内部状态 - 多选值使用数组
+    const [selectedValues, setSelectedValues] = useState<string[]>([]);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [isHovering, setIsHovering] = useState(false);
+
+    // 从配置中获取选项
+    const options = (propertyDefinition.config?.options || []) as Array<{ id: string, name: string, color: string }>;
+
+    // 暴露onSubmit方法
+    useImperativeHandle(ref, () => ({
+        onSubmit: () => {
+            // 执行校验逻辑
+            const isRequired = propertyDefinition.config?.required === true;
+            const isValid: boolean = Boolean(!isRequired || (selectedValues.length > 0));
+
+            // 构造PropertyValue
+            return {
+                isValid,
+                propertyValue: isValid ? {
+                    property_id: propertyDefinition.id,
+                    value: selectedValues
+                } : null
+            };
+        }
+    }));
+
+    // 获取选中的选项
+    const selectedOptions = options.filter(option => selectedValues.includes(option.id));
+
+    // 处理选项选择
+    const handleSelectOption = (optionId: string) => {
+        setSelectedValues(prev => {
+            // 如果已经选中，则移除
+            if (prev.includes(optionId)) {
+                return prev.filter(id => id !== optionId);
+            }
+            // 否则添加
+            return [...prev, optionId];
+        });
+        // 注意：这里不关闭下拉框，允许用户继续选择多个选项
+    };
+
+    // 清除所有已选项
+    const handleClearAllOptions = (e: React.MouseEvent) => {
+        e.stopPropagation(); // 阻止事件冒泡，防止触发下拉框
+        setSelectedValues([]);
+    };
+
+    // 清除单个选项
+    const handleRemoveOption = (optionId: string, e: React.MouseEvent) => {
+        e.stopPropagation(); // 阻止事件冒泡
+        setSelectedValues(prev => prev.filter(id => id !== optionId));
+    };
+
+    // 切换下拉框显示状态
+    const toggleDropdown = () => {
+        setDropdownOpen(!dropdownOpen);
+    };
+
+    // 关闭下拉框的引用
+    const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+    // 点击外部关闭下拉框并保存选择
+    React.useEffect(() => {
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setDropdownOpen(false);
+                // 这里可以触发额外的保存逻辑，如果需要的话
+            }
+        };
+
+        document.addEventListener('mousedown', handleOutsideClick);
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+        };
+    }, []);
+
+    return (
+        <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 font-semibold whitespace-nowrap">{propertyDefinition.name}</span>
+            <div className="relative w-auto min-w-[120px] max-w-[240px]" ref={dropdownRef}>
+                <div
+                    className="flex items-center w-full min-h-[32px] px-3 py-1 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={toggleDropdown}
+                    onMouseEnter={() => setIsHovering(true)}
+                    onMouseLeave={() => setIsHovering(false)}
+                >
+                    {selectedOptions.length > 0 ? (
+                        <div className="flex flex-wrap w-full justify-between">
+                            <div className="flex flex-wrap items-center gap-1 max-w-full">
+                                {selectedOptions.map(option => (
+                                    <div 
+                                        key={option.id} 
+                                        className="flex items-center bg-gray-100 rounded-md px-2 py-0.5 m-0.5"
+                                    >
+                                        <span
+                                            className="inline-block w-2 h-2 rounded-full mr-1 flex-shrink-0"
+                                            style={{ backgroundColor: option.color }}
+                                        ></span>
+                                        <span className="text-xs truncate">{option.name}</span>
+                                        <button
+                                            className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors cursor-pointer"
+                                            onClick={(e) => handleRemoveOption(option.id, e)}
+                                            title="移除标签"
+                                        >
+                                            <MdCancel size={14} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            {isHovering && selectedOptions.length > 0 && (
+                                <button
+                                    className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors p-1 -mr-1 cursor-pointer flex-shrink-0"
+                                    onClick={handleClearAllOptions}
+                                    title="清除所有选择"
+                                >
+                                    <MdCancel size={16} />
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <span className="text-gray-400 text-sm">未选择</span>
+                    )}
+                </div>
+
+                {/* 下拉选项列表 */}
+                {dropdownOpen && (
+                    <div className="absolute z-10 mt-1 w-auto min-w-full max-w-[240px] bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        <div className="py-1">
+                            {options.map(option => (
+                                <div
+                                    key={option.id}
+                                    className={`px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center justify-between transition-colors ${
+                                        selectedValues.includes(option.id) ? 'bg-blue-50' : ''
+                                    }`}
+                                    onClick={() => handleSelectOption(option.id)}
+                                >
+                                    <div className="flex items-center">
+                                        <span
+                                            className="inline-block w-3 h-3 rounded-full mr-2 flex-shrink-0"
+                                            style={{ backgroundColor: option.color }}
+                                        ></span>
+                                        <span className="text-sm truncate">{option.name}</span>
+                                    </div>
+                                    {selectedValues.includes(option.id) && (
+                                        <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    )}
+                                </div>
+                            ))}
+
+                            {/* 无选项时的提示 */}
+                            {options.length === 0 && (
+                                <div className="px-4 py-2 text-gray-500 text-sm">
+                                    无可选选项
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+});
+
+MultiSelectPropertyInput.displayName = 'MultiSelectPropertyInput';
+
+// 属性输入组件映射表
+export const PROPERTY_INPUT_COMPONENTS: Record<
+    string,
+    React.ForwardRefExoticComponent<
+        PropertyInputProps & React.RefAttributes<{
+            onSubmit: () => { isValid: boolean; propertyValue: PropertyValue | null }
+        }>
+    >
+> = {
+    [PropertyType.TEXT]: TextPropertyInput,
+    [PropertyType.RICH_TEXT]: TextareaPropertyInput,
+    [PropertyType.SELECT]: SelectPropertyInput,
+    [PropertyType.MULTI_SELECT]: MultiSelectPropertyInput,
+    // 可以扩展更多属性类型...
+}; 
