@@ -136,7 +136,7 @@ export default function MinersPage() {
 // 生成模拟矿机数据的函数
 function generateMockMiners(): Miner[] {
   const now = Date.now();
-  
+
   return [
     {
       id: 'M001',

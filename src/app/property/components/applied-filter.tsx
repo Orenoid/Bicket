@@ -282,6 +282,102 @@ export const MultiSelectAppliedFilter: AppliedFilterComponent = ({ filter, prope
 };
 
 /**
+ * 矿机列表类型的已应用筛选组件
+ * 
+ * 显示矿机列表类型属性的筛选条件，支持多个矿机ID的展示
+ */
+export const MinersAppliedFilter: AppliedFilterComponent = ({ filter, propertyDefinition }) => {
+    // 模拟矿机状态信息 - 在实际应用中，这些信息应该从后端获取
+    const minerStatusMap: Record<string, { status: string; model: string; ipAddress: string }> = {
+        'M001': { status: '在线', model: 'Antminer S19 Pro', ipAddress: '192.168.1.101' },
+        'M002': { status: '过热警告', model: 'Whatsminer M30S++', ipAddress: '192.168.1.102' },
+        'M003': { status: '离线', model: 'Antminer S19j Pro', ipAddress: '192.168.2.101' },
+        'M004': { status: '在线', model: 'Avalon 1246', ipAddress: '192.168.2.102' },
+        'M005': { status: '在线', model: 'Antminer S19 XP', ipAddress: '192.168.3.101' },
+        'M006': { status: '在线', model: 'Whatsminer M30S', ipAddress: '192.168.3.102' }
+    };
+    
+    // 获取状态对应的样式类名
+    const getStatusStyle = (status: string) => {
+        switch (status) {
+            case '在线':
+                return 'bg-green-100 text-green-800';
+            case '离线':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-yellow-100 text-yellow-800';
+        }
+    };
+    
+    // 获取矿机的状态信息
+    const getMinerStatus = (minerId: string) => {
+        return minerStatusMap[minerId] || { status: '未知', model: '未知', ipAddress: '未知' };
+    };
+    
+    // 根据操作符显示不同的格式
+    switch (filter.operator) {
+        case 'in':
+            // 值为矿机ID数组
+            const selectedIds = filter.value as string[];
+            
+            if (selectedIds.length === 0) {
+                return <span>未选择矿机</span>;
+            } else if (selectedIds.length === 1) {
+                // 单个矿机情况
+                const minerId = selectedIds[0];
+                const minerInfo = getMinerStatus(minerId);
+                return (
+                    <span className="flex items-center">
+                        <span 
+                            className={`inline-block w-2 h-2 rounded-full mr-1 ${getStatusStyle(minerInfo.status)}`}
+                        />
+                        {minerId}
+                    </span>
+                );
+            } else if (selectedIds.length <= 3) {
+                // 显示所有选中的矿机ID（最多3个）
+                return (
+                    <span className="flex items-center flex-wrap gap-x-2">
+                        {selectedIds.map(minerId => {
+                            const minerInfo = getMinerStatus(minerId);
+                            return (
+                                <span key={minerId} className="flex items-center">
+                                    <span 
+                                        className={`inline-block w-2 h-2 rounded-full mr-1 ${getStatusStyle(minerInfo.status)}`}
+                                    />
+                                    {minerId}
+                                </span>
+                            );
+                        })}
+                    </span>
+                );
+            } else {
+                // 超过3个矿机，显示前2个和数量提示
+                return (
+                    <span className="flex items-center flex-wrap gap-x-2">
+                        {selectedIds.slice(0, 2).map(minerId => {
+                            const minerInfo = getMinerStatus(minerId);
+                            return (
+                                <span key={minerId} className="flex items-center">
+                                    <span 
+                                        className={`inline-block w-2 h-2 rounded-full mr-1 ${getStatusStyle(minerInfo.status)}`}
+                                    />
+                                    {minerId}
+                                </span>
+                            );
+                        })}
+                        <span className="text-xs text-gray-500">
+                            +{selectedIds.length - 2}
+                        </span>
+                    </span>
+                );
+            }
+        default:
+            return <span>{String(filter.value)}</span>;
+    }
+};
+
+/**
  * 针对不同属性类型的已应用筛选组件映射
  * 
  * 类似于表格单元格和筛选面板，可以为不同属性类型注册专门的展示组件
@@ -296,5 +392,7 @@ export const APPLIED_FILTER_COMPONENTS: Record<string, AppliedFilterComponent> =
     // 富文本类型使用 RichTextAppliedFilter 组件
     [PropertyType.RICH_TEXT]: RichTextAppliedFilter,
     // 多选类型使用 MultiSelectAppliedFilter 组件
-    [PropertyType.MULTI_SELECT]: MultiSelectAppliedFilter
+    [PropertyType.MULTI_SELECT]: MultiSelectAppliedFilter,
+    // 矿机列表类型使用 MinersAppliedFilter 组件
+    [PropertyType.MINERS]: MinersAppliedFilter
 }; 

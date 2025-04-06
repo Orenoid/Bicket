@@ -567,3 +567,262 @@ export const MultiSelectPropertyDetail: React.FC<PropertyDetailProps> = ({
     );
 };
 
+/**
+ * 矿机列表属性详情组件
+ * 
+ * 用于显示和编辑与工单关联的矿机列表，支持多选模式
+ */
+export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
+    propertyDefinition,
+    value,
+    onUpdate
+}) => {
+    // 状态管理
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isHovering, setIsHovering] = useState(false);
+    const [selectedMiners, setSelectedMiners] = useState<string[]>([]);
+    
+    // 下拉框引用，用于检测点击外部关闭
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    
+    // 模拟矿机列表数据 - 实际应用中应该从API获取
+    const miners = [
+        { id: 'M001', model: 'Antminer S19 Pro', status: '在线', ipAddress: '192.168.1.101' },
+        { id: 'M002', model: 'Whatsminer M30S++', status: '过热警告', ipAddress: '192.168.1.102' },
+        { id: 'M003', model: 'Antminer S19j Pro', status: '离线', ipAddress: '192.168.2.101' },
+        { id: 'M004', model: 'Avalon 1246', status: '在线', ipAddress: '192.168.2.102' },
+        { id: 'M005', model: 'Antminer S19 XP', status: '在线', ipAddress: '192.168.3.101' },
+        { id: 'M006', model: 'Whatsminer M30S', status: '在线', ipAddress: '192.168.3.102' }
+    ];
+    
+    // 当属性值变化时更新内部状态
+    useEffect(() => {
+        if (value === null || value === undefined) {
+            setSelectedMiners([]);
+        } else if (Array.isArray(value)) {
+            setSelectedMiners(value.map(v => String(v)));
+        } else {
+            // 单个值情况，转为数组
+            setSelectedMiners([String(value)]);
+        }
+    }, [value]);
+    
+    // 获取已选中的矿机信息
+    const selectedMinersInfo = miners.filter(miner => selectedMiners.includes(miner.id));
+    
+    // 获取状态对应的样式
+    const getStatusStyle = (status: string) => {
+        switch (status) {
+            case '在线':
+                return 'bg-green-100 text-green-800';
+            case '离线':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-yellow-100 text-yellow-800';
+        }
+    };
+    
+    // 处理选择矿机
+    const handleSelectMiner = async (minerId: string) => {
+        // 检查是否已选中
+        const isAlreadySelected = selectedMiners.includes(minerId);
+        
+        if (isAlreadySelected) {
+            // 若已选中，则从选中列表中移除
+            const newValues = selectedMiners.filter(id => id !== minerId);
+            
+            if (onUpdate) {
+                if (newValues.length === 0) {
+                    // 如果没有选中项，则使用REMOVE操作
+                    const operation = createRemoveOperation(propertyDefinition.id);
+                    const success = await onUpdate(operation);
+                    if (success) {
+                        setSelectedMiners([]);
+                    }
+                } else {
+                    // 否则更新选中项列表
+                    const operation = createUpdateOperation(propertyDefinition.id, newValues);
+                    const success = await onUpdate(operation);
+                    if (success) {
+                        setSelectedMiners(newValues);
+                    }
+                }
+            } else {
+                setSelectedMiners(newValues);
+            }
+        } else {
+            // 若未选中，则添加到选中列表
+            const newValues = [...selectedMiners, minerId];
+            
+            if (onUpdate) {
+                // 使用UPDATE操作更新整个列表
+                const operation = createUpdateOperation(propertyDefinition.id, newValues);
+                const success = await onUpdate(operation);
+                if (success) {
+                    setSelectedMiners(newValues);
+                }
+            } else {
+                setSelectedMiners(newValues);
+            }
+        }
+    };
+    
+    // 处理清除所有矿机
+    const handleClearAllMiners = async (e: React.MouseEvent) => {
+        e.stopPropagation(); // 阻止事件冒泡，防止触发下拉框
+        
+        if (onUpdate) {
+            // 使用REMOVE操作
+            const operation = createRemoveOperation(propertyDefinition.id);
+            const success = await onUpdate(operation);
+            if (success) {
+                setSelectedMiners([]);
+            }
+        } else {
+            setSelectedMiners([]);
+        }
+    };
+    
+    // 处理删除单个矿机
+    const handleRemoveMiner = async (minerId: string, e: React.MouseEvent) => {
+        e.stopPropagation(); // 阻止事件冒泡，防止触发下拉框
+        
+        // 从选中列表中移除
+        const newValues = selectedMiners.filter(id => id !== minerId);
+        
+        if (onUpdate) {
+            if (newValues.length === 0) {
+                // 如果没有选中项，则使用REMOVE操作
+                const operation = createRemoveOperation(propertyDefinition.id);
+                const success = await onUpdate(operation);
+                if (success) {
+                    setSelectedMiners([]);
+                }
+            } else {
+                // 否则更新选中项列表
+                const operation = createUpdateOperation(propertyDefinition.id, newValues);
+                const success = await onUpdate(operation);
+                if (success) {
+                    setSelectedMiners(newValues);
+                }
+            }
+        } else {
+            setSelectedMiners(newValues);
+        }
+    };
+    
+    // 切换下拉框显示状态
+    const toggleDropdown = () => {
+        setIsDropdownOpen(!isDropdownOpen);
+    };
+    
+    // 点击外部关闭下拉框
+    useEffect(() => {
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false);
+            }
+        };
+        
+        document.addEventListener('mousedown', handleOutsideClick);
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+        };
+    }, []);
+    
+    return (
+        <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 font-semibold whitespace-nowrap">{propertyDefinition.name}</span>
+            <div className="relative w-auto min-w-[120px] max-w-[320px]" ref={dropdownRef}>
+                {/* 触发下拉框的按钮/显示区域 */}
+                <div
+                    className="flex items-center w-full min-h-[32px] px-3 py-1 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={toggleDropdown}
+                    onMouseEnter={() => setIsHovering(true)}
+                    onMouseLeave={() => setIsHovering(false)}
+                >
+                    {selectedMinersInfo.length > 0 ? (
+                        <div className="flex flex-wrap items-center w-full gap-1">
+                            {/* 显示选中的矿机标签 */}
+                            <div className="flex flex-wrap items-center gap-1 max-w-full">
+                                {selectedMinersInfo.map(miner => (
+                                    <div 
+                                        key={miner.id}
+                                        className="flex items-center bg-gray-100 rounded-full px-2 py-0.5 max-w-[140px] group"
+                                        title={`${miner.model} - ${miner.status} - ${miner.ipAddress}`}
+                                    >
+                                        <span
+                                            className={`inline-block w-2 h-2 rounded-full mr-1 flex-shrink-0 ${getStatusStyle(miner.status)}`}
+                                        ></span>
+                                        <span className="text-xs truncate">{miner.id}</span>
+                                        <button
+                                            className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+                                            onClick={(e) => handleRemoveMiner(miner.id, e)}
+                                            title="移除此矿机"
+                                        >
+                                            <MdCancel size={14} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            {/* 清除所有按钮 */}
+                            {isHovering && selectedMinersInfo.length > 0 && (
+                                <button
+                                    className="ml-auto text-gray-400 hover:text-gray-600 focus:outline-none transition-colors p-1 -mr-1 cursor-pointer shrink-0"
+                                    onClick={handleClearAllMiners}
+                                    title="清除所有矿机"
+                                >
+                                    <MdCancel size={16} />
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <span className="text-gray-400 text-sm">未选择矿机</span>
+                    )}
+                </div>
+                
+                {/* 下拉选项列表 */}
+                {isDropdownOpen && (
+                    <div className="absolute z-10 mt-1 w-auto min-w-full max-w-[320px] bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        <div className="py-1">
+                            {miners.map(miner => (
+                                <div
+                                    key={miner.id}
+                                    className={`px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center transition-colors ${selectedMiners.includes(miner.id) ? 'bg-gray-50' : ''}`}
+                                    onClick={() => handleSelectMiner(miner.id)}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedMiners.includes(miner.id)}
+                                        readOnly
+                                        className="mr-2"
+                                    />
+                                    <div>
+                                        <div className="flex items-center">
+                                            <span
+                                                className={`inline-block w-3 h-3 rounded-full mr-2 flex-shrink-0 ${getStatusStyle(miner.status)}`}
+                                            ></span>
+                                            <span className="text-sm font-medium">{miner.id}</span>
+                                        </div>
+                                        <div className="text-xs text-gray-500 ml-5">
+                                            {miner.model} - {miner.ipAddress}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                            
+                            {/* 无矿机时的提示 */}
+                            {miners.length === 0 && (
+                                <div className="px-4 py-2 text-gray-500 text-sm">
+                                    无可选矿机
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+

@@ -640,6 +640,150 @@ export const MultiSelectFilterConstructorPanel: FilterConstructorComponent = ({
 };
 
 /**
+ * 矿机列表类型筛选构造器面板组件
+ * 
+ * 用于矿机列表类型属性的筛选条件设置，用户可以选择多个矿机ID进行筛选
+ */
+export const MinersFilterConstructorPanel: FilterConstructorComponent = ({
+    propertyDefinition,
+    currentFilter,
+    onApply,
+    onCancel,
+    position = {}
+}) => {
+    // 模拟矿机列表数据 - 实际应用中应该从API获取
+    const miners = [
+        { id: 'M001', model: 'Antminer S19 Pro', status: '在线', ipAddress: '192.168.1.101' },
+        { id: 'M002', model: 'Whatsminer M30S++', status: '过热警告', ipAddress: '192.168.1.102' },
+        { id: 'M003', model: 'Antminer S19j Pro', status: '离线', ipAddress: '192.168.2.101' },
+        { id: 'M004', model: 'Avalon 1246', status: '在线', ipAddress: '192.168.2.102' },
+        { id: 'M005', model: 'Antminer S19 XP', status: '在线', ipAddress: '192.168.3.101' },
+        { id: 'M006', model: 'Whatsminer M30S', status: '在线', ipAddress: '192.168.3.102' }
+    ];
+    
+    // 选中的矿机IDs - 始终使用in操作符和数组值
+    const [selectedMiners, setSelectedMiners] = useState<string[]>(
+        currentFilter?.operator === 'in' && Array.isArray(currentFilter.value)
+            ? currentFilter.value as string[]
+            : []
+    );
+
+    // 获取状态对应的样式
+    const getStatusStyle = (status: string) => {
+        switch (status) {
+            case '在线':
+                return 'bg-green-100 text-green-800';
+            case '离线':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-yellow-100 text-yellow-800';
+        }
+    };
+
+    // 处理矿机选择
+    const handleMinerToggle = (minerId: string) => {
+        // 多选模式，切换选中状态
+        setSelectedMiners(prev => 
+            prev.includes(minerId)
+                ? prev.filter(id => id !== minerId)
+                : [...prev, minerId]
+        );
+    };
+
+    // 应用筛选条件
+    const handleApply = () => {
+        if (selectedMiners.length > 0) {
+            // 多选模式，使用in操作符
+            onApply({
+                propertyId: propertyDefinition.id,
+                propertyType: propertyDefinition.type,
+                operator: 'in',
+                value: selectedMiners
+            });
+        } else {
+            // 没有选择任何矿机，等同于清除筛选
+            onApply(null);
+        }
+    };
+
+    // 清除筛选条件
+    const handleClear = () => {
+        onApply(null);
+    };
+
+    return (
+        <div className="absolute z-20 bg-white border border-gray-200 rounded-md shadow-lg p-3 w-64"
+             style={{ ...position }}>
+            {/* 面板标题 */}
+            <div className="text-xs font-medium text-gray-500 border-b border-gray-100 pb-2 mb-3">
+                {propertyDefinition.name}
+            </div>
+
+            {/* 矿机列表 */}
+            {miners.length > 0 ? (
+                <div className="mb-3 max-h-48 overflow-y-auto">
+                    <div className="space-y-1">
+                        {miners.map(miner => (
+                            <div
+                                key={miner.id}
+                                className="flex items-center px-2 py-1 rounded hover:bg-gray-50 cursor-pointer"
+                                onClick={() => handleMinerToggle(miner.id)}
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={selectedMiners.includes(miner.id)}
+                                    readOnly
+                                    className="mr-2"
+                                />
+                                <div className="flex items-center">
+                                    <span
+                                        className={`inline-block w-3 h-3 rounded-full mr-2 ${getStatusStyle(miner.status)}`}
+                                    />
+                                    <span className="text-sm">{miner.id}</span>
+                                    <span className="text-xs text-gray-500 ml-2">({miner.model})</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                <div className="text-sm text-gray-500 mb-3">
+                    无可选矿机
+                </div>
+            )}
+            
+            {/* 操作按钮 */}
+            <div className="flex justify-between mt-3 pt-2 border-t border-gray-100">
+                <div>
+                    {currentFilter && (
+                        <button
+                            onClick={handleClear}
+                            className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
+                        >
+                            清除
+                        </button>
+                    )}
+                </div>
+                <div className="flex space-x-2">
+                    <button
+                        onClick={onCancel}
+                        className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
+                    >
+                        取消
+                    </button>
+                    <button
+                        onClick={handleApply}
+                        className="px-3 py-1 text-xs bg-gray-700 text-white border border-gray-600 rounded hover:bg-gray-800"
+                    >
+                        应用
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+/**
  * 筛选构造器面板组件映射表
  * 
  * 各属性类型的筛选面板组件应该注册到这里
@@ -655,6 +799,8 @@ export const FILTER_CONSTRUCTOR_PANELS: Record<string, FilterConstructorComponen
     [PropertyType.RICH_TEXT]: RichTextFilterConstructorPanel,
     // 注册多选筛选面板组件
     [PropertyType.MULTI_SELECT]: MultiSelectFilterConstructorPanel,
+    // 注册矿机列表筛选面板组件
+    [PropertyType.MINERS]: MinersFilterConstructorPanel,
 };
 
 /**

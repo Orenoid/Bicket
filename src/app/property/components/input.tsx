@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useImperativeHandle } from 'react';
+import React, { useState, useImperativeHandle, useEffect } from 'react';
 import { PropertyDefinition } from '@/app/issue/components/IssuePage';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -19,6 +19,15 @@ export interface PropertyValue {
 export interface PropertyInputProps {
     // 基础属性信息
     propertyDefinition: PropertyDefinition;  // 包含 id, name, type, config 等
+}
+
+// 矿机类型定义
+export interface Miner {
+    id: string;                // 矿机 ID
+    model: string;             // 矿机型号
+    manufacturer: string;      // 制造商
+    status: string;            // 矿机状态
+    ipAddress: string;         // IP 地址
 }
 
 // 文本属性输入组件
@@ -665,6 +674,245 @@ export const MultiSelectPropertyInput = React.forwardRef<
 
 MultiSelectPropertyInput.displayName = 'MultiSelectPropertyInput';
 
+// 矿机列表属性输入组件
+export const MinersPropertyInput = React.forwardRef<
+    { onSubmit: () => { isValid: boolean; propertyValue: PropertyValue | null } },
+    PropertyInputProps
+>((props, ref) => {
+    const { propertyDefinition } = props;
+
+    // 存储组件内部状态 - 多选值使用数组
+    const [selectedMiners, setSelectedMiners] = useState<string[]>([]);
+    const [availableMiners, setAvailableMiners] = useState<Miner[]>([]);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [isHovering, setIsHovering] = useState(false);
+
+    // 模拟获取矿机列表数据
+    useEffect(() => {
+        // 模拟延迟加载
+        const fetchMiners = () => {
+            // 在实际应用中，这里会从 API 获取矿机列表
+            // 这里使用了硬编码的模拟数据
+            const mockMiners = [
+                {
+                    id: 'M001',
+                    model: 'Antminer S19 Pro',
+                    manufacturer: 'Bitmain',
+                    status: '在线',
+                    ipAddress: '192.168.1.101',
+                },
+                {
+                    id: 'M002',
+                    model: 'Whatsminer M30S++',
+                    manufacturer: 'MicroBT',
+                    status: '过热警告',
+                    ipAddress: '192.168.1.102',
+                },
+                {
+                    id: 'M003',
+                    model: 'Antminer S19j Pro',
+                    manufacturer: 'Bitmain',
+                    status: '离线',
+                    ipAddress: '192.168.2.101',
+                },
+                {
+                    id: 'M004',
+                    model: 'Avalon 1246',
+                    manufacturer: 'Canaan',
+                    status: '在线',
+                    ipAddress: '192.168.2.102',
+                },
+                {
+                    id: 'M005',
+                    model: 'Antminer S19 XP',
+                    manufacturer: 'Bitmain',
+                    status: '在线',
+                    ipAddress: '192.168.3.101',
+                },
+                {
+                    id: 'M006',
+                    model: 'Whatsminer M30S',
+                    manufacturer: 'MicroBT',
+                    status: '在线',
+                    ipAddress: '192.168.3.102',
+                }
+            ];
+            setAvailableMiners(mockMiners);
+        };
+
+        fetchMiners();
+    }, []);
+
+    // 暴露onSubmit方法
+    useImperativeHandle(ref, () => ({
+        onSubmit: () => {
+            // 执行校验逻辑
+            const isRequired = propertyDefinition.config?.required === true;
+            const isValid: boolean = Boolean(!isRequired || (selectedMiners.length > 0));
+
+            // 构造PropertyValue
+            return {
+                isValid,
+                propertyValue: isValid ? {
+                    property_id: propertyDefinition.id,
+                    value: selectedMiners
+                } : null
+            };
+        }
+    }));
+
+    // 获取选中的矿机
+    const selectedMinersData = availableMiners.filter(miner => selectedMiners.includes(miner.id));
+
+    // 获取状态对应的样式
+    const getStatusStyle = (status: string) => {
+        switch (status) {
+            case '在线':
+                return 'bg-green-100 text-green-800';
+            case '离线':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-yellow-100 text-yellow-800';
+        }
+    };
+
+    // 处理矿机选择
+    const handleSelectMiner = (minerId: string) => {
+        setSelectedMiners(prev => {
+            // 如果已经选中，则移除
+            if (prev.includes(minerId)) {
+                return prev.filter(id => id !== minerId);
+            }
+            // 否则添加
+            return [...prev, minerId];
+        });
+        // 注意：这里不关闭下拉框，允许用户继续选择多个矿机
+    };
+
+    // 清除所有已选矿机
+    const handleClearAllMiners = (e: React.MouseEvent) => {
+        e.stopPropagation(); // 阻止事件冒泡，防止触发下拉框
+        setSelectedMiners([]);
+    };
+
+    // 清除单个矿机
+    const handleRemoveMiner = (minerId: string, e: React.MouseEvent) => {
+        e.stopPropagation(); // 阻止事件冒泡
+        setSelectedMiners(prev => prev.filter(id => id !== minerId));
+    };
+
+    // 切换下拉框显示状态
+    const toggleDropdown = () => {
+        setDropdownOpen(!dropdownOpen);
+    };
+
+    // 关闭下拉框的引用
+    const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+    // 点击外部关闭下拉框并保存选择
+    React.useEffect(() => {
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setDropdownOpen(false);
+                // 这里可以触发额外的保存逻辑，如果需要的话
+            }
+        };
+
+        document.addEventListener('mousedown', handleOutsideClick);
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+        };
+    }, []);
+
+    return (
+        <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 font-semibold whitespace-nowrap">{propertyDefinition.name}</span>
+            <div className="relative w-auto min-w-[120px] max-w-[240px]" ref={dropdownRef}>
+                <div
+                    className="flex items-center w-full min-h-[32px] px-3 py-1 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={toggleDropdown}
+                    onMouseEnter={() => setIsHovering(true)}
+                    onMouseLeave={() => setIsHovering(false)}
+                >
+                    {selectedMinersData.length > 0 ? (
+                        <div className="flex flex-wrap w-full justify-between">
+                            <div className="flex flex-wrap items-center gap-1 max-w-full">
+                                {selectedMinersData.map(miner => (
+                                    <div 
+                                        key={miner.id} 
+                                        className="flex items-center bg-gray-100 rounded-md px-2 py-0.5 m-0.5"
+                                    >
+                                        <span
+                                            className={`inline-block w-2 h-2 rounded-full mr-1 flex-shrink-0 ${getStatusStyle(miner.status)}`}
+                                        ></span>
+                                        <span className="text-xs truncate">{miner.id}</span>
+                                        <button
+                                            className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors cursor-pointer"
+                                            onClick={(e) => handleRemoveMiner(miner.id, e)}
+                                            title="移除矿机"
+                                        >
+                                            <MdCancel size={14} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            {isHovering && selectedMinersData.length > 0 && (
+                                <button
+                                    className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors p-1 -mr-1 cursor-pointer flex-shrink-0"
+                                    onClick={handleClearAllMiners}
+                                    title="清除所有选择"
+                                >
+                                    <MdCancel size={16} />
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <span className="text-gray-400 text-sm">未选择矿机</span>
+                    )}
+                </div>
+
+                {/* 下拉选项列表 */}
+                {dropdownOpen && (
+                    <div className="absolute z-10 mt-1 w-auto min-w-full max-w-[240px] bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        <div className="py-1">
+                            {availableMiners.map(miner => (
+                                <div
+                                    key={miner.id}
+                                    className={`px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center justify-between transition-colors ${
+                                        selectedMiners.includes(miner.id) ? 'bg-blue-50' : ''
+                                    }`}
+                                    onClick={() => handleSelectMiner(miner.id)}
+                                >
+                                    <div className="flex items-center">
+                                        <span
+                                            className={`inline-block w-3 h-3 rounded-full mr-2 flex-shrink-0 ${getStatusStyle(miner.status)}`}
+                                        ></span>
+                                        <span className="text-sm truncate">{miner.id}</span>
+                                    </div>
+                                    {selectedMiners.includes(miner.id) && (
+                                        <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    )}
+                                </div>
+                            ))}
+
+                            {/* 无选项时的提示 */}
+                            {availableMiners.length === 0 && (
+                                <div className="px-4 py-2 text-gray-500 text-sm">
+                                    无可选矿机
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+});
+
+MinersPropertyInput.displayName = 'MinersPropertyInput';
+
 // 属性输入组件映射表
 export const PROPERTY_INPUT_COMPONENTS: Record<
     string,
@@ -678,5 +926,6 @@ export const PROPERTY_INPUT_COMPONENTS: Record<
     [PropertyType.RICH_TEXT]: TextareaPropertyInput,
     [PropertyType.SELECT]: SelectPropertyInput,
     [PropertyType.MULTI_SELECT]: MultiSelectPropertyInput,
+    [PropertyType.MINERS]: MinersPropertyInput,
     // 可以扩展更多属性类型...
 }; 

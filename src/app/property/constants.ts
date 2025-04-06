@@ -12,6 +12,7 @@ export enum SystemPropertyId {
     CATEGORY = 'property0008',       // 工单类别
     DIAGNOSIS = 'property0009',      // 工单诊断
     LABEL = 'property0010',          // 工单标签
+    MINERS = 'property0011',         // 矿机列表
 }
 
 
@@ -29,6 +30,7 @@ export enum PropertyType {
     USER = 'user',           // 用户类型
     RELATIONSHIP = 'relationship', // 关联类型
     RICH_TEXT = 'rich_text', // 富文本类型
+    MINERS = 'miners',       // 矿机列表类型
 }
 
 /**
@@ -45,6 +47,7 @@ export const PROPERTY_ID_TYPE_MAP = {
     [SystemPropertyId.CATEGORY]: PropertyType.SELECT,
     [SystemPropertyId.DIAGNOSIS]: PropertyType.SELECT,
     [SystemPropertyId.LABEL]: PropertyType.MULTI_SELECT,
+    [SystemPropertyId.MINERS]: PropertyType.MINERS,
 };
 
 /**

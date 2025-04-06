@@ -66,6 +66,8 @@ export class PropertyProcessorFactory {
         return new RichTextPropertyProcessor();
       case PropertyType.MULTI_SELECT:
         return new MultiSelectPropertyProcessor();
+      case PropertyType.MINERS:
+        return new MinersPropertyProcessor();
       default:
         throw new Error(`不支持的属性类型: ${propertyType}`);
     }
@@ -528,6 +530,119 @@ export class MultiSelectPropertyProcessor extends BasePropertyProcessor {
         issueId,
         property.id,
         PropertyType.MULTI_SELECT,
+        String(item),
+        index,
+        null
+      );
+    });
+    
+    return { multiValues };
+  }
+}
+
+/**
+ * 矿机列表类型属性处理器
+ */
+export class MinersPropertyProcessor extends BasePropertyProcessor {
+  validateFormat(property: property, value: unknown): ValidationResult {
+    // 检查值是否为可用值
+    if (value === null || value === undefined) {
+      // 如果属性不允许为 null，则返回错误
+      if (!property.nullable) {
+        return {
+          valid: false,
+          errors: [`属性 ${property.name} 不能为空`]
+        };
+      }
+      return { valid: true };
+    }
+
+    // 矿机列表值应该是数组
+    if (!Array.isArray(value)) {
+      return {
+        valid: false,
+        errors: [`属性 ${property.name} 必须是数组类型`]
+      };
+    }
+
+    // 数组中的每个值应该是字符串或数字（矿机ID）
+    for (let i = 0; i < value.length; i++) {
+      const item = value[i];
+      if (typeof item !== 'string' && typeof item !== 'number') {
+        return {
+          valid: false,
+          errors: [`属性 ${property.name} 的第 ${i+1} 个矿机ID必须是字符串或数字类型`]
+        };
+      }
+    }
+
+    return { valid: true };
+  }
+
+  validateBusinessRules(property: property, value: unknown): ValidationResult {
+    // 如果值为 null 而且允许为 null，通过验证
+    if ((value === null || value === undefined) && property.nullable) {
+      return { valid: true };
+    }
+
+    // 空数组检查
+    if (Array.isArray(value) && value.length === 0 && !property.nullable) {
+      return {
+        valid: false,
+        errors: [`属性 ${property.name} 不能为空`]
+      };
+    }
+
+    // 转换为数组
+    const valueArray = Array.isArray(value) ? value : [value];
+    
+    // 检查是否有重复选项
+    const uniqueValues = new Set(valueArray.map(item => String(item)));
+    if (uniqueValues.size !== valueArray.length) {
+      return {
+        valid: false,
+        errors: [`属性 ${property.name} 包含重复矿机ID`]
+      };
+    }
+
+    // 获取配置信息
+    const config = property.config as Record<string, unknown> | undefined;
+    
+    // 检查是否超过最大选择数
+    if (config && typeof config.maxSelect === 'number' && valueArray.length > config.maxSelect) {
+      return {
+        valid: false,
+        errors: [`属性 ${property.name} 最多只能选择 ${config.maxSelect} 个矿机`]
+      };
+    }
+
+    // 这里可以添加验证矿机ID是否存在的逻辑
+    // 在实际应用中，可能需要调用矿机相关的API或数据库查询来验证
+    // 为了简化，这里假设所有传入的ID都是有效的
+    
+    return { valid: true };
+  }
+
+  transformToDbFormat(property: property, value: unknown, issueId: string): DbInsertData {
+    // 如果值为 null 而且允许为 null，存储 null
+    if ((value === null || value === undefined) && property.nullable) {
+      return { multiValues: [] };
+    }
+
+    // 空数组时返回空结果
+    if (Array.isArray(value) && value.length === 0) {
+      return { multiValues: [] };
+    }
+
+    // 转换为数组并存储
+    const valueArray = Array.isArray(value) ? value : [value];
+    
+    // 创建多值属性数据
+    const multiValues = valueArray.map((item, index) => {
+      return this.createMultiValue(
+        issueId,
+        property.id,
+        PropertyType.MINERS,
         String(item),
         index,
         null

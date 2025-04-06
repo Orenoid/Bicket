@@ -1,7 +1,7 @@
 'use client';
 
 import { SecondaryButton } from '../../components/ui/buttons';
-import { SelectPropertyDetail, TitlePropertyDetail, MultiSelectPropertyDetail } from '@/app/property/components/detail';
+import { SelectPropertyDetail, TitlePropertyDetail, MultiSelectPropertyDetail, MinersPropertyDetail } from '@/app/property/components/detail';
 import { SystemPropertyId } from '@/app/property/constants';
 
 // 从IssuePage.tsx导入需要的接口
@@ -40,6 +40,8 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
     const diagnosisProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.DIAGNOSIS);
     // 获取标签属性
     const labelProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.LABEL);
+    // 获取矿机列表属性
+    const minersProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.MINERS);
 
     // 获取标题属性值
     const getTitleValue = () => {
@@ -75,6 +77,12 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
     const getLabelValue = () => {
         const labelPropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.LABEL);
         return labelPropertyValue ? labelPropertyValue.value : null;
+    };
+
+    // 获取矿机列表属性值
+    const getMinersValue = () => {
+        const minersPropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.MINERS);
+        return minersPropertyValue ? minersPropertyValue.value : null;
     };
 
     // 处理属性更新
@@ -181,6 +189,14 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
                             <SelectPropertyDetail
                                 propertyDefinition={diagnosisProperty}
                                 value={getDiagnosisValue()}
+                                onUpdate={handlePropertyUpdate}
+                            />
+                        )}
+                        {/* 矿机列表属性组件 */}
+                        {minersProperty && (
+                            <MinersPropertyDetail
+                                propertyDefinition={minersProperty}
+                                value={getMinersValue()}
                                 onUpdate={handlePropertyUpdate}
                             />
                         )}
