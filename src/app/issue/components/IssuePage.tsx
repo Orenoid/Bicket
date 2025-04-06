@@ -16,6 +16,7 @@ import {
     APPLIED_FILTER_COMPONENTS
 } from '@/app/property/components/applied-filter';
 import { CreateIssuePanel } from './CreateIssuePanel';
+import { IssueDetailPanel } from './IssueDetailPanel';
 
 // 数据类型
 export interface PropertyValue {
@@ -76,6 +77,10 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
 
     // 新增：控制新建issue面板的显示状态
     const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
+    
+    // 新增：控制详情面板的显示状态和当前选中的issue
+    const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
+    const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
 
     // 刷新issue列表函数
     const refreshIssueList = () => {
@@ -261,6 +266,12 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
         });
     };
 
+    // 新增：行点击处理函数
+    const handleRowClick = (issue: Record<string, unknown>) => {
+        setSelectedIssue(issue as unknown as Issue);
+        setIsDetailPanelOpen(true);
+    };
+
     return (
         <div className="p-8">
             {/* 工具栏 */}
@@ -312,6 +323,7 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
                         data={issues as unknown as Record<string, unknown>[]}
                         renderHeader={renderHeader}
                         renderCell={renderCell}
+                        onRowClick={handleRowClick}
                     />
                     {/* 数据统计 */}
                     <div className="mt-4 text-sm text-gray-500">
@@ -335,6 +347,23 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
                         onClose={() => setIsCreatePanelOpen(false)} 
                         propertyDefinitions={propertyDefinitions}
                         onCreateSuccess={refreshIssueList} 
+                    />
+                </>
+            )}
+
+            {/* 新增：issue详情面板 */}
+            {isDetailPanelOpen && selectedIssue && (
+                <>
+                    {/* 白色半透明遮罩 */}
+                    <div
+                        className="fixed inset-0 z-40"
+                        style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                        onClick={() => setIsDetailPanelOpen(false)}
+                    />
+                    <IssueDetailPanel 
+                        onClose={() => setIsDetailPanelOpen(false)} 
+                        issue={selectedIssue}
+                        propertyDefinitions={propertyDefinitions}
                     />
                 </>
             )}

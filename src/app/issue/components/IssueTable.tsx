@@ -27,6 +27,7 @@ export interface IssueTableProps {
     data: Record<string, unknown>[];
     renderHeader?: (column: TableColumn) => React.ReactNode;
     renderCell?: (column: TableColumn, rowData: Record<string, unknown>, rowIndex: number) => React.ReactNode;
+    onRowClick?: (rowData: Record<string, unknown>) => void;
 }
 
 // 表格框架组件
@@ -34,7 +35,8 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     columns, 
     data, 
     renderHeader = (col) => col.title, 
-    renderCell = () => null
+    renderCell = () => null,
+    onRowClick
 }) => {
     // 处理列宽
     const getColumnWidth = (column: TableColumn) => {
@@ -127,7 +129,8 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                             {table.getRowModel().rows.map((row) => (
                                 <tr 
                                     key={row.id}
-                                    className="hover:bg-gray-50 transition-colors"
+                                    className="hover:bg-gray-50 transition-colors cursor-pointer"
+                                    onClick={() => onRowClick && onRowClick(row.original)}
                                 >
                                     {row.getVisibleCells().map((cell, colIndex) => (
                                         <td 
