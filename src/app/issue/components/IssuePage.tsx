@@ -8,18 +8,20 @@ import {
     PROPERTY_CELL_COMPONENTS
 } from '../../property/components/table';
 import { FilterCondition } from '@/app/property/types';
-import { FiFilter } from 'react-icons/fi';
+import { FiFilter, FiPlus } from 'react-icons/fi';
 import { DropDownMenuV2 } from '../../components/ui/dropdownMenu';
+import { PrimaryButton, SecondaryButton, ButtonGroup } from '../../components/ui/buttons';
 import { FilterConstructorPanel } from '@/app/property/components/filter-construction';
 import {
     AppliedFilterWrapper,
     APPLIED_FILTER_COMPONENTS
 } from '@/app/property/components/applied-filter';
+import { PropertyValue as InputPropertyValue, SelectPropertyInput, TextareaPropertyInput, TextPropertyInput } from '@/app/property/components/input';
+import { SystemPropertyId } from '@/app/property/constants';
 
 // 数据类型
 export interface PropertyValue {
     property_id: string;
-    property_type: string;
     value: unknown;
 }
 
@@ -55,15 +57,135 @@ function serializeFilters(filters: FilterCondition[]): string {
         } else {
             valueStr = String(filter.value);
         }
-        
+
         return `${filter.propertyId}:${filter.propertyType}:${filter.operator}:${encodeURIComponent(valueStr)}`;
     }).join(';');
 }
 
+// 新建issue面板组件
+const CreateIssuePanel = ({ onClose, propertyDefinitions }: {
+    onClose: () => void;
+    propertyDefinitions: PropertyDefinition[];
+}) => {
+    // 存储属性组件引用，用于调用onSubmit方法
+    const propertyInputRefs = useRef<Record<string, {
+        onSubmit: () => { isValid: boolean; propertyValue: InputPropertyValue | null }
+    }>>({});
+    // 注册属性组件引用
+    const registerPropertyRef = (propertyId: string, ref: {
+        onSubmit: () => { isValid: boolean; propertyValue: InputPropertyValue | null }
+    } | null) => {
+        if (ref) {
+            propertyInputRefs.current[propertyId] = ref;
+        }
+    };
+
+    // 处理提交
+    const handleSubmit = async () => {
+        // 收集所有属性的校验结果和构造的PropertyValue
+        const submitResults = Object.values(propertyInputRefs.current).map(ref => {
+            return ref.onSubmit();
+        });
+
+        // 检查是否所有属性都有效
+        const allValid = submitResults.every(result => result.isValid);
+        if (!allValid) {
+            // 如果有无效的属性，阻止提交
+            return;
+        }
+
+        // 收集有效的PropertyValue对象
+        const validPropertyValues = submitResults
+            .filter(result => result.isValid && result.propertyValue)
+            .map(result => result.propertyValue) as InputPropertyValue[];
+
+        try {
+            // 调用API创建issue
+            const response = await fetch('/api/issue', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    propertyValues: validPropertyValues
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // 创建成功，关闭面板
+                onClose();
+                // 可以添加成功提示或刷新列表的逻辑
+            } else {
+                // 处理API返回的错误
+                console.error('创建失败:', result.message);
+            }
+        } catch (error) {
+            // 处理网络错误
+            console.error('创建issue失败:', error);
+        }
+    };
+
+    return (
+        <div
+            className="fixed top-0 right-0 h-full bg-white z-50 border-l border-gray-200"
+            style={{
+                boxShadow: '-4px 0 15px rgba(0, 0, 0, 0.1)',
+                width: 'calc(100vw * 2/3)'
+            }}
+        >
+            <div className='flex flex-row h-full'>
+                {/* 左侧面板内容 */}
+                <div className="flex flex-col h-full w-2/3 border-r border-gray-200">
+                    <div className="pt-16 flex-grow overflow-auto p-4">
+                        <div className="flex">
+                            {/* 左侧：标题和描述 */}
+                            <div className="flex-grow pr-4 flex-col">
+                                {/* TODO tech dept 可能找不到这个属性 */}
+                                <TextPropertyInput
+                                    propertyDefinition={propertyDefinitions.find(p => p.id === SystemPropertyId.TITLE) as PropertyDefinition}
+                                    ref={(ref) => registerPropertyRef(SystemPropertyId.TITLE, ref)}
+                                />
+                                <TextareaPropertyInput
+                                    propertyDefinition={propertyDefinitions.find(p => p.id === SystemPropertyId.DESCRIPTION) as PropertyDefinition}
+                                    ref={(ref) => registerPropertyRef(SystemPropertyId.DESCRIPTION, ref)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    {/* 面板底部：按钮操作区 */}
+                    <div className="p-4 flex justify-start">
+                        <ButtonGroup>
+                            <PrimaryButton className='mr-2' onClick={handleSubmit}>
+                                <span className="text-white text-sm">Submit</span>
+                            </PrimaryButton>
+                            <SecondaryButton onClick={onClose} className="mr-4">
+                                <span className="text-gray-400 text-sm">Cancel</span>
+                            </SecondaryButton>
+                        </ButtonGroup>
+                    </div>
+                </div>
+                {/* 右侧：其他属性列表 */}
+                <div className="flex flex-col w-1/3 h-full pl-5 pt-5">
+                    <span className='text-md text-gray-500 whitespace-nowrap font-sans mb-10'>Properties</span>
+                    <div className='flex flex-col gap-2 pl-3'>
+                        <SelectPropertyInput
+                            propertyDefinition={propertyDefinitions.find(p => p.id === SystemPropertyId.STATUS) as PropertyDefinition}
+                            ref={(ref) => registerPropertyRef(SystemPropertyId.STATUS, ref)}
+                        />
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
-    
+
     // 当前选中的属性（用于显示筛选面板）
     const [selectedProperty, setSelectedProperty] = useState<PropertyDefinition | null>(null);
 
@@ -73,7 +195,10 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
     const [panelPosition, setPanelPosition] = useState({ top: 0, left: 0 });
     // 活跃的筛选条件
     const [activeFilters, setActiveFilters] = useState<FilterCondition[]>([]);
-    
+
+    // 新增：控制新建issue面板的显示状态
+    const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
+
     // 当按钮引用或选中属性改变时，更新面板位置
     useEffect(() => {
         if (filterButtonRef.current && selectedProperty) {
@@ -84,11 +209,11 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
             });
         }
     }, [selectedProperty]);
-    
+
     // 当筛选条件变化时，更新URL
     useEffect(() => {
         const serialized = serializeFilters(activeFilters);
-        
+
         // 构建新的 URL 查询参数
         const params = new URLSearchParams(searchParams);
         if (serialized) {
@@ -96,11 +221,11 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
         } else {
             params.delete('filters');
         }
-        
+
         // 更新 URL，不触发页面刷新
         router.push(`?${params.toString()}`, { scroll: false });
     }, [activeFilters, router, searchParams]);
-    
+
     // 筛选条件应用回调
     const handleFilterApply = (filter: FilterCondition | null) => {
         if (filter) {
@@ -117,17 +242,17 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
         }
         setSelectedProperty(null); // 关闭筛选面板
     };
-    
+
     // 筛选条件取消回调
     const handleFilterCancel = () => {
         setSelectedProperty(null); // 关闭筛选面板
     };
-    
+
     // 移除筛选条件
     const handleRemoveFilter = (filterId: string) => {
         setActiveFilters(activeFilters.filter(f => f.propertyId !== filterId));
     };
-    
+
     // 获取当前属性的筛选条件
     const getCurrentFilter = (propertyId: string): FilterCondition | null => {
         return activeFilters.find(f => f.propertyId === propertyId) || null;
@@ -155,11 +280,11 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
     const renderHeader = (column: TableColumn) => {
         const propertyDef = getPropertyDefinition(column.id);
         if (!propertyDef) return column.title;
-        
+
         // 从映射中获取对应的表头组件
         const HeaderComponent = PROPERTY_HEADER_COMPONENTS[propertyDef.type];
         if (!HeaderComponent) return column.title;
-        
+
         // 渲染表头组件
         return (
             <HeaderComponent
@@ -176,23 +301,23 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
         const issue = row as unknown as Issue;
         const propertyValue = getPropertyValue(issue, column.id);
         if (!propertyValue) return '';
-        
+
         const propertyDef = getPropertyDefinition(column.id);
         if (!propertyDef) return '';
-        
+
         // 从映射中获取对应的单元格组件
-        const CellComponent = PROPERTY_CELL_COMPONENTS[propertyValue.property_type];
+        const CellComponent = PROPERTY_CELL_COMPONENTS[propertyDef.type];
         if (!CellComponent) {
             // 默认处理，如果没有找到对应组件
-            return propertyValue.value !== null && propertyValue.value !== undefined 
-                ? String(propertyValue.value) 
+            return propertyValue.value !== null && propertyValue.value !== undefined
+                ? String(propertyValue.value)
                 : '';
         }
         // 渲染单元格组件
         return (
             <CellComponent
                 propertyID={propertyValue.property_id}
-                propertyType={propertyValue.property_type}
+                propertyType={propertyDef.type}
                 value={propertyValue.value}
                 issueId={String(issue.issue_id)}
                 propertyConfig={propertyDef.config}
@@ -215,8 +340,8 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
 
     // 自定义筛选按钮
     const FilterButton = (
-        <div 
-            ref={filterButtonRef} 
+        <div
+            ref={filterButtonRef}
             className="flex items-center px-2 py-1 text-sm text-gray-700"
         >
             <FiFilter className="mr-2 h-4 w-4 text-gray-500" />
@@ -229,11 +354,11 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
         return activeFilters.map(filter => {
             const propertyDef = getPropertyDefinition(filter.propertyId);
             if (!propertyDef) return null;
-            
+
             // 获取对应类型的筛选组件
             const FilterComponent = APPLIED_FILTER_COMPONENTS[propertyDef.type];
             if (!FilterComponent) return null;
-            
+
             return (
                 <AppliedFilterWrapper
                     key={filter.propertyId}
@@ -250,20 +375,33 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
         <div className="p-8">
             {/* 工具栏 */}
             <div className="mb-4 relative">
-                <div className="flex flex-wrap items-center">
-                    <div className="mr-2 mb-2">
-                        <DropDownMenuV2 
-                            entryLabel={FilterButton}
-                            menuItems={filterMenuItems}
-                            entryClassName="border border-gray-200 rounded"
-                            menuClassName="w-64 bg-white border border-gray-200 rounded-md shadow-lg"
-                        />
+                <div className="flex flex-wrap items-center justify-between">
+                    <div className="flex flex-wrap items-center">
+                        <div className="mr-2 mb-2">
+                            <DropDownMenuV2
+                                entryLabel={FilterButton}
+                                menuItems={filterMenuItems}
+                                entryClassName="border border-gray-200 rounded"
+                                menuClassName="w-64 bg-white border border-gray-200 rounded-md shadow-lg"
+                            />
+                        </div>
+
+                        {/* 显示已应用的筛选条件 */}
+                        {renderAppliedFilters()}
                     </div>
-                    
-                    {/* 显示已应用的筛选条件 */}
-                    {renderAppliedFilters()}
+
+                    {/* 添加新建issue按钮 */}
+                    <div className="mb-2">
+                        <button
+                            className="p-2 rounded text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200 focus:outline-none cursor-pointer"
+                            aria-label="创建新工单"
+                            onClick={() => setIsCreatePanelOpen(true)}
+                        >
+                            <FiPlus className="h-5 w-5" />
+                        </button>
+                    </div>
                 </div>
-                
+
                 {/* 设置筛选条件的面板 */}
                 {selectedProperty && (
                     <FilterConstructorPanel
@@ -279,7 +417,7 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
             {/* 表格组件 */}
             {issues.length > 0 ? (
                 <>
-                    <IssueTable 
+                    <IssueTable
                         columns={columns}
                         data={issues as unknown as Record<string, unknown>[]}
                         renderHeader={renderHeader}
@@ -292,6 +430,19 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
                 </>
             ) : (
                 <div className="p-4 text-gray-500 text-sm">暂无符合条件的工单</div>
+            )}
+
+            {/* 新建issue面板 */}
+            {isCreatePanelOpen && (
+                <>
+                    {/* 白色半透明遮罩 */}
+                    <div
+                        className="fixed inset-0 z-40"
+                        style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+                        onClick={() => setIsCreatePanelOpen(false)}
+                    />
+                    <CreateIssuePanel onClose={() => setIsCreatePanelOpen(false)} propertyDefinitions={propertyDefinitions} />
+                </>
             )}
         </div>
     );
