@@ -2,6 +2,8 @@ import { Prisma } from '@prisma/client';
 import { property } from '@prisma/client';
 import { PropertyType } from './constants';
 
+// TODO tech dept 现在很多属性在为空时，会产生 null value 的数据库记录，不合理
+
 /**
  * 验证结果接口
  */
@@ -242,13 +244,7 @@ export class SelectPropertyProcessor extends BasePropertyProcessor {
   validateFormat(property: property, value: unknown): ValidationResult {
     // 检查值是否为可用值
     if (value === null || value === undefined) {
-      // 如果属性不允许为 null，则返回错误
-      if (!property.nullable) {
-        return {
-          valid: false,
-          errors: [`属性 ${property.name} 不能为空`]
-        };
-      }
+      // 所有属性都允许为空
       return { valid: true };
     }
 
@@ -264,8 +260,8 @@ export class SelectPropertyProcessor extends BasePropertyProcessor {
   }
 
   validateBusinessRules(property: property, value: unknown): ValidationResult {
-    // 如果值为 null 而且允许为 null，通过验证
-    if ((value === null || value === undefined) && property.nullable) {
+    // 如果值为 null 或 undefined，允许通过验证
+    if (value === null || value === undefined) {
       return { valid: true };
     }
 
@@ -277,6 +273,11 @@ export class SelectPropertyProcessor extends BasePropertyProcessor {
         valid: false,
         errors: [`属性 ${property.name} 配置错误：未定义选项列表`]
       };
+    }
+
+    // 空字符串也视为空值，允许通过验证
+    if (value === "") {
+      return { valid: true };
     }
 
     // 检查值是否存在于选项列表中
@@ -293,8 +294,8 @@ export class SelectPropertyProcessor extends BasePropertyProcessor {
   }
 
   transformToDbFormat(property: property, value: unknown, issueId: string): DbInsertData {
-    // 如果值为 null 而且允许为 null，存储 null
-    if ((value === null || value === undefined) && property.nullable) {
+    // 如果值为 null，存储 null
+    if (value === null || value === undefined || value === "") {
       return {
         singleValues: [
           this.createSingleValue(
@@ -332,13 +333,7 @@ export class RichTextPropertyProcessor extends BasePropertyProcessor {
   validateFormat(property: property, value: unknown): ValidationResult {
     // 检查值是否为字符串或可以转为字符串的类型
     if (value === null || value === undefined) {
-      // 如果属性不允许为 null，则返回错误
-      if (!property.nullable) {
-        return {
-          valid: false,
-          errors: [`属性 ${property.name} 不能为空`]
-        };
-      }
+      // 所有属性都允许为空
       return { valid: true };
     }
 
@@ -355,8 +350,8 @@ export class RichTextPropertyProcessor extends BasePropertyProcessor {
   }
 
   validateBusinessRules(property: property, value: unknown): ValidationResult {
-    // 如果值为 null 而且允许为 null，通过验证
-    if ((value === null || value === undefined) && property.nullable) {
+    // 如果值为 null 或 undefined，允许通过验证
+    if (value === null || value === undefined) {
       return { valid: true };
     }
 
@@ -378,8 +373,8 @@ export class RichTextPropertyProcessor extends BasePropertyProcessor {
   }
 
   transformToDbFormat(property: property, value: unknown, issueId: string): DbInsertData {
-    // 如果值为 null 而且允许为 null，存储 null
-    if ((value === null || value === undefined) && property.nullable) {
+    // 如果值为 null，存储 null
+    if (value === null || value === undefined) {
       return {
         singleValues: [
           this.createSingleValue(
@@ -417,13 +412,7 @@ export class MultiSelectPropertyProcessor extends BasePropertyProcessor {
   validateFormat(property: property, value: unknown): ValidationResult {
     // 检查值是否为可用值
     if (value === null || value === undefined) {
-      // 如果属性不允许为 null，则返回错误
-      if (!property.nullable) {
-        return {
-          valid: false,
-          errors: [`属性 ${property.name} 不能为空`]
-        };
-      }
+      // 所有属性都允许为空
       return { valid: true };
     }
 
@@ -450,17 +439,14 @@ export class MultiSelectPropertyProcessor extends BasePropertyProcessor {
   }
 
   validateBusinessRules(property: property, value: unknown): ValidationResult {
-    // 如果值为 null 而且允许为 null，通过验证
-    if ((value === null || value === undefined) && property.nullable) {
+    // 如果值为 null 或 undefined，允许通过验证
+    if (value === null || value === undefined) {
       return { valid: true };
     }
 
-    // 空数组检查
-    if (Array.isArray(value) && value.length === 0 && !property.nullable) {
-      return {
-        valid: false,
-        errors: [`属性 ${property.name} 不能为空`]
-      };
+    // 空数组也允许通过验证
+    if (Array.isArray(value) && value.length === 0) {
+      return { valid: true };
     }
 
     // 获取属性配置中的选项列表
@@ -511,8 +497,8 @@ export class MultiSelectPropertyProcessor extends BasePropertyProcessor {
   }
 
   transformToDbFormat(property: property, value: unknown, issueId: string): DbInsertData {
-    // 如果值为 null 而且允许为 null，存储 null
-    if ((value === null || value === undefined) && property.nullable) {
+    // 如果值为 null，返回空数组
+    if (value === null || value === undefined) {
       return { multiValues: [] };
     }
 
@@ -547,13 +533,7 @@ export class MinersPropertyProcessor extends BasePropertyProcessor {
   validateFormat(property: property, value: unknown): ValidationResult {
     // 检查值是否为可用值
     if (value === null || value === undefined) {
-      // 如果属性不允许为 null，则返回错误
-      if (!property.nullable) {
-        return {
-          valid: false,
-          errors: [`属性 ${property.name} 不能为空`]
-        };
-      }
+      // 所有属性都允许为空
       return { valid: true };
     }
 
@@ -580,17 +560,14 @@ export class MinersPropertyProcessor extends BasePropertyProcessor {
   }
 
   validateBusinessRules(property: property, value: unknown): ValidationResult {
-    // 如果值为 null 而且允许为 null，通过验证
-    if ((value === null || value === undefined) && property.nullable) {
+    // 如果值为 null 或 undefined，允许通过验证
+    if (value === null || value === undefined) {
       return { valid: true };
     }
 
-    // 空数组检查
-    if (Array.isArray(value) && value.length === 0 && !property.nullable) {
-      return {
-        valid: false,
-        errors: [`属性 ${property.name} 不能为空`]
-      };
+    // 空数组也允许通过验证
+    if (Array.isArray(value) && value.length === 0) {
+      return { valid: true };
     }
 
     // 转换为数组
@@ -624,8 +601,8 @@ export class MinersPropertyProcessor extends BasePropertyProcessor {
   }
 
   transformToDbFormat(property: property, value: unknown, issueId: string): DbInsertData {
-    // 如果值为 null 而且允许为 null，存储 null
-    if ((value === null || value === undefined) && property.nullable) {
+    // 如果值为 null，返回空数组
+    if (value === null || value === undefined) {
       return { multiValues: [] };
     }
 
