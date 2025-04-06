@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Divider from './ui/divider';
 import { TbLayoutSidebarRightExpand, TbLayoutSidebarRightCollapse } from 'react-icons/tb';
 import Image from 'next/image';
@@ -16,6 +16,20 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ sections = [[], [], []] }) => {
   const [collapsed, setCollapsed] = useState(false);
+  
+  // 监听折叠状态变化，更新文档根元素的 class
+  useEffect(() => {
+    if (collapsed) {
+      document.documentElement.classList.add('sidebar-collapsed');
+    } else {
+      document.documentElement.classList.remove('sidebar-collapsed');
+    }
+    
+    // 清理函数
+    return () => {
+      document.documentElement.classList.remove('sidebar-collapsed');
+    };
+  }, [collapsed]);
   
   // 切换侧边栏折叠状态
   const toggleSidebar = () => {

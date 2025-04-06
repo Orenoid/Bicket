@@ -29,7 +29,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ClientSidebar />
-        <main className="ml-64">
+        <main className="transition-all duration-300 sidebar-margin">
           {children}
         </main>
       </body>

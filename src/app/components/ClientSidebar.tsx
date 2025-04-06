@@ -1,29 +1,31 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import Sidebar from '@/app/components/sidebar';
-import { MdInbox, MdViewList, MdSettings } from "react-icons/md";
-import { FaCode, FaServer } from "react-icons/fa";
+import { useRouter } from 'next/navigation';
+import { CiViewTimeline } from 'react-icons/ci';
+import { HiOutlineServer } from 'react-icons/hi';
+import { IoNotificationsOutline } from 'react-icons/io5';
+import { MdSettings, MdViewList } from "react-icons/md";
 
 const ClientSidebar = () => {
   const router = useRouter();
 
   const sidebarSections = [
     [
-      { id: "inbox", label: "Inbox", icon: <MdInbox size={20} /> },
+      { id: "inbox", label: "Inbox", icon: <IoNotificationsOutline size={20} /> },
       { id: "views", label: "Views", icon: <MdViewList size={20} /> },
     ],
     [
       { 
         id: "issues", 
         label: "Issues", 
-        icon: <FaCode size={18} />,
+        icon: <CiViewTimeline size={18} />,
         onClick: () => router.push('/issue')
       },
       { 
         id: "miners", 
         label: "Miners", 
-        icon: <FaServer size={18} />, 
+        icon: <HiOutlineServer size={18} />, 
         onClick: () => router.push('/miners')
       },
     ],

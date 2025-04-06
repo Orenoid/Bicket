@@ -3,6 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --sidebar-width-expanded: 16rem; /* 64px in rem */
+  --sidebar-width-collapsed: 4rem; /* 16px in rem */
 }
 
 @theme inline {
@@ -23,4 +25,14 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* 侧边栏响应式样式 */
+.sidebar-margin {
+  margin-left: var(--sidebar-width-expanded);
+}
+
+/* 当侧边栏折叠时应用这个类 */
+.sidebar-collapsed .sidebar-margin {
+  margin-left: var(--sidebar-width-collapsed);
 }
