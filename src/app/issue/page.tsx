@@ -205,7 +205,7 @@ async function getIssues(filters?: FilterCondition[]): Promise<Issue[]> {
                     
                     // 添加到工单数据中
                     issueData.push({
-                        issue_id: parseInt(issue.id.replace('issue', ''), 10),
+                        issue_id: issue.id,
                         property_values: values
                     });
                 }
@@ -261,7 +261,7 @@ async function getIssuesWithoutFilter(baseWhere: Prisma.issueWhereInput): Promis
         
         // 添加到工单数据中
         issueData.push({
-            issue_id: parseInt(issue.id.replace('issue', ''), 10),
+            issue_id: issue.id,
             property_values: values
         });
     }

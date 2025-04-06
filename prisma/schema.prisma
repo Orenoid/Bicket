@@ -38,7 +38,7 @@ model property_single_value {
   number_value  Float?                         // 数值类型值，用于数值类搜索和排序
   createdAt     DateTime  @default(now())      // 创建时间
   updatedAt     DateTime  @updatedAt           // 更新时间
-  deletedAt     DateTime?                      // 软删除时间，为null表示未删除
+  deletedAt     DateTime?                      // 软删除时间，为null表示未删除 (deprecated)
 
   @@unique([issue_id, property_id])            // 每个issue的每个属性只能有一个单值
   @@index([issue_id])                          // 按工单ID索引，提高查询效率
@@ -56,7 +56,7 @@ model property_multi_value {
   position      Int       @default(0)          // 在多选列表中的位置
   createdAt     DateTime  @default(now())      // 创建时间
   updatedAt     DateTime  @updatedAt           // 更新时间
-  deletedAt     DateTime?                      // 软删除时间，为null表示未删除
+  deletedAt     DateTime?                      // 软删除时间，为null表示未删除 (deprecated)
 
   @@unique([issue_id, property_id, position])  // 确保每个位置只有一个值
   @@index([issue_id])                          // 按工单ID索引，提高查询效率

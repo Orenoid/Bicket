@@ -39,4 +39,14 @@ export const PROPERTY_ID_TYPE_MAP = {
     [SystemPropertyId.DESCRIPTION]: PropertyType.RICH_TEXT,
 };
 
+/**
+ * 属性操作类型常量
+ */
+export enum PropertyOperationType {
+    SET = 'set',           // 设置属性值
+    REMOVE = 'remove',     // 删除属性值
+    ADD = 'add',           // 添加属性值（多值）
+    UPDATE = 'update',     // 更新属性值（多值）
+}
+
 

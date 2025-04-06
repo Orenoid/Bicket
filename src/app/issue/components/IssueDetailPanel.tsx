@@ -1,7 +1,7 @@
 'use client';
 
 import { SecondaryButton } from '../../components/ui/buttons';
-import { TitlePropertyDetail } from '@/app/property/components/detail';
+import { SelectPropertyDetail, TitlePropertyDetail } from '@/app/property/components/detail';
 import { SystemPropertyId } from '@/app/property/constants';
 
 // 从IssuePage.tsx导入需要的接口
@@ -13,7 +13,7 @@ export interface PropertyDefinition {
 }
 
 export interface Issue {
-    issue_id: number;
+    issue_id: string;
     property_values: {
         property_id: string;
         value: unknown;
@@ -30,6 +30,8 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
 }) => {
     // 获取标题属性
     const titleProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.TITLE);
+    // 获取状态属性
+    const statusProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.STATUS);
 
     // 获取标题属性值
     const getTitleValue = () => {
@@ -37,13 +39,44 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
         return titlePropertyValue ? titlePropertyValue.value : '';
     };
 
+    // 获取状态属性值
+    const getStatusValue = () => {
+        const statusPropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.STATUS);
+        return statusPropertyValue ? statusPropertyValue.value : null;
+    };
+
     // 处理属性更新
-    const handlePropertyUpdate = async (propertyId: string, newValue: unknown) => {
-        // 这里可以添加API调用来更新属性值
-        console.log(`更新属性 ${propertyId} 的值为:`, newValue);
-        
-        // 目前只是返回成功，后续可以添加实际的API调用
-        return true;
+    const handlePropertyUpdate = async (operation: {
+        property_id: string;
+        operation_type: string;
+        operation_payload: Record<string, unknown>;
+    }) => {
+        try {
+            // 调用API更新属性值
+            const response = await fetch('/api/issue/update', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    issue_id: issue.issue_id,
+                    operations: [operation]
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                console.log('更新成功:', data);
+                return true;
+            } else {
+                console.error('更新失败:', data.message || '未知错误');
+                return false;
+            }
+        } catch (error) {
+            console.error('更新属性时发生错误:', error);
+            return false;
+        }
     };
 
     return (
@@ -63,7 +96,7 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
                             <TitlePropertyDetail
                                 propertyDefinition={titleProperty}
                                 value={getTitleValue()}
-                                onUpdate={(newValue: unknown) => handlePropertyUpdate(SystemPropertyId.TITLE, newValue)}
+                                onUpdate={handlePropertyUpdate}
                             />
                         )}
                         {/* 后续可以添加更多详情组件 */}
@@ -79,7 +112,14 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
                 <div className="flex flex-col w-1/3 h-full pl-5 pt-5">
                     <span className='text-md text-gray-500 whitespace-nowrap font-sans mb-10'>属性</span>
                     <div className='flex flex-col gap-2 pl-3'>
-                        {/* 这里保持空白，后续实现属性展示 */}
+                        {/* 状态属性组件 */}
+                        {statusProperty && (
+                            <SelectPropertyDetail
+                                propertyDefinition={statusProperty}
+                                value={getStatusValue()}
+                                onUpdate={handlePropertyUpdate}
+                            />
+                        )}
                     </div>
                 </div>
             </div>

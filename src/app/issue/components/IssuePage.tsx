@@ -25,7 +25,7 @@ export interface PropertyValue {
 }
 
 export interface Issue {
-    issue_id: number;
+    issue_id: string;
     property_values: PropertyValue[];
 }
 
@@ -77,7 +77,7 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
 
     // 新增：控制新建issue面板的显示状态
     const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
-    
+
     // 新增：控制详情面板的显示状态和当前选中的issue
     const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
     const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
@@ -86,10 +86,10 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
     const refreshIssueList = () => {
         // 获取当前URL参数
         const currentParams = new URLSearchParams(searchParams);
-        
+
         // 添加一个时间戳参数，强制页面刷新（服务端数据）
         currentParams.set('_t', Date.now().toString());
-        
+
         // 刷新页面，获取最新数据
         router.refresh();
     };
@@ -343,10 +343,10 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
                         style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
                         onClick={() => setIsCreatePanelOpen(false)}
                     />
-                    <CreateIssuePanel 
-                        onClose={() => setIsCreatePanelOpen(false)} 
+                    <CreateIssuePanel
+                        onClose={() => setIsCreatePanelOpen(false)}
                         propertyDefinitions={propertyDefinitions}
-                        onCreateSuccess={refreshIssueList} 
+                        onCreateSuccess={refreshIssueList}
                     />
                 </>
             )}
@@ -360,8 +360,8 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
                         style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
                         onClick={() => setIsDetailPanelOpen(false)}
                     />
-                    <IssueDetailPanel 
-                        onClose={() => setIsDetailPanelOpen(false)} 
+                    <IssueDetailPanel
+                        onClose={() => setIsDetailPanelOpen(false)}
                         issue={selectedIssue}
                         propertyDefinitions={propertyDefinitions}
                     />
