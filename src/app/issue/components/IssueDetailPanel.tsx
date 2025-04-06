@@ -121,7 +121,7 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
         >
             <div className='flex flex-row h-full'>
                 {/* 左侧面板内容 */}
-                <div className="flex flex-col h-full w-2/3 border-r border-gray-200">
+                <div className="flex flex-col h-full w-3/4 border-r border-gray-200">
                     <div className="pt-16 flex-grow overflow-auto p-4">
                         {/* 添加标题组件 */}
                         {titleProperty && (
@@ -141,8 +141,8 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
                     </div>
                 </div>
                 {/* 右侧：属性列表 */}
-                <div className="flex flex-col w-1/3 h-full pl-5 pt-5">
-                    <span className='text-md text-gray-500 whitespace-nowrap font-sans mb-10'>属性</span>
+                <div className="flex flex-col w-1/4 h-full pl-5 pt-5">
+                    <span className='text-md text-gray-500 whitespace-nowrap font-sans mb-10'>Properties</span>
                     <div className='flex flex-col gap-2 pl-3'>
                         {/* 标签属性组件 */}
                         {labelProperty && (
