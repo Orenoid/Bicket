@@ -132,6 +132,18 @@ export const CreateIssuePanel = ({ onClose, propertyDefinitions, onCreateSuccess
                             propertyDefinition={propertyDefinitions.find(p => p.id === SystemPropertyId.STATUS) as PropertyDefinition}
                             ref={(ref) => registerPropertyRef(SystemPropertyId.STATUS, ref)}
                         />
+                        <SelectPropertyInput
+                            propertyDefinition={propertyDefinitions.find(p => p.id === SystemPropertyId.PRIORITY) as PropertyDefinition}
+                            ref={(ref) => registerPropertyRef(SystemPropertyId.PRIORITY, ref)}
+                        />
+                        <SelectPropertyInput
+                            propertyDefinition={propertyDefinitions.find(p => p.id === SystemPropertyId.CATEGORY) as PropertyDefinition}
+                            ref={(ref) => registerPropertyRef(SystemPropertyId.CATEGORY, ref)}
+                        />
+                        <SelectPropertyInput
+                            propertyDefinition={propertyDefinitions.find(p => p.id === SystemPropertyId.DIAGNOSIS) as PropertyDefinition}
+                            ref={(ref) => registerPropertyRef(SystemPropertyId.DIAGNOSIS, ref)}
+                        />
                     </div>
                 </div>
             </div>

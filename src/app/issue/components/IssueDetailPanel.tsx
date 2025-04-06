@@ -32,6 +32,12 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
     const titleProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.TITLE);
     // 获取状态属性
     const statusProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.STATUS);
+    // 获取优先级属性
+    const priorityProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.PRIORITY);
+    // 获取类别属性
+    const categoryProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.CATEGORY);
+    // 获取诊断属性
+    const diagnosisProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.DIAGNOSIS);
 
     // 获取标题属性值
     const getTitleValue = () => {
@@ -43,6 +49,24 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
     const getStatusValue = () => {
         const statusPropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.STATUS);
         return statusPropertyValue ? statusPropertyValue.value : null;
+    };
+
+    // 获取优先级属性值
+    const getPriorityValue = () => {
+        const priorityPropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.PRIORITY);
+        return priorityPropertyValue ? priorityPropertyValue.value : null;
+    };
+
+    // 获取类别属性值
+    const getCategoryValue = () => {
+        const categoryPropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.CATEGORY);
+        return categoryPropertyValue ? categoryPropertyValue.value : null;
+    };
+
+    // 获取诊断属性值
+    const getDiagnosisValue = () => {
+        const diagnosisPropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.DIAGNOSIS);
+        return diagnosisPropertyValue ? diagnosisPropertyValue.value : null;
     };
 
     // 处理属性更新
@@ -117,6 +141,30 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
                             <SelectPropertyDetail
                                 propertyDefinition={statusProperty}
                                 value={getStatusValue()}
+                                onUpdate={handlePropertyUpdate}
+                            />
+                        )}
+                        {/* 优先级属性组件 */}
+                        {priorityProperty && (
+                            <SelectPropertyDetail
+                                propertyDefinition={priorityProperty}
+                                value={getPriorityValue()}
+                                onUpdate={handlePropertyUpdate}
+                            />
+                        )}
+                        {/* 类别属性组件 */}
+                        {categoryProperty && (
+                            <SelectPropertyDetail
+                                propertyDefinition={categoryProperty}
+                                value={getCategoryValue()}
+                                onUpdate={handlePropertyUpdate}
+                            />
+                        )}
+                        {/* 诊断属性组件 */}
+                        {diagnosisProperty && (
+                            <SelectPropertyDetail
+                                propertyDefinition={diagnosisProperty}
+                                value={getDiagnosisValue()}
                                 onUpdate={handlePropertyUpdate}
                             />
                         )}

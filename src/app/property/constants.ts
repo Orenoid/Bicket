@@ -8,6 +8,9 @@ export enum SystemPropertyId {
     CREATED_AT = 'property0004',     // 创建时间
     UPDATED_AT = 'property0005',     // 更新时间
     DESCRIPTION = 'property0006',    // 工单描述
+    PRIORITY = 'property0007',       // 工单优先级
+    CATEGORY = 'property0008',       // 工单类别
+    DIAGNOSIS = 'property0009',      // 工单诊断
 }
 
 
@@ -37,6 +40,9 @@ export const PROPERTY_ID_TYPE_MAP = {
     [SystemPropertyId.CREATED_AT]: PropertyType.DATETIME,
     [SystemPropertyId.UPDATED_AT]: PropertyType.DATETIME,
     [SystemPropertyId.DESCRIPTION]: PropertyType.RICH_TEXT,
+    [SystemPropertyId.PRIORITY]: PropertyType.SELECT,
+    [SystemPropertyId.CATEGORY]: PropertyType.SELECT,
+    [SystemPropertyId.DIAGNOSIS]: PropertyType.SELECT,
 };
 
 /**
