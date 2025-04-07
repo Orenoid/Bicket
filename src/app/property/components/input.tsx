@@ -6,6 +6,7 @@ import React, { useEffect, useImperativeHandle, useState } from 'react';
 import { MdCancel } from 'react-icons/md';
 import { PropertyType } from '../constants';
 import '@mdxeditor/editor/style.css';
+import './mdxeditor.css';
 
 // 属性值接口，与API接口保持一致
 export interface PropertyValue {

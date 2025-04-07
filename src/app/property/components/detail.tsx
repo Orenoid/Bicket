@@ -24,6 +24,7 @@ import {
 } from '@mdxeditor/editor';
 import '@mdxeditor/editor/style.css';
 import { PrimaryButton, SecondaryButton, ButtonGroup } from '@/app/components/ui/buttons';
+import './mdxeditor.css';
 
 // 属性值接口，与API接口保持一致
 export interface PropertyValue {
