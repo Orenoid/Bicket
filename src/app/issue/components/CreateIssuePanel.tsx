@@ -126,8 +126,8 @@ export const CreateIssuePanel = ({ onClose, propertyDefinitions, onCreateSuccess
                 </div>
                 {/* 右侧：其他属性列表 */}
                 <div className="flex flex-col w-1/3 h-full pl-5 pt-5">
-                    <span className='text-md text-gray-500 whitespace-nowrap font-sans mb-10'>Properties</span>
-                    <div className='flex flex-col gap-2 pl-3'>
+                    <span className='text-sm text-gray-400 whitespace-nowrap font-sans mb-2'>Properties</span>
+                    <div className='flex flex-col gap-3 pl-3 mb-8'>
                         <SelectPropertyInput
                             propertyDefinition={propertyDefinitions.find(p => p.id === SystemPropertyId.STATUS) as PropertyDefinition}
                             ref={(ref) => registerPropertyRef(SystemPropertyId.STATUS, ref)}
@@ -148,6 +148,11 @@ export const CreateIssuePanel = ({ onClose, propertyDefinitions, onCreateSuccess
                             propertyDefinition={propertyDefinitions.find(p => p.id === SystemPropertyId.LABEL) as PropertyDefinition}
                             ref={(ref) => registerPropertyRef(SystemPropertyId.LABEL, ref)}
                         />
+                    </div>
+                    
+                    {/* 矿机相关属性区域 */}
+                    <span className='text-sm text-gray-400 whitespace-nowrap font-sans mb-2'>Miners Related</span>
+                    <div className='flex flex-col gap-3 pl-3'>
                         <MinersPropertyInput
                             propertyDefinition={propertyDefinitions.find(p => p.id === SystemPropertyId.MINERS) as PropertyDefinition}
                             ref={(ref) => registerPropertyRef(SystemPropertyId.MINERS, ref)}

@@ -270,8 +270,8 @@ export const SelectPropertyDetail: React.FC<PropertyDetailProps> = ({
     }, []);
     
     return (
-        <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600 font-semibold whitespace-nowrap">{propertyDefinition.name}</span>
+        <div className="flex items-center">
+            <div className="w-20 text-sm text-gray-600 font-semibold">{propertyDefinition.name}</div>
             <div className="relative w-auto min-w-[120px] max-w-[240px]" ref={dropdownRef}>
                 <div
                     className="flex items-center w-full h-8 px-3 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors"
@@ -478,8 +478,8 @@ export const MultiSelectPropertyDetail: React.FC<PropertyDetailProps> = ({
     }, []);
     
     return (
-        <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600 font-semibold whitespace-nowrap">{propertyDefinition.name}</span>
+        <div className="flex items-center">
+            <div className="w-20 text-sm text-gray-600 font-semibold">{propertyDefinition.name}</div>
             <div className="relative w-auto min-w-[120px] max-w-[240px]" ref={dropdownRef}>
                 {/* 触发下拉框的按钮/显示区域 */}
                 <div
@@ -731,8 +731,8 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
     }, []);
     
     return (
-        <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600 font-semibold whitespace-nowrap">{propertyDefinition.name}</span>
+        <div className="flex items-center">
+            <div className="w-20 text-sm text-gray-600 font-semibold">{propertyDefinition.name}</div>
             <div className="relative w-auto min-w-[120px] max-w-[320px]" ref={dropdownRef}>
                 {/* 触发下拉框的按钮/显示区域 */}
                 <div

@@ -150,8 +150,8 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
                 </div>
                 {/* 右侧：属性列表 */}
                 <div className="flex flex-col w-1/4 h-full pl-5 pt-5">
-                    <span className='text-md text-gray-500 whitespace-nowrap font-sans mb-10'>Properties</span>
-                    <div className='flex flex-col gap-2 pl-3'>
+                    <span className='text-sm text-gray-400 whitespace-nowrap font-sans mb-2'>Properties</span>
+                    <div className='flex flex-col gap-3 pl-3 mb-8'>
                         {/* 标签属性组件 */}
                         {labelProperty && (
                             <MultiSelectPropertyDetail
@@ -192,6 +192,11 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
                                 onUpdate={handlePropertyUpdate}
                             />
                         )}
+                    </div>
+                    
+                    {/* 矿机相关属性区域 */}
+                    <span className='text-sm text-gray-400 whitespace-nowrap font-sans mt-8 mb-2'>Miners Related</span>
+                    <div className='flex flex-col gap-3 pl-3'>
                         {/* 矿机列表属性组件 */}
                         {minersProperty && (
                             <MinersPropertyDetail
