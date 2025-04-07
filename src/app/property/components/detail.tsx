@@ -3,7 +3,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PropertyDefinition } from '@/app/issue/components/IssuePage';
 import { createSetOperation, createRemoveOperation, createUpdateOperation } from '../update-operations';
-import { MdCancel } from 'react-icons/md';
+import { MdCancel, MdCheckBox, MdDateRange, MdLink, MdNumbers, MdPerson, MdSubject, MdTextFields } from 'react-icons/md';
+import { BiSelectMultiple } from 'react-icons/bi';
+import { HiOutlineServer } from 'react-icons/hi';
+import { TbCheckbox } from 'react-icons/tb';
+import { PropertyType } from '../constants';
 import {
     MDXEditor,
     headingsPlugin,
@@ -43,6 +47,26 @@ export interface PropertyDetailProps {
         operation_payload: Record<string, unknown>;
     }) => Promise<boolean>; // 更新值的回调，返回是否更新成功
 }
+
+// 根据属性类型获取对应图标的工具函数
+export const getPropertyTypeIcon = (propertyType: string): React.ReactNode => {
+    return PROPERTY_TYPE_ICONS[propertyType] || PROPERTY_TYPE_ICONS[PropertyType.TEXT]; // 默认使用文本类型图标
+};
+
+// 属性类型图标映射表
+export const PROPERTY_TYPE_ICONS: Record<string, React.ReactNode> = {
+    [PropertyType.ID]: <MdNumbers size={16} className="mr-1 text-gray-500" />,
+    [PropertyType.TEXT]: <MdTextFields size={16} className="mr-1 text-gray-500"/>,
+    [PropertyType.RICH_TEXT]: <MdSubject size={16} className="mr-1 text-gray-500"/>,
+    [PropertyType.NUMBER]: <MdNumbers size={16} className="mr-1 text-gray-500"/>,
+    [PropertyType.SELECT]: <TbCheckbox size={16} className="mr-1 text-gray-500"/>,
+    [PropertyType.MULTI_SELECT]: <BiSelectMultiple size={16} className="mr-1 text-gray-500"/>,
+    [PropertyType.DATETIME]: <MdDateRange size={16} className="mr-1 text-gray-500"/>,
+    [PropertyType.BOOLEAN]: <MdCheckBox size={16} className="mr-1 text-gray-500"/>,
+    [PropertyType.USER]: <MdPerson size={16} className="mr-1 text-gray-500"/>,
+    [PropertyType.RELATIONSHIP]: <MdLink size={16} className="mr-1 text-gray-500"/>,
+    [PropertyType.MINERS]: <HiOutlineServer size={16} className="mr-1 text-gray-500"/>
+};
 
 // BUG: 改了一次标题后，如果再点击标题并什么都不改，依然会出现调用更新回调的情况
 // 标题详情组件
@@ -292,7 +316,12 @@ export const SelectPropertyDetail: React.FC<PropertyDetailProps> = ({
     
     return (
         <div className="flex items-center">
-            <div className="w-20 text-sm text-gray-600 font-semibold truncate" title={propertyDefinition.name}>{propertyDefinition.name}</div>
+            <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+                <div className="w-5 flex-shrink-0 flex justify-center">
+                    {getPropertyTypeIcon(propertyDefinition.type)}
+                </div>
+                <span className="truncate" title={propertyDefinition.name}>{propertyDefinition.name}</span>
+            </div>
             <div className="relative w-auto min-w-[120px] max-w-[240px] pl-3" ref={dropdownRef}>
                 <div
                     className="flex items-center w-full h-8 px-3 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors"
@@ -500,7 +529,12 @@ export const MultiSelectPropertyDetail: React.FC<PropertyDetailProps> = ({
     
     return (
         <div className="flex items-center">
-            <div className="w-20 text-sm text-gray-600 font-semibold truncate" title={propertyDefinition.name}>{propertyDefinition.name}</div>
+            <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+                <div className="w-5 flex-shrink-0 flex justify-center">
+                    {getPropertyTypeIcon(propertyDefinition.type)}
+                </div>
+                <span className="truncate" title={propertyDefinition.name}>{propertyDefinition.name}</span>
+            </div>
             <div className="relative w-auto min-w-[120px] max-w-[240px] pl-3" ref={dropdownRef}>
                 {/* 触发下拉框的按钮/显示区域 */}
                 <div
@@ -753,7 +787,12 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
     
     return (
         <div className="flex items-center">
-            <div className="w-20 text-sm text-gray-600 font-semibold truncate" title={propertyDefinition.name}>{propertyDefinition.name}</div>
+            <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+                <div className="w-5 flex-shrink-0 flex justify-center">
+                    {getPropertyTypeIcon(propertyDefinition.type)}
+                </div>
+                <span className="truncate" title={propertyDefinition.name}>{propertyDefinition.name}</span>
+            </div>
             <div className="relative w-auto min-w-[120px] max-w-[320px] pl-3" ref={dropdownRef}>
                 {/* 触发下拉框的按钮/显示区域 */}
                 <div
@@ -861,7 +900,12 @@ export const DatetimePropertyDetail: React.FC<PropertyDetailProps> = ({
     if (value === null || value === undefined || value === "") {
         return (
             <div className="flex items-center">
-                <div className="w-20 text-sm text-gray-600 font-semibold truncate" title={propertyDefinition.name}>{propertyDefinition.name}</div>
+                <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+                    <div className="w-5 flex-shrink-0 flex justify-center">
+                        {getPropertyTypeIcon(propertyDefinition.type)}
+                    </div>
+                    <span className="truncate" title={propertyDefinition.name}>{propertyDefinition.name}</span>
+                </div>
                 <div className="pl-3">
                     <span className="text-gray-400 italic">未设置</span>
                 </div>
@@ -878,7 +922,12 @@ export const DatetimePropertyDetail: React.FC<PropertyDetailProps> = ({
         if (isNaN(date.getTime())) {
             return (
                 <div className="flex items-center">
-                    <div className="w-20 text-sm text-gray-600 font-semibold truncate" title={propertyDefinition.name}>{propertyDefinition.name}</div>
+                    <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+                        <div className="flex-shrink-0 flex justify-center">
+                            {getPropertyTypeIcon(propertyDefinition.type)}
+                        </div>
+                        <span className="w-8 truncate" title={propertyDefinition.name}>{propertyDefinition.name}</span>
+                    </div>
                     <div className="pl-3">
                         <span className="text-gray-400 italic">无效日期</span>
                     </div>
@@ -925,7 +974,12 @@ export const DatetimePropertyDetail: React.FC<PropertyDetailProps> = ({
         // 返回完整的格式化日期时间，整体使用浅灰色
         return (
             <div className="flex items-center">
-                <div className="w-20 text-sm text-gray-600 font-semibold truncate" title={propertyDefinition.name}>{propertyDefinition.name}</div>
+                <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+                    <div className="w-5 flex-shrink-0 flex justify-center">
+                        {getPropertyTypeIcon(propertyDefinition.type)}
+                    </div>
+                    <span className="truncate" title={propertyDefinition.name}>{propertyDefinition.name}</span>
+                </div>
                 <div className="pl-3 flex-grow">
                     <div className="whitespace-nowrap text-gray-500">
                         <span>{dateFormatted}</span>
@@ -940,7 +994,12 @@ export const DatetimePropertyDetail: React.FC<PropertyDetailProps> = ({
         console.error('日期格式化错误', error);
         return (
             <div className="flex items-center">
-                <div className="w-20 text-sm text-gray-600 font-semibold truncate" title={propertyDefinition.name}>{propertyDefinition.name}</div>
+                <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+                    <div className="w-5 flex-shrink-0 flex justify-center">
+                        {getPropertyTypeIcon(propertyDefinition.type)}
+                    </div>
+                    <span className="truncate" title={propertyDefinition.name}>{propertyDefinition.name}</span>
+                </div>
                 <div className="pl-3">
                     <span className="text-gray-400 italic">日期格式错误</span>
                 </div>

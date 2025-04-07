@@ -1,12 +1,25 @@
 'use client';
 
 import { PropertyDefinition } from '@/app/issue/components/IssuePage';
-import { headingsPlugin, listsPlugin, markdownShortcutPlugin, thematicBreakPlugin, MDXEditor, quotePlugin, toolbarPlugin, BoldItalicUnderlineToggles, linkPlugin, linkDialogPlugin, CreateLink, CodeToggle, ListsToggle, BlockTypeSelect, imagePlugin, InsertImage } from '@mdxeditor/editor';
+import { BlockTypeSelect, BoldItalicUnderlineToggles, CodeToggle, CreateLink, headingsPlugin, imagePlugin, InsertImage, linkDialogPlugin, linkPlugin, listsPlugin, ListsToggle, markdownShortcutPlugin, MDXEditor, quotePlugin, thematicBreakPlugin, toolbarPlugin } from '@mdxeditor/editor';
+import '@mdxeditor/editor/style.css';
 import React, { useEffect, useImperativeHandle, useState } from 'react';
 import { MdCancel } from 'react-icons/md';
 import { PropertyType } from '../constants';
-import '@mdxeditor/editor/style.css';
 import './mdxeditor.css';
+// 导入需要的图标
+import { BiSelectMultiple } from 'react-icons/bi';
+import { HiOutlineServer } from 'react-icons/hi';
+import {
+    MdCheckBox,
+    MdDateRange,
+    MdLink,
+    MdNumbers,
+    MdPerson,
+    MdSubject,
+    MdTextFields
+} from 'react-icons/md';
+import { TbCheckbox } from 'react-icons/tb';
 
 // 属性值接口，与API接口保持一致
 export interface PropertyValue {
@@ -28,6 +41,11 @@ export interface Miner {
     status: string;            // 矿机状态
     ipAddress: string;         // IP 地址
 }
+
+// 根据属性类型获取对应图标的工具函数
+export const getPropertyTypeIcon = (propertyType: string): React.ReactNode => {
+    return PROPERTY_TYPE_ICONS[propertyType] || PROPERTY_TYPE_ICONS[PropertyType.TEXT]; // 默认使用文本类型图标
+};
 
 // 文本属性输入组件
 export const TextPropertyInput = React.forwardRef<
@@ -235,7 +253,12 @@ export const SelectPropertyInput = React.forwardRef<
 
     return (
         <div className="flex items-center">
-            <div className="w-20 text-sm text-gray-600 font-semibold">{propertyDefinition.name}</div>
+            <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+                <div className="w-5 flex-shrink-0 flex justify-center text-gray-500">
+                    {getPropertyTypeIcon(propertyDefinition.type)}
+                </div>
+                <span className="w-12">{propertyDefinition.name}</span>
+            </div>
             <div className="relative w-auto min-w-[120px] max-w-[240px]" ref={dropdownRef}>
                 <div
                     className="flex items-center w-full h-8 px-3 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors"
@@ -387,7 +410,12 @@ export const MultiSelectPropertyInput = React.forwardRef<
 
     return (
         <div className="flex items-center">
-            <div className="w-20 text-sm text-gray-600 font-semibold">{propertyDefinition.name}</div>
+            <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+                <div className="w-5 flex-shrink-0 flex justify-center text-gray-500">
+                    {getPropertyTypeIcon(propertyDefinition.type)}
+                </div>
+                <span className="truncate">{propertyDefinition.name}</span>
+            </div>
             <div className="relative w-auto min-w-[120px] max-w-[240px]" ref={dropdownRef}>
                 <div
                     className="flex items-center w-full min-h-[32px] px-3 py-1 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors"
@@ -628,7 +656,12 @@ export const MinersPropertyInput = React.forwardRef<
 
     return (
         <div className="flex items-center">
-            <div className="w-20 text-sm text-gray-600 font-semibold">{propertyDefinition.name}</div>
+            <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+                <div className="w-5 flex-shrink-0 flex justify-center text-gray-500">
+                    {getPropertyTypeIcon(propertyDefinition.type)}
+                </div>
+                <span className="truncate">{propertyDefinition.name}</span>
+            </div>
             <div className="relative w-auto min-w-[120px] max-w-[240px]" ref={dropdownRef}>
                 <div
                     className="flex items-center w-full min-h-[32px] px-3 py-1 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors"
@@ -730,4 +763,20 @@ export const PROPERTY_INPUT_COMPONENTS: Record<
     [PropertyType.MULTI_SELECT]: MultiSelectPropertyInput,
     [PropertyType.MINERS]: MinersPropertyInput,
     // 可以扩展更多属性类型...
+}; 
+
+// 属性类型图标映射表
+export const PROPERTY_TYPE_ICONS: Record<string, React.ReactNode> = {
+    [PropertyType.ID]: <MdNumbers size={16} className="mr-1 text-gray-500" />,
+    [PropertyType.TEXT]: <MdTextFields size={16} className='mr-1 text-gray-500'/>,
+    [PropertyType.RICH_TEXT]: <MdSubject size={16} className='mr-1 text-gray-500'/>,
+    [PropertyType.NUMBER]: <MdNumbers size={16} className='mr-1 text-gray-500'/>,
+    [PropertyType.SELECT]: <TbCheckbox size={16} className='mr-1 text-gray-500'/>,
+    [PropertyType.MULTI_SELECT]: <BiSelectMultiple size={16} className='mr-1 text-gray-500'/>,
+    // [PropertyType.MULTI_SELECT]: <BiSelectMultiple size={16} />,
+    [PropertyType.DATETIME]: <MdDateRange size={16} className='mr-1 text-gray-500'/>,
+    [PropertyType.BOOLEAN]: <MdCheckBox size={16} className='mr-1 text-gray-500'/>,
+    [PropertyType.USER]: <MdPerson size={16} className='mr-1 text-gray-500'/>,
+    [PropertyType.RELATIONSHIP]: <MdLink size={16} className='mr-1 text-gray-500'/>,
+    [PropertyType.MINERS]: <HiOutlineServer size={16} className='mr-1 text-gray-500'/>
 }; 
