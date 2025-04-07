@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Divider from './ui/divider';
+import Divider from './ui/divider-new';
 import { TbLayoutSidebarRightExpand, TbLayoutSidebarRightCollapse } from 'react-icons/tb';
 import Image from 'next/image';
 
