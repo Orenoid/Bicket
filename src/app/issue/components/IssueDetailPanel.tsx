@@ -47,6 +47,12 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
     // 获取更新时间属性
     const updatedAtProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.UPDATED_AT);
 
+    // 获取ID属性值
+    const getIdValue = (): string => {
+        const idPropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.ID);
+        return idPropertyValue ? String(idPropertyValue.value) : '';
+    };
+    
     // 获取标题属性值
     const getTitleValue = () => {
         const titlePropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.TITLE);
@@ -101,6 +107,20 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
         return updatedAtPropertyValue ? updatedAtPropertyValue.value : null;
     };
 
+    // 处理复制ID到剪贴板
+    const handleCopyId = () => {
+        const idValue = getIdValue();
+        if (idValue) {
+            navigator.clipboard.writeText(idValue)
+                .then(() => {
+                    alert(`ID copied: ${idValue}`);
+                })
+                .catch(err => {
+                    console.error('Copy ID failed:', err);
+                });
+        }
+    };
+
     // 处理属性更新
     const handlePropertyUpdate = async (operation: {
         property_id: string;
@@ -146,7 +166,12 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
             <div className='flex flex-row h-full'>
                 {/* 左侧面板内容 */}
                 <div className="flex flex-col h-full w-3/4 border-r border-gray-200">
-                    <div className="pt-16 flex-grow overflow-auto p-4">
+                    {/* Issue ID 显示区域 */}
+                    <div className="absolute top-4 left-4 flex items-center cursor-pointer" onClick={handleCopyId}>
+                        <span className="text-2xl text-gray-400 hover:text-gray-500"># {getIdValue()}</span>
+                    </div>
+
+                    <div className="pt-14 flex-grow overflow-auto p-4">
                         {/* 添加标题组件 */}
                         {titleProperty && (
                             <TitlePropertyDetail
