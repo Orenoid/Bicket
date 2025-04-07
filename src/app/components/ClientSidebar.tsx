@@ -5,7 +5,7 @@ import { CiViewTimeline } from 'react-icons/ci';
 import { HiOutlineServer } from 'react-icons/hi';
 import { IoNotificationsOutline } from 'react-icons/io5';
 import { MdSettings, MdViewList } from "react-icons/md";
-import Sidebar from './sidebar';
+import Sidebar from './new-sidebar';
 
 const ClientSidebar = () => {
   const router = useRouter();
