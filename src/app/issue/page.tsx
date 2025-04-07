@@ -188,6 +188,9 @@ async function getIssues(filters?: FilterCondition[]): Promise<Issue[]> {
                     where: whereCondition,
                     select: {
                         id: true
+                    },
+                    orderBy: {
+                        createdAt: 'desc' // 按创建时间倒序排序
                     }
                 });
                 
@@ -280,6 +283,9 @@ async function getIssuesWithoutFilter(baseWhere: Prisma.issueWhereInput): Promis
         where: baseWhere,
         select: {
             id: true
+        },
+        orderBy: {
+            createdAt: 'desc' // 按创建时间倒序排序
         }
     });
     
@@ -354,10 +360,11 @@ async function getIssuesWithoutFilter(baseWhere: Prisma.issueWhereInput): Promis
 }
 
 // 页面主组件
-export default async function Page({ searchParams }: { searchParams: { filters?: string } }) {
+export default async function Page({ searchParams }: { searchParams: Promise<{ filters?: string }> }) {
     try {
         // 从 URL 参数获取筛选条件
-        const filtersStr = searchParams.filters;
+        const resolvedParams = await searchParams;
+        const filtersStr = resolvedParams.filters;
         const filters = filtersStr ? deserializeFilters(filtersStr) : [];
         
         // 获取属性定义和工单数据
