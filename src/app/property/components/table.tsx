@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { PropertyType } from '../constants';
+import { getMinerById, getMinerStatusStyle } from '../../miners/service';
 
 // 表头组件属性接口
 export interface PropertyHeaderCellProps {
@@ -271,39 +272,12 @@ export const MinersPropertyCell: PropertyCellComponent = ({
     const showMore = valueArray.length > displayCount;
     const displayItems = showMore ? valueArray.slice(0, displayCount) : valueArray;
     
-    // 模拟矿机状态信息 - 在实际应用中，这些信息应该从后端获取
-    const minerStatusMap: Record<string, { status: string; model: string; ipAddress: string }> = {
-        'M001': { status: '在线', model: 'Antminer S19 Pro', ipAddress: '192.168.1.101' },
-        'M002': { status: '过热警告', model: 'Whatsminer M30S++', ipAddress: '192.168.1.102' },
-        'M003': { status: '离线', model: 'Antminer S19j Pro', ipAddress: '192.168.2.101' },
-        'M004': { status: '在线', model: 'Avalon 1246', ipAddress: '192.168.2.102' },
-        'M005': { status: '在线', model: 'Antminer S19 XP', ipAddress: '192.168.3.101' },
-        'M006': { status: '在线', model: 'Whatsminer M30S', ipAddress: '192.168.3.102' }
-    };
-    
-    // 获取状态对应的样式
-    const getStatusStyle = (status: string) => {
-        switch (status) {
-            case '在线':
-                return 'bg-green-100 text-green-800';
-            case '离线':
-                return 'bg-red-100 text-red-800';
-            default:
-                return 'bg-yellow-100 text-yellow-800';
-        }
-    };
-    
-    // 获取矿机的状态信息
-    const getMinerStatus = (minerId: string) => {
-        return minerStatusMap[minerId] || { status: '未知', model: '未知', ipAddress: '未知' };
-    };
-    
     // 以标签组形式显示矿机ID列表，带有状态指示和悬停详情
     return (
         <div className="flex flex-row items-center gap-1 w-full overflow-hidden whitespace-nowrap">
             {displayItems.map(minerId => {
-                const minerInfo = getMinerStatus(minerId.toString());
-                const statusStyle = getStatusStyle(minerInfo.status);
+                const miner = getMinerById(minerId.toString());
+                const statusStyle = miner ? getMinerStatusStyle(miner.status) : getMinerStatusStyle('未知');
                 
                 return (
                     <div 
@@ -312,7 +286,7 @@ export const MinersPropertyCell: PropertyCellComponent = ({
                     >
                         <span 
                             className="inline-flex items-center shrink-0 justify-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-800"
-                            title={`${minerInfo.model} (${minerInfo.ipAddress})`}
+                            title={miner ? `${miner.model} (${miner.ipAddress})` : '未知矿机'}
                         >
                             <span
                                 className={`inline-block w-2 h-2 rounded-full mr-1 flex-shrink-0 ${statusStyle}`}
@@ -324,9 +298,9 @@ export const MinersPropertyCell: PropertyCellComponent = ({
                         <div className="absolute z-20 left-0 bottom-full mb-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
                             <div className="bg-gray-800 text-white text-xs rounded shadow-lg py-1.5 px-3 whitespace-nowrap">
                                 <div className="font-medium">ID: {minerId}</div>
-                                <div>型号: {minerInfo.model}</div>
-                                <div>IP: {minerInfo.ipAddress}</div>
-                                <div>状态: <span className={statusStyle.replace('bg-', 'text-').replace('text-gray-800', 'text-white')}>{minerInfo.status}</span></div>
+                                <div>型号: {miner ? miner.model : '未知'}</div>
+                                <div>IP: {miner ? miner.ipAddress : '未知'}</div>
+                                <div>状态: <span className={statusStyle.replace('bg-', 'text-').replace('text-gray-800', 'text-white')}>{miner ? miner.status : '未知'}</span></div>
                             </div>
                             <div className="w-2 h-2 bg-gray-800 transform rotate-45 absolute -bottom-1 left-3"></div>
                         </div>

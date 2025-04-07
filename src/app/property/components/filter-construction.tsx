@@ -5,6 +5,7 @@ import { FilterCondition } from '@/app/property/types';
 import { FilterOperator } from '@/app/property/types';
 import { PropertyType } from '../constants';
 import { PropertyDefinition } from '../../issue/components/IssuePage';
+import { getSimpleMinersList, getMinerStatusStyle } from '../../miners/service';
 
 /**
  * 筛选构造器面板属性接口
@@ -640,9 +641,9 @@ export const MultiSelectFilterConstructorPanel: FilterConstructorComponent = ({
 };
 
 /**
- * 矿机列表类型筛选构造器面板组件
+ * 矿机列表类型的筛选构造器面板
  * 
- * 用于矿机列表类型属性的筛选条件设置，用户可以选择多个矿机ID进行筛选
+ * 提供矿机列表筛选界面，支持多选模式
  */
 export const MinersFilterConstructorPanel: FilterConstructorComponent = ({
     propertyDefinition,
@@ -651,15 +652,8 @@ export const MinersFilterConstructorPanel: FilterConstructorComponent = ({
     onCancel,
     position = {}
 }) => {
-    // 模拟矿机列表数据 - 实际应用中应该从API获取
-    const miners = [
-        { id: 'M001', model: 'Antminer S19 Pro', status: '在线', ipAddress: '192.168.1.101' },
-        { id: 'M002', model: 'Whatsminer M30S++', status: '过热警告', ipAddress: '192.168.1.102' },
-        { id: 'M003', model: 'Antminer S19j Pro', status: '离线', ipAddress: '192.168.2.101' },
-        { id: 'M004', model: 'Avalon 1246', status: '在线', ipAddress: '192.168.2.102' },
-        { id: 'M005', model: 'Antminer S19 XP', status: '在线', ipAddress: '192.168.3.101' },
-        { id: 'M006', model: 'Whatsminer M30S', status: '在线', ipAddress: '192.168.3.102' }
-    ];
+    // 获取矿机列表
+    const miners = getSimpleMinersList();
     
     // 选中的矿机IDs - 始终使用in操作符和数组值
     const [selectedMiners, setSelectedMiners] = useState<string[]>(
@@ -667,18 +661,6 @@ export const MinersFilterConstructorPanel: FilterConstructorComponent = ({
             ? currentFilter.value as string[]
             : []
     );
-
-    // 获取状态对应的样式
-    const getStatusStyle = (status: string) => {
-        switch (status) {
-            case '在线':
-                return 'bg-green-100 text-green-800';
-            case '离线':
-                return 'bg-red-100 text-red-800';
-            default:
-                return 'bg-yellow-100 text-yellow-800';
-        }
-    };
 
     // 处理矿机选择
     const handleMinerToggle = (minerId: string) => {
@@ -737,7 +719,7 @@ export const MinersFilterConstructorPanel: FilterConstructorComponent = ({
                                 />
                                 <div className="flex items-center">
                                     <span
-                                        className={`inline-block w-3 h-3 rounded-full mr-2 ${getStatusStyle(miner.status)}`}
+                                        className={`inline-block w-3 h-3 rounded-full mr-2 ${getMinerStatusStyle(miner.status)}`}
                                     />
                                     <span className="text-sm">{miner.id}</span>
                                     <span className="text-xs text-gray-500 ml-2">({miner.model})</span>

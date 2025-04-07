@@ -29,6 +29,7 @@ import {
 import '@mdxeditor/editor/style.css';
 import { PrimaryButton, SecondaryButton, ButtonGroup } from '@/app/components/ui/buttons';
 import './mdxeditor.css';
+import { getSimpleMinersList, getMinerStatusStyle, getMinerById } from '../../miners/service';
 
 // 属性值接口，与API接口保持一致
 export interface PropertyValue {
@@ -640,15 +641,8 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
     // 下拉框引用，用于检测点击外部关闭
     const dropdownRef = useRef<HTMLDivElement>(null);
     
-    // 模拟矿机列表数据 - 实际应用中应该从API获取
-    const miners = [
-        { id: 'M001', model: 'Antminer S19 Pro', status: '在线', ipAddress: '192.168.1.101' },
-        { id: 'M002', model: 'Whatsminer M30S++', status: '过热警告', ipAddress: '192.168.1.102' },
-        { id: 'M003', model: 'Antminer S19j Pro', status: '离线', ipAddress: '192.168.2.101' },
-        { id: 'M004', model: 'Avalon 1246', status: '在线', ipAddress: '192.168.2.102' },
-        { id: 'M005', model: 'Antminer S19 XP', status: '在线', ipAddress: '192.168.3.101' },
-        { id: 'M006', model: 'Whatsminer M30S', status: '在线', ipAddress: '192.168.3.102' }
-    ];
+    // 获取矿机列表数据
+    const miners = getSimpleMinersList();
     
     // 当属性值变化时更新内部状态
     useEffect(() => {
@@ -663,19 +657,9 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
     }, [value]);
     
     // 获取已选中的矿机信息
-    const selectedMinersInfo = miners.filter(miner => selectedMiners.includes(miner.id));
-    
-    // 获取状态对应的样式
-    const getStatusStyle = (status: string) => {
-        switch (status) {
-            case '在线':
-                return 'bg-green-100 text-green-800';
-            case '离线':
-                return 'bg-red-100 text-red-800';
-            default:
-                return 'bg-yellow-100 text-yellow-800';
-        }
-    };
+    const selectedMinersInfo = selectedMiners
+        .map(id => getMinerById(id))
+        .filter(Boolean); // 过滤掉未找到的矿机
     
     // 处理选择矿机
     const handleSelectMiner = async (minerId: string) => {
@@ -805,14 +789,14 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
                         <div className="flex flex-wrap items-center w-full gap-1">
                             {/* 显示选中的矿机标签 */}
                             <div className="flex flex-wrap items-center gap-1 max-w-full">
-                                {selectedMinersInfo.map(miner => (
+                                {selectedMinersInfo.map(miner => miner && (
                                     <div 
                                         key={miner.id}
                                         className="flex items-center bg-gray-100 rounded-full px-2 py-0.5 max-w-[140px] group"
                                         title={`${miner.model} - ${miner.status} - ${miner.ipAddress}`}
                                     >
                                         <span
-                                            className={`inline-block w-2 h-2 rounded-full mr-1 flex-shrink-0 ${getStatusStyle(miner.status)}`}
+                                            className={`inline-block w-2 h-2 rounded-full mr-1 flex-shrink-0 ${getMinerStatusStyle(miner.status)}`}
                                         ></span>
                                         <span className="text-xs truncate">{miner.id}</span>
                                         <button
@@ -827,10 +811,10 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
                             </div>
                             
                             {/* 清除所有按钮 */}
-                            {isHovering && selectedMinersInfo.length > 0 && (
+                            {selectedMinersInfo.length > 1 && isHovering && (
                                 <button
-                                    className="ml-auto text-gray-400 hover:text-gray-600 focus:outline-none transition-colors p-1 -mr-1 cursor-pointer shrink-0"
                                     onClick={handleClearAllMiners}
+                                    className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors cursor-pointer"
                                     title="清除所有矿机"
                                 >
                                     <MdCancel size={16} />
@@ -838,44 +822,43 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
                             )}
                         </div>
                     ) : (
-                        <span className="text-gray-400 text-sm">未选择矿机</span>
+                        <span className="text-gray-400">选择矿机...</span>
                     )}
                 </div>
                 
-                {/* 下拉选项列表 */}
+                {/* 下拉选项菜单 */}
                 {isDropdownOpen && (
-                    <div className="absolute z-10 mt-1 w-auto min-w-full max-w-[320px] bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
-                        <div className="py-1">
-                            {miners.map(miner => (
-                                <div
-                                    key={miner.id}
-                                    className={`px-4 py-2 hover:bg-gray-50 cursor-pointer flex items-center transition-colors ${selectedMiners.includes(miner.id) ? 'bg-gray-50' : ''}`}
-                                    onClick={() => handleSelectMiner(miner.id)}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedMiners.includes(miner.id)}
-                                        readOnly
-                                        className="mr-2"
-                                    />
-                                    <div>
-                                        <div className="flex items-center">
+                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                        <div className="p-2">
+                            {miners.length > 0 ? (
+                                miners.map(miner => (
+                                    <div
+                                        key={miner.id}
+                                        onClick={() => handleSelectMiner(miner.id)}
+                                        className={`
+                                            flex items-center p-2 hover:bg-gray-50 rounded-md transition-colors cursor-pointer
+                                            ${selectedMiners.includes(miner.id) ? 'bg-gray-100' : ''}
+                                        `}
+                                    >
+                                        <div className="flex items-center flex-1 min-w-0">
                                             <span
-                                                className={`inline-block w-3 h-3 rounded-full mr-2 flex-shrink-0 ${getStatusStyle(miner.status)}`}
+                                                className={`inline-block w-3 h-3 rounded-full mr-2 flex-shrink-0 ${getMinerStatusStyle(miner.status)}`}
                                             ></span>
-                                            <span className="text-sm font-medium">{miner.id}</span>
+                                            <div className="truncate">
+                                                <span className="text-sm font-medium">{miner.id}</span>
+                                                <span className="ml-2 text-xs text-gray-500">
+                                                    {miner.model} - {miner.ipAddress}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className="text-xs text-gray-500 ml-5">
-                                            {miner.model} - {miner.ipAddress}
-                                        </div>
+                                        {selectedMiners.includes(miner.id) && (
+                                            <span className="ml-2 text-blue-500">✓</span>
+                                        )}
                                     </div>
-                                </div>
-                            ))}
-                            
-                            {/* 无矿机时的提示 */}
-                            {miners.length === 0 && (
-                                <div className="px-4 py-2 text-gray-500 text-sm">
-                                    无可选矿机
+                                ))
+                            ) : (
+                                <div className="text-center py-3 text-gray-500">
+                                    没有可用的矿机
                                 </div>
                             )}
                         </div>

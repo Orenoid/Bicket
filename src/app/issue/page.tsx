@@ -133,8 +133,9 @@ async function getIssues(filters?: FilterCondition[]): Promise<Issue[]> {
                 // 根据属性类型确定查询表
                 let propertyValues: { issue_id: string }[] = [];
                 
-                if (filter.propertyType === 'multi_select') {
-                    // 多选类型存储在 property_multi_value 表中
+                // TODO tech dept 这里做了个特殊判断，感觉是有问题的，回头排查
+                if (filter.propertyType === 'multi_select' || filter.propertyType === 'miners') {
+                    // 多选类型和矿机列表类型都存储在 property_multi_value 表中
                     propertyValues = await prisma.property_multi_value.findMany({
                         where: baseCondition,
                         select: {
