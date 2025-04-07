@@ -1,7 +1,7 @@
 'use client';
 
 import { SecondaryButton } from '../../components/ui/buttons';
-import { SelectPropertyDetail, TitlePropertyDetail, MultiSelectPropertyDetail, MinersPropertyDetail, DatetimePropertyDetail } from '@/app/property/components/detail';
+import { SelectPropertyDetail, TitlePropertyDetail, MultiSelectPropertyDetail, MinersPropertyDetail, DatetimePropertyDetail, RichTextPropertyDetail } from '@/app/property/components/detail';
 import { SystemPropertyId } from '@/app/property/constants';
 
 // 从IssuePage.tsx导入需要的接口
@@ -30,6 +30,8 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
 }) => {
     // 获取标题属性
     const titleProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.TITLE);
+    // 获取描述属性
+    const descriptionProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.DESCRIPTION);
     // 获取状态属性
     const statusProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.STATUS);
     // 获取优先级属性
@@ -57,6 +59,12 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
     const getTitleValue = () => {
         const titlePropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.TITLE);
         return titlePropertyValue ? titlePropertyValue.value : '';
+    };
+
+    // 获取描述属性值
+    const getDescriptionValue = () => {
+        const descriptionPropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.DESCRIPTION);
+        return descriptionPropertyValue ? descriptionPropertyValue.value : '';
     };
 
     // 获取状态属性值
@@ -177,6 +185,15 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
                             <TitlePropertyDetail
                                 propertyDefinition={titleProperty}
                                 value={getTitleValue()}
+                                onUpdate={handlePropertyUpdate}
+                            />
+                        )}
+                        
+                        {/* 添加描述组件 */}
+                        {descriptionProperty && (
+                            <RichTextPropertyDetail
+                                propertyDefinition={descriptionProperty}
+                                value={getDescriptionValue()}
                                 onUpdate={handlePropertyUpdate}
                             />
                         )}

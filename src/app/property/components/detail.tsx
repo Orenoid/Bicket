@@ -4,6 +4,26 @@ import React, { useState, useEffect, useRef } from 'react';
 import { PropertyDefinition } from '@/app/issue/components/IssuePage';
 import { createSetOperation, createRemoveOperation, createUpdateOperation } from '../update-operations';
 import { MdCancel } from 'react-icons/md';
+import {
+    MDXEditor,
+    headingsPlugin,
+    listsPlugin,
+    quotePlugin,
+    thematicBreakPlugin,
+    markdownShortcutPlugin,
+    toolbarPlugin,
+    BoldItalicUnderlineToggles,
+    linkPlugin,
+    linkDialogPlugin,
+    CreateLink,
+    CodeToggle,
+    ListsToggle,
+    BlockTypeSelect,
+    imagePlugin,
+    InsertImage
+} from '@mdxeditor/editor';
+import '@mdxeditor/editor/style.css';
+import { PrimaryButton, SecondaryButton, ButtonGroup } from '@/app/components/ui/buttons';
 
 // 属性值接口，与API接口保持一致
 export interface PropertyValue {
@@ -926,5 +946,107 @@ export const DatetimePropertyDetail: React.FC<PropertyDetailProps> = ({
             </div>
         );
     }
+};
+
+/**
+ * 富文本描述属性详情组件
+ * 用于显示和编辑Issue的描述内容，支持Markdown格式
+ */
+export const RichTextPropertyDetail: React.FC<PropertyDetailProps> = ({
+propertyDefinition,
+value,
+    onUpdate
+}) => {
+    // 组件状态
+    const [internalValue, setInternalValue] = useState<string>(String(value));
+    const [hasChanges, setHasChanges] = useState(false);
+    const [originalValue, setOriginalValue] = useState<string>(String(value));
+    
+    // 初始化和同步内部值
+    useEffect(() => {
+        if (value !== undefined && value !== null) {
+            setInternalValue(String(value));
+            setOriginalValue(String(value));
+        } else {
+            setInternalValue('');
+            setOriginalValue('');
+        }
+    }, [value]);
+    
+    // 更新编辑器内容的处理函数
+    const handleChange = (markdown: string) => {
+        setInternalValue(markdown);
+        // 检查是否有变化
+        setHasChanges(markdown !== originalValue);
+    };
+    
+    // 处理取消操作
+    const handleCancel = () => {
+        setInternalValue(originalValue);
+        setHasChanges(false);
+    };
+    
+    // 处理保存操作
+    const handleSave = async () => {
+        if (onUpdate) {
+            // 使用createSetOperation创建更新操作
+            const operation = createSetOperation(propertyDefinition.id, internalValue);
+            
+            // 调用回调函数更新值
+            const success = await onUpdate(operation);
+            if (success) {
+                setHasChanges(false);
+                setOriginalValue(internalValue);
+            }
+        } else {
+            // 无回调时，直接重置状态
+            setHasChanges(false);
+        }
+    };
+    
+    // 渲染编辑模式
+    return (
+        <div className="border-t border-gray-200 pt-4 mt-4 pb-4">
+            <MDXEditor
+                onChange={handleChange}
+                markdown={internalValue}
+                placeholder={<span className="text-gray-400 text-md">Issue描述，支持markdown格式</span>}
+                plugins={[
+                    headingsPlugin(),
+                    quotePlugin(),
+                    listsPlugin(),
+                    thematicBreakPlugin(),
+                    linkPlugin(),
+                    linkDialogPlugin(),
+                    imagePlugin(),
+                    markdownShortcutPlugin(),
+                    toolbarPlugin({
+                        toolbarContents: () => (
+                            <>
+                                <BlockTypeSelect />
+                                <BoldItalicUnderlineToggles />
+                                <CreateLink />
+                                <ListsToggle />
+                                <CodeToggle />
+                                <InsertImage />
+                            </>
+                        )
+                    })
+                ]}
+            />
+            
+            {/* 操作按钮 - 只有在有变化时才显示 */}
+            {hasChanges && (
+                <ButtonGroup className="mt-2">
+                    <SecondaryButton onClick={handleCancel} className="mr-2">
+                        Cancel
+                    </SecondaryButton>
+                    <PrimaryButton onClick={handleSave}>
+                        Save
+                    </PrimaryButton>
+                </ButtonGroup>
+            )}
+        </div>
+    );
 };
 

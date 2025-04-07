@@ -9,12 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@mdxeditor/editor": "^3.29.2",
     "@prisma/client": "^6.5.0",
     "@tanstack/match-sorter-utils": "^8.19.4",
     "@tanstack/react-table": "^8.21.2",
-    "@tiptap/extension-image": "^2.11.7",
-    "@tiptap/react": "^2.11.7",
-    "@tiptap/starter-kit": "^2.11.7",
     "next": "15.2.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

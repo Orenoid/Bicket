@@ -1,13 +1,11 @@
 'use client';
 
-import React, { useState, useImperativeHandle, useEffect } from 'react';
 import { PropertyDefinition } from '@/app/issue/components/IssuePage';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Image from '@tiptap/extension-image';
-import { FaBold, FaItalic, FaListUl, FaListOl, FaQuoteLeft, FaImage, FaUndo, FaRedo, FaHeading, FaCode } from 'react-icons/fa';
+import { headingsPlugin, listsPlugin, markdownShortcutPlugin, thematicBreakPlugin, MDXEditor, quotePlugin, toolbarPlugin, BoldItalicUnderlineToggles, linkPlugin, linkDialogPlugin, CreateLink, CodeToggle, ListsToggle, BlockTypeSelect, imagePlugin, InsertImage } from '@mdxeditor/editor';
+import React, { useEffect, useImperativeHandle, useState } from 'react';
 import { MdCancel } from 'react-icons/md';
 import { PropertyType } from '../constants';
+import '@mdxeditor/editor/style.css';
 
 // 属性值接口，与API接口保持一致
 export interface PropertyValue {
@@ -100,37 +98,15 @@ export const TextareaPropertyInput = React.forwardRef<
 >((props, ref) => {
     const { propertyDefinition } = props;
 
-    // 存储组件内部状态
-    const [internalValue, setInternalValue] = useState('');
+    // TODO BUG https://github.com/mdx-editor/editor/issues/305
 
-    // 初始化编辑器
-    const editor = useEditor({
-        extensions: [
-            StarterKit.configure({
-                heading: {
-                    levels: [1, 2, 3] // 启用h1, h2, h3标题
-                },
-                bulletList: {},
-                orderedList: {},
-                blockquote: {},
-                codeBlock: {}, // 启用代码块
-                code: {}, // 启用行内代码
-            }),
-            Image,
-        ],
-        content: internalValue,
-        onUpdate: ({ editor }) => {
-            // 获取HTML内容
-            const html = editor.getHTML();
-            setInternalValue(html);
-        },
-        autofocus: false,
-        editorProps: {
-            attributes: {
-                class: 'focus:outline-none w-full min-h-[150px] prose max-w-none',
-            },
-        },
-    });
+    // 存储组件内部状态
+    const [internalValue, setInternalValue] = useState(``);
+
+    // 更新编辑器内容的处理函数
+    const handleChange = (markdown: string) => {
+        setInternalValue(markdown);
+    };
 
     // 暴露onSubmit方法
     useImperativeHandle(ref, () => ({
@@ -150,211 +126,36 @@ export const TextareaPropertyInput = React.forwardRef<
         }
     }));
 
-    // 工具栏按钮组件
-    interface MenuButtonProps {
-        onClick: () => void;
-        active: boolean;
-        icon: React.ComponentType<{ className?: string }>;
-        title: string;
-    }
-
-    const MenuButton: React.FC<MenuButtonProps> = ({ onClick, active, icon: Icon, title }) => (
-        <button
-            onClick={onClick}
-            className={`p-2 rounded-md hover:bg-gray-100 transition-colors ${active ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}`}
-            title={title}
-            type="button"
-        >
-            <Icon className="h-4 w-4" />
-        </button>
-    );
-
-    // 添加图片的函数
-    const addImage = () => {
-        const url = window.prompt('输入图片URL');
-        if (url && editor) {
-            editor.chain().focus().setImage({ src: url }).run();
-        }
-    };
-
     return (
         <div className="mb-4">
-            {/* 编辑器工具栏 */}
-            {editor && (
-                <div className="flex flex-wrap items-center gap-1 mb-0 border border-gray-200 rounded-t-lg p-2 bg-white shadow-sm">
-                    <MenuButton
-                        onClick={() => editor.chain().focus().toggleBold().run()}
-                        active={editor.isActive('bold')}
-                        icon={FaBold}
-                        title="加粗"
-                    />
-                    <MenuButton
-                        onClick={() => editor.chain().focus().toggleItalic().run()}
-                        active={editor.isActive('italic')}
-                        icon={FaItalic}
-                        title="斜体"
-                    />
-                    <div className="h-5 w-px bg-gray-200 mx-1"></div>
-                    <MenuButton
-                        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                        active={editor.isActive('heading', { level: 1 })}
-                        icon={FaHeading}
-                        title="大标题"
-                    />
-                    <MenuButton
-                        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-                        active={editor.isActive('heading', { level: 3 })}
-                        icon={FaHeading}
-                        title="小标题"
-                    />
-                    <div className="h-5 w-px bg-gray-200 mx-1"></div>
-                    <MenuButton
-                        onClick={() => editor.chain().focus().toggleBulletList().run()}
-                        active={editor.isActive('bulletList')}
-                        icon={FaListUl}
-                        title="无序列表"
-                    />
-                    <MenuButton
-                        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                        active={editor.isActive('orderedList')}
-                        icon={FaListOl}
-                        title="有序列表"
-                    />
-                    <div className="h-5 w-px bg-gray-200 mx-1"></div>
-                    <MenuButton
-                        onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                        active={editor.isActive('blockquote')}
-                        icon={FaQuoteLeft}
-                        title="引用"
-                    />
-                    <MenuButton
-                        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-                        active={editor.isActive('codeBlock')}
-                        icon={FaCode}
-                        title="代码块"
-                    />
-                    <MenuButton
-                        onClick={addImage}
-                        active={false}
-                        icon={FaImage}
-                        title="插入图片"
-                    />
-                    <div className="h-5 w-px bg-gray-200 mx-1"></div>
-                    <MenuButton
-                        onClick={() => editor.chain().focus().undo().run()}
-                        active={false}
-                        icon={FaUndo}
-                        title="撤销"
-                    />
-                    <MenuButton
-                        onClick={() => editor.chain().focus().redo().run()}
-                        active={false}
-                        icon={FaRedo}
-                        title="重做"
-                    />
-                </div>
-            )}
-
-            {/* 自定义CSS，解决交互问题 */}
-            <style jsx global>{`
-                .ProseMirror {
-                    outline: none !important;
-                    padding: 1rem !important;
-                    min-height: 180px;
-                    color: #374151;
-                    font-size: 0.95rem;
-                }
-                .ProseMirror-focused {
-                    outline: none !important;
-                }
-                .ProseMirror p.is-editor-empty:first-child::before {
-                    content: "开始输入内容...";
-                    float: left;
-                    color: #9ca3af;
-                    pointer-events: none;
-                    height: 0;
-                }
-                .ProseMirror .is-empty::before {
-                    content: attr(data-placeholder);
-                    float: left;
-                    color: #9ca3af;
-                    pointer-events: none;
-                    height: 0;
-                }
-                /* 增强Markdown样式 */
-                .ProseMirror h1 {
-                    font-size: 1.75em;
-                    font-weight: 600;
-                    margin-top: 0.75em;
-                    margin-bottom: 0.5em;
-                    color: #111827;
-                    border-bottom: 1px solid #e5e7eb;
-                    padding-bottom: 0.3em;
-                }
-                .ProseMirror h2 {
-                    font-size: 1.5em;
-                    font-weight: 600;
-                    margin-top: 0.75em;
-                    margin-bottom: 0.5em;
-                    color: #111827;
-                }
-                .ProseMirror h3 {
-                    font-size: 1.25em;
-                    font-weight: 600;
-                    margin-top: 0.75em;
-                    margin-bottom: 0.5em;
-                    color: #111827;
-                }
-                .ProseMirror pre {
-                    background-color: #f9fafb;
-                    border-radius: 6px;
-                    padding: 0.75em 1em;
-                    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-                    font-size: 0.9em;
-                    overflow-x: auto;
-                    margin: 0.5em 0;
-                    border: 1px solid #e5e7eb;
-                }
-                .ProseMirror code {
-                    background-color: #f3f4f6;
-                    border-radius: 4px;
-                    padding: 0.1em 0.3em;
-                    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-                    font-size: 0.9em;
-                    color: #ef4444;
-                }
-                .ProseMirror blockquote {
-                    border-left: 4px solid #e5e7eb;
-                    padding: 0.5em 1em;
-                    margin: 0.5em 0;
-                    color: #4b5563;
-                    background-color: #f9fafb;
-                    border-radius: 0 4px 4px 0;
-                }
-                .ProseMirror ul,
-                .ProseMirror ol {
-                    padding-left: 1.5em;
-                    margin: 0.5em 0;
-                }
-                .ProseMirror p {
-                    margin: 0.5em 0;
-                    line-height: 1.6;
-                }
-                .ProseMirror img {
-                    max-width: 100%;
-                    height: auto;
-                    border-radius: 4px;
-                    margin: 0.5em 0;
-                }
-            `}</style>
-
-            {/* TipTap编辑器内容区域 */}
-            <div className="border border-gray-200 border-t-0 rounded-b-lg overflow-hidden shadow-sm bg-white">
-                <EditorContent
-                    editor={editor}
-                    className="w-full focus-within:outline-none"
-                />
-            </div>
+            <MDXEditor
+                onChange={handleChange}
+                markdown={internalValue}
+                placeholder={<span className="text-gray-400 text-md">Issue description, markdown supported</span>}
+                plugins={[
+                    // 功能插件
+                    headingsPlugin(),
+                    quotePlugin(),
+                    listsPlugin(),
+                    thematicBreakPlugin(),
+                    linkPlugin(),
+                    linkDialogPlugin(),
+                    imagePlugin(),
+                    markdownShortcutPlugin(),
+                    toolbarPlugin({
+                        toolbarContents: () => (
+                            <>
+                                <BlockTypeSelect />
+                                <BoldItalicUnderlineToggles />
+                                <CreateLink />
+                                <ListsToggle />
+                                <CodeToggle />
+                                <InsertImage />
+                            </>
+                        )
+                    })
+                ]}
+            />
         </div>
     );
 });

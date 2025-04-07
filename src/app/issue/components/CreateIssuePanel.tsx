@@ -96,7 +96,7 @@ export const CreateIssuePanel = ({ onClose, propertyDefinitions, onCreateSuccess
             <div className='flex flex-row h-full'>
                 {/* 左侧面板内容 */}
                 <div className="flex flex-col h-full w-2/3 border-r border-gray-200">
-                    <div className="pt-16 flex-grow overflow-auto p-4">
+                    <div className="pt-6 flex-grow overflow-auto p-4">
                         <div className="flex">
                             {/* 左侧：标题和描述 */}
                             <div className="flex-grow pr-4 flex-col">
