@@ -47,6 +47,16 @@ export interface MinersPropertyConfig extends Record<string, unknown> {
     displayCount?: number;             // 表格中显示的最大矿机数
 }
 
+/**
+ * 日期时间类型属性的配置结构
+ */
+export interface DatetimePropertyConfig extends Record<string, unknown> {
+    format?: string;                   // 日期时间显示格式
+    showTime?: boolean;                // 是否显示时间部分
+    showSeconds?: boolean;             // 是否显示秒部分
+    showTimezone?: boolean;            // 是否显示时区部分
+}
+
 // 文本类型的表头组件
 export const TextPropertyHeaderCell: PropertyHeaderCellComponent = ({ 
     propertyName, 
@@ -332,14 +342,101 @@ export const MinersPropertyCell: PropertyCellComponent = ({
     );
 };
 
+// 日期时间类型的表头组件
+export const DatetimePropertyHeaderCell: PropertyHeaderCellComponent = ({ 
+    propertyName, 
+    propertyConfig 
+}) => {
+    return (
+        <div className="flex items-center space-x-1">
+            <span className="font-medium text-gray-700">{propertyName}</span>
+            {Boolean(propertyConfig?.required) && (
+                <span className="text-red-500 text-xs">*</span>
+            )}
+        </div>
+    );
+};
+
+// 日期时间类型的单元格组件
+export const DatetimePropertyCell: PropertyCellComponent = ({ 
+    value, 
+    propertyConfig 
+}) => {
+    // 处理空值显示
+    if (value === null || value === undefined || value === "") {
+        return <span className="text-gray-400 italic">{propertyConfig?.emptyText as string || "未设置"}</span>;
+    }
+    
+    try {
+        // 尝试解析日期时间字符串
+        const dateString = String(value);
+        const date = new Date(dateString);
+        
+        // 检查日期是否有效
+        if (isNaN(date.getTime())) {
+            return <span className="text-gray-400 italic">无效日期</span>;
+        }
+        
+        // 获取配置
+        const config = propertyConfig as DatetimePropertyConfig || {};
+        const showTime = config.showTime !== false; // 默认显示时间
+        const showSeconds = config.showSeconds !== false; // 默认显示秒
+        const showTimezone = config.showTimezone === true; // 默认不显示时区
+        
+        // 格式化日期部分 (YYYY-MM-DD)
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const dateFormatted = `${year}-${month}-${day}`;
+        
+        // 如果不显示时间，只返回日期部分
+        if (!showTime) {
+            return <span>{dateFormatted}</span>;
+        }
+        
+        // 格式化时间部分
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        let timeFormatted = `${hours}:${minutes}`;
+        
+        // 添加秒部分（如果需要）
+        if (showSeconds) {
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            timeFormatted += `:${seconds}`;
+        }
+        
+        // 添加时区部分（如果需要）
+        if (showTimezone) {
+            const timezoneOffset = date.getTimezoneOffset();
+            const timezoneHours = Math.abs(Math.floor(timezoneOffset / 60));
+            const timezoneMinutes = Math.abs(timezoneOffset % 60);
+            const timezoneSign = timezoneOffset <= 0 ? '+' : '-'; // 注意：getTimezoneOffset 返回的是与 UTC 的差值的负数
+            const timezoneFormatted = `${timezoneSign}${String(timezoneHours).padStart(2, '0')}:${String(timezoneMinutes).padStart(2, '0')}`;
+            timeFormatted += ` (UTC${timezoneFormatted})`;
+        }
+        
+        // 返回完整的格式化日期时间
+        return (
+            <div className="whitespace-nowrap">
+                <span className="mr-2">{dateFormatted}</span>
+                <span className="text-gray-500">{timeFormatted}</span>
+            </div>
+        );
+    } catch (error) {
+        console.error('日期格式化错误', error);
+        return <span className="text-gray-400 italic">日期格式错误</span>;
+    }
+};
+
 // 表头组件映射
 export const PROPERTY_HEADER_COMPONENTS: Record<string, PropertyHeaderCellComponent> = {
     [PropertyType.ID]: TextPropertyHeaderCell,
     [PropertyType.TEXT]: TextPropertyHeaderCell,
     [PropertyType.SELECT]: TextPropertyHeaderCell,
     [PropertyType.RICH_TEXT]: TextPropertyHeaderCell,
-    [PropertyType.MULTI_SELECT]: TextPropertyHeaderCell, // 多选类型使用与单选相同的表头组件
-    [PropertyType.MINERS]: TextPropertyHeaderCell, // 矿机列表类型使用通用的表头组件
+    [PropertyType.MULTI_SELECT]: TextPropertyHeaderCell,
+    [PropertyType.MINERS]: TextPropertyHeaderCell,
+    [PropertyType.DATETIME]: DatetimePropertyHeaderCell,
     // 其他类型的表头组件可以在这里添加
 };
 
@@ -350,6 +447,7 @@ export const PROPERTY_CELL_COMPONENTS: Record<string, PropertyCellComponent> = {
     [PropertyType.SELECT]: SelectPropertyCell,
     [PropertyType.RICH_TEXT]: RichTextPropertyCell,
     [PropertyType.MULTI_SELECT]: MultiSelectPropertyCell,
-    [PropertyType.MINERS]: MinersPropertyCell, // 注册矿机列表类型的单元格组件
+    [PropertyType.MINERS]: MinersPropertyCell,
+    [PropertyType.DATETIME]: DatetimePropertyCell,
     // 其他类型的单元格组件可以在这里添加
 }; 

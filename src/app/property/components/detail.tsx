@@ -271,8 +271,8 @@ export const SelectPropertyDetail: React.FC<PropertyDetailProps> = ({
     
     return (
         <div className="flex items-center">
-            <div className="w-20 text-sm text-gray-600 font-semibold">{propertyDefinition.name}</div>
-            <div className="relative w-auto min-w-[120px] max-w-[240px]" ref={dropdownRef}>
+            <div className="w-20 text-sm text-gray-600 font-semibold truncate" title={propertyDefinition.name}>{propertyDefinition.name}</div>
+            <div className="relative w-auto min-w-[120px] max-w-[240px] pl-3" ref={dropdownRef}>
                 <div
                     className="flex items-center w-full h-8 px-3 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={toggleDropdown}
@@ -479,8 +479,8 @@ export const MultiSelectPropertyDetail: React.FC<PropertyDetailProps> = ({
     
     return (
         <div className="flex items-center">
-            <div className="w-20 text-sm text-gray-600 font-semibold">{propertyDefinition.name}</div>
-            <div className="relative w-auto min-w-[120px] max-w-[240px]" ref={dropdownRef}>
+            <div className="w-20 text-sm text-gray-600 font-semibold truncate" title={propertyDefinition.name}>{propertyDefinition.name}</div>
+            <div className="relative w-auto min-w-[120px] max-w-[240px] pl-3" ref={dropdownRef}>
                 {/* 触发下拉框的按钮/显示区域 */}
                 <div
                     className="flex items-center w-full min-h-[32px] px-3 py-1 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors"
@@ -732,8 +732,8 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
     
     return (
         <div className="flex items-center">
-            <div className="w-20 text-sm text-gray-600 font-semibold">{propertyDefinition.name}</div>
-            <div className="relative w-auto min-w-[120px] max-w-[320px]" ref={dropdownRef}>
+            <div className="w-20 text-sm text-gray-600 font-semibold truncate" title={propertyDefinition.name}>{propertyDefinition.name}</div>
+            <div className="relative w-auto min-w-[120px] max-w-[320px] pl-3" ref={dropdownRef}>
                 {/* 触发下拉框的按钮/显示区域 */}
                 <div
                     className="flex items-center w-full min-h-[32px] px-3 py-1 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors"
@@ -824,5 +824,107 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
             </div>
         </div>
     );
+};
+
+/**
+ * 日期时间类型详情组件
+ * 当前仅展示日期时间，不支持用户编辑
+ */
+export const DatetimePropertyDetail: React.FC<PropertyDetailProps> = ({
+    propertyDefinition,
+    value
+}) => {
+    // TODO: 后续需要实现日期时间编辑功能，当前版本仅支持显示
+
+    // 处理空值显示
+    if (value === null || value === undefined || value === "") {
+        return (
+            <div className="flex items-center">
+                <div className="w-20 text-sm text-gray-600 font-semibold truncate" title={propertyDefinition.name}>{propertyDefinition.name}</div>
+                <div className="pl-3">
+                    <span className="text-gray-400 italic">未设置</span>
+                </div>
+            </div>
+        );
+    }
+    
+    try {
+        // 尝试解析日期时间字符串
+        const dateString = String(value);
+        const date = new Date(dateString);
+        
+        // 检查日期是否有效
+        if (isNaN(date.getTime())) {
+            return (
+                <div className="flex items-center">
+                    <div className="w-20 text-sm text-gray-600 font-semibold truncate" title={propertyDefinition.name}>{propertyDefinition.name}</div>
+                    <div className="pl-3">
+                        <span className="text-gray-400 italic">无效日期</span>
+                    </div>
+                </div>
+            );
+        }
+        
+        // 获取配置
+        const config = propertyDefinition.config || {};
+        const showTime = config.showTime !== false; // 默认显示时间
+        const showSeconds = config.showSeconds !== false; // 默认显示秒
+        const showTimezone = config.showTimezone === true; // 默认不显示时区
+        
+        // 格式化日期部分 (YYYY-MM-DD)
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const dateFormatted = `${year}-${month}-${day}`;
+        
+        // 格式化时间部分
+        let timeFormatted = '';
+        if (showTime) {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            timeFormatted = `${hours}:${minutes}`;
+            
+            // 添加秒部分（如果需要）
+            if (showSeconds) {
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                timeFormatted += `:${seconds}`;
+            }
+            
+            // 添加时区部分（如果需要）
+            if (showTimezone) {
+                const timezoneOffset = date.getTimezoneOffset();
+                const timezoneHours = Math.abs(Math.floor(timezoneOffset / 60));
+                const timezoneMinutes = Math.abs(timezoneOffset % 60);
+                const timezoneSign = timezoneOffset <= 0 ? '+' : '-'; // 注意：getTimezoneOffset 返回的是与 UTC 的差值的负数
+                const timezoneFormatted = `${timezoneSign}${String(timezoneHours).padStart(2, '0')}:${String(timezoneMinutes).padStart(2, '0')}`;
+                timeFormatted += ` (UTC${timezoneFormatted})`;
+            }
+        }
+        
+        // 返回完整的格式化日期时间，整体使用浅灰色
+        return (
+            <div className="flex items-center">
+                <div className="w-20 text-sm text-gray-600 font-semibold truncate" title={propertyDefinition.name}>{propertyDefinition.name}</div>
+                <div className="pl-3 flex-grow">
+                    <div className="whitespace-nowrap text-gray-500">
+                        <span>{dateFormatted}</span>
+                        {showTime && (
+                            <span className="ml-1">{timeFormatted}</span>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    } catch (error) {
+        console.error('日期格式化错误', error);
+        return (
+            <div className="flex items-center">
+                <div className="w-20 text-sm text-gray-600 font-semibold truncate" title={propertyDefinition.name}>{propertyDefinition.name}</div>
+                <div className="pl-3">
+                    <span className="text-gray-400 italic">日期格式错误</span>
+                </div>
+            </div>
+        );
+    }
 };
 

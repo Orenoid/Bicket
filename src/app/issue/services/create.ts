@@ -91,7 +91,35 @@ export async function batchCreateIssues(
           value: String(issueIds[i]),
           number_value: Number(issueIds[i])
         });
+
+        // 添加创建时间（冗余存储到 property_single_value 表）
+        const now = new Date();
+        // 生成带时区信息的时间字符串
+        const timezoneOffset = -now.getTimezoneOffset();
+        const sign = timezoneOffset >= 0 ? '+' : '-';
+        const hours = String(Math.floor(Math.abs(timezoneOffset) / 60)).padStart(2, '0');
+        const minutes = String(Math.abs(timezoneOffset) % 60).padStart(2, '0');
+        const timezoneSuffix = `${sign}${hours}:${minutes}`;
         
+        // 格式化年月日时分秒毫秒
+        const yyyy = now.getFullYear();
+        const MM = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        const ms = String(now.getMilliseconds()).padStart(3, '0');
+
+        // ISO 8601 格式带时区信息：yyyy-MM-ddThh:mm:ss.sss+hh:mm
+        const localISOString = `${yyyy}-${MM}-${dd}T${hh}:${mm}:${ss}.${ms}${timezoneSuffix}`;
+        
+        allSingleValues.push({
+          issue_id: issueId,
+          property_id: SystemPropertyId.CREATED_AT,
+          property_type: PropertyType.DATETIME,
+          value: localISOString
+        });
+
         // 处理用户输入的每个属性值
         for (const pv of input.propertyValues) {
           const property = properties.find(p => p.id === pv.property_id)!;

@@ -1,5 +1,6 @@
 import { prisma } from '@/app/lib/prisma';
 import { PropertyUpdateProcessorFactory, MultiValueData } from '@/app/property/update-property-value';
+import { SystemPropertyId, PropertyType } from '@/app/property/constants';
 
 // 定义操作负载接口
 type OperationPayload = Record<string, unknown>;
@@ -203,12 +204,51 @@ export async function updateIssue(input: UpdateIssueInput): Promise<UpdateIssueR
       }
       
       // 更新issue的updatedAt时间
+      const now = new Date();
       await tx.issue.update({
         where: {
           id: input.issueId
         },
         data: {
-          updatedAt: new Date()
+          updatedAt: now
+        }
+      });
+      
+      // 生成带时区信息的时间字符串
+      const timezoneOffset = -now.getTimezoneOffset();
+      const sign = timezoneOffset >= 0 ? '+' : '-';
+      const hours = String(Math.floor(Math.abs(timezoneOffset) / 60)).padStart(2, '0');
+      const minutes = String(Math.abs(timezoneOffset) % 60).padStart(2, '0');
+      const timezoneSuffix = `${sign}${hours}:${minutes}`;
+      
+      // 格式化年月日时分秒毫秒
+      const yyyy = now.getFullYear();
+      const MM = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      const ms = String(now.getMilliseconds()).padStart(3, '0');
+      
+      // ISO 8601 格式带时区信息：yyyy-MM-ddThh:mm:ss.sss+hh:mm
+      const localISOString = `${yyyy}-${MM}-${dd}T${hh}:${mm}:${ss}.${ms}${timezoneSuffix}`;
+      
+      // 更新 property_single_value 表中的 UPDATED_AT 属性值
+      await tx.property_single_value.upsert({
+        where: {
+          issue_id_property_id: {
+            issue_id: input.issueId,
+            property_id: SystemPropertyId.UPDATED_AT
+          }
+        },
+        update: {
+          value: localISOString
+        },
+        create: {
+          issue_id: input.issueId,
+          property_id: SystemPropertyId.UPDATED_AT,
+          property_type: PropertyType.DATETIME,
+          value: localISOString
         }
       });
     });
