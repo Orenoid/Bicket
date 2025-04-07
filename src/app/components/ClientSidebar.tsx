@@ -1,11 +1,11 @@
 'use client';
 
-import Sidebar from '@/app/components/sidebar';
 import { useRouter } from 'next/navigation';
 import { CiViewTimeline } from 'react-icons/ci';
 import { HiOutlineServer } from 'react-icons/hi';
 import { IoNotificationsOutline } from 'react-icons/io5';
 import { MdSettings, MdViewList } from "react-icons/md";
+import Sidebar from './sidebar';
 
 const ClientSidebar = () => {
   const router = useRouter();
