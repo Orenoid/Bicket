@@ -174,7 +174,7 @@ export class TextPropertyUpdateProcessor extends BasePropertyUpdateProcessor {
     return { valid: true };
   }
 
-  transformToDbOperations(property: property, operationType: string, payload: Record<string, unknown>, _issueId: string): DbOperationResult {
+  transformToDbOperations(property: property, operationType: string, payload: Record<string, unknown>): DbOperationResult {
     const result: DbOperationResult = {};
 
     switch (operationType) {
@@ -262,7 +262,7 @@ export class SelectPropertyUpdateProcessor extends BasePropertyUpdateProcessor {
     return { valid: true };
   }
 
-  transformToDbOperations(property: property, operationType: string, payload: Record<string, unknown>, _issueId: string): DbOperationResult {
+  transformToDbOperations(property: property, operationType: string, payload: Record<string, unknown>): DbOperationResult {
     const result: DbOperationResult = {};
 
     switch (operationType) {
@@ -351,7 +351,7 @@ export class RichTextPropertyUpdateProcessor extends BasePropertyUpdateProcessor
     return { valid: true };
   }
 
-  transformToDbOperations(property: property, operationType: string, payload: Record<string, unknown>, _issueId: string): DbOperationResult {
+  transformToDbOperations(property: property, operationType: string, payload: Record<string, unknown>): DbOperationResult {
     const result: DbOperationResult = {};
 
     switch (operationType) {
@@ -502,7 +502,7 @@ export class MultiSelectPropertyUpdateProcessor extends BasePropertyUpdateProces
     return { valid: true };
   }
 
-  transformToDbOperations(property: property, operationType: string, payload: Record<string, unknown>, _issueId: string): DbOperationResult {
+  transformToDbOperations(property: property, operationType: string, payload: Record<string, unknown>): DbOperationResult {
     const result: DbOperationResult = {};
     
     switch (operationType) {
@@ -649,7 +649,7 @@ export class MinersPropertyUpdateProcessor extends BasePropertyUpdateProcessor {
     return { valid: true };
   }
 
-  transformToDbOperations(property: property, operationType: string, payload: Record<string, unknown>, _issueId: string): DbOperationResult {
+  transformToDbOperations(property: property, operationType: string, payload: Record<string, unknown>): DbOperationResult {
     const result: DbOperationResult = {};
     
     switch (operationType) {

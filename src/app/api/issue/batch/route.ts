@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 提取issue列表
-    const issues: CreateIssueInput[] = requestBody.issues.map((issue: any) => ({
+    const issues: CreateIssueInput[] = requestBody.issues.map((issue: Record<string, unknown>) => ({
       propertyValues: issue.propertyValues || {}
     }));
 

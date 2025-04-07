@@ -1,6 +1,6 @@
 import { FilterCondition } from '../types';
 import { PropertyType } from '../constants';
-import { FilterTransformer, PrismaFilterCondition, FilterTransformerContext } from '../filter-transformer';
+import { FilterTransformer, PrismaFilterCondition } from '../filter-transformer';
 
 /**
  * 矿机列表筛选转换器
@@ -12,10 +12,9 @@ export const MinersFilterTransformer: FilterTransformer = {
      * 转换为Prisma查询条件
      * 
      * @param filter 筛选条件
-     * @param context 转换上下文（可选）
      * @returns Prisma查询条件对象
      */
-    toPrismaQuery(filter: FilterCondition, context?: FilterTransformerContext): PrismaFilterCondition {
+    toPrismaQuery(filter: FilterCondition): PrismaFilterCondition {
         // 根据操作符构造不同的查询条件
         switch (filter.operator) {
             case 'in':

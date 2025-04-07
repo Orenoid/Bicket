@@ -287,7 +287,7 @@ export const MultiSelectAppliedFilter: AppliedFilterComponent = ({ filter, prope
  * 
  * 显示矿机列表类型属性的筛选条件，支持多个矿机ID的展示
  */
-export const MinersAppliedFilter: AppliedFilterComponent = ({ filter, propertyDefinition }) => {
+export const MinersAppliedFilter: AppliedFilterComponent = ({ filter }) => {
     // 根据操作符显示不同的格式
     switch (filter.operator) {
         case 'in':
