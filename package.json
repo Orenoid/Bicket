@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.14.2",
     "@mdxeditor/editor": "^3.29.2",
     "@prisma/client": "^6.5.0",
     "@tanstack/match-sorter-utils": "^8.19.4",
