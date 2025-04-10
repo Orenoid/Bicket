@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Divider from './ui/divider-new';
 import { TbLayoutSidebarRightExpand, TbLayoutSidebarRightCollapse } from 'react-icons/tb';
-import Image from 'next/image';
+import { OrganizationSwitcher, useAuth, useOrganizationList } from '@clerk/nextjs';
 
 export interface SidebarItem {
   id: string;
@@ -16,7 +16,25 @@ export interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ sections = [[], [], []] }) => {
   const [collapsed, setCollapsed] = useState(false);
-  
+
+  const { orgId } = useAuth()
+  const hasActiveOrg = orgId !== null
+
+  const { isLoaded, setActive, userMemberships } = useOrganizationList()
+
+  useEffect(() => {
+    if (hasActiveOrg) {
+      return
+    }
+
+    if (userMemberships.data && userMemberships.data.length > 0 && isLoaded ) {
+      setActive({
+        organization: userMemberships.data[0].organization.id,
+      })
+    }
+
+  }, [hasActiveOrg, isLoaded, orgId, setActive, userMemberships.data])
+
   // 监听折叠状态变化，更新文档根元素的 class
   useEffect(() => {
     if (collapsed) {
@@ -24,21 +42,21 @@ const Sidebar: React.FC<SidebarProps> = ({ sections = [[], [], []] }) => {
     } else {
       document.documentElement.classList.remove('sidebar-collapsed');
     }
-    
+
     // 清理函数
     return () => {
       document.documentElement.classList.remove('sidebar-collapsed');
     };
   }, [collapsed]);
-  
+
   // 切换侧边栏折叠状态
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
   };
 
   // Make sure we always have 3 sections
-  const [topSection, middleSection, bottomSection] = sections.length === 3 
-    ? sections 
+  const [topSection, middleSection, bottomSection] = sections.length === 3
+    ? sections
     : [...sections, ...Array(3 - sections.length).fill([])];
 
   // 渲染单个侧边栏项目
@@ -60,19 +78,20 @@ const Sidebar: React.FC<SidebarProps> = ({ sections = [[], [], []] }) => {
   );
 
   return (
-    <aside 
+    <aside
       className={`fixed left-0 top-0 h-screen ${collapsed ? 'w-16' : 'w-64'} bg-gray-50 border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 flex flex-col transition-all duration-300 overflow-x-hidden z-10`}
     >
       {/* Logo和折叠按钮 */}
       <div className={`flex items-center p-2 ${collapsed ? 'justify-center' : 'justify-between'}`}>
         {!collapsed && (
           <div className="flex items-center">
-            <Image src="/logo.png" alt="Bicket Logo" width={64} height={64} className="mr-1 pl-1" />
-            <h1 className="text-2xl font-bold">Bicket</h1>
+            <OrganizationSwitcher hidePersonal={true} />
+            {/* <Image src="/logo.png" alt="Bicket Logo" width={64} height={64} className="mr-1 pl-1" />
+            <h1 className="text-2xl font-bold">Bicket</h1> */}
           </div>
         )}
-        
-        <button 
+
+        <button
           onClick={toggleSidebar}
           className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors hover:cursor-pointer"
           aria-label={collapsed ? "展开侧边栏" : "折叠侧边栏"}
@@ -93,7 +112,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sections = [[], [], []] }) => {
       <div className="p-4 flex-1 overflow-y-auto overflow-x-hidden w-full">
         {middleSection.map(renderSidebarItem)}
       </div>
-      
+
       {/* Divider between middle and bottom sections */}
       <Divider />
 

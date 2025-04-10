@@ -10,7 +10,7 @@ import { UserButton, useUser } from '@clerk/nextjs';
 
 const ClientSidebar = () => {
   const router = useRouter();
-  const { isSignedIn, user, isLoaded } = useUser()
+  const { user, isLoaded } = useUser()
 
   const sidebarSections: SidebarItem[][] = [
     [
@@ -34,7 +34,7 @@ const ClientSidebar = () => {
     [
       { id: "settings", label: "Settings", icon: <MdSettings size={20} /> },
       { 
-        id: "users", 
+        id: "user", 
         label: isLoaded ? user?.fullName || user?.emailAddresses[0].emailAddress || "" : " ",
         icon: <UserButton />,
         onClick: () => {
