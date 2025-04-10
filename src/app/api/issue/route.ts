@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { createIssue, CreateIssueInput } from '@/app/issue/services/create';
+import { auth } from '@clerk/nextjs/server';
 
 // 预留认证中间件位置
 // 未来可以在这里添加身份验证逻辑
@@ -7,9 +8,17 @@ import { createIssue, CreateIssueInput } from '@/app/issue/services/create';
 
 export async function POST(req: NextRequest) {
   try {
-    // 未来可以在这里调用认证中间件
-    // await authMiddleware(req)
-    
+    const { userId } = await auth()
+    if (!userId) {
+      return new Response(JSON.stringify({
+        success: false,
+        message: '未授权'
+      }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     // 解析请求体
     const requestBody = await req.json();
     

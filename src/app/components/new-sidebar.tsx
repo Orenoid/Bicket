@@ -3,14 +3,14 @@ import Divider from './ui/divider-new';
 import { TbLayoutSidebarRightExpand, TbLayoutSidebarRightCollapse } from 'react-icons/tb';
 import Image from 'next/image';
 
-interface SidebarItem {
+export interface SidebarItem {
   id: string;
   label: string;
   icon?: React.ReactNode;
   onClick?: () => void;
 }
 
-interface SidebarProps {
+export interface SidebarProps {
   sections: SidebarItem[][];
 }
 

@@ -5,12 +5,14 @@ import { CiViewTimeline } from 'react-icons/ci';
 import { HiOutlineServer } from 'react-icons/hi';
 import { IoNotificationsOutline } from 'react-icons/io5';
 import { MdSettings, MdViewList } from "react-icons/md";
-import Sidebar from './new-sidebar';
+import Sidebar, { SidebarItem } from './new-sidebar';
+import { UserButton, useUser } from '@clerk/nextjs';
 
 const ClientSidebar = () => {
   const router = useRouter();
+  const { isSignedIn, user, isLoaded } = useUser()
 
-  const sidebarSections = [
+  const sidebarSections: SidebarItem[][] = [
     [
       { id: "inbox", label: "Inbox", icon: <IoNotificationsOutline size={20} /> },
       { id: "views", label: "Views", icon: <MdViewList size={20} /> },
@@ -31,6 +33,18 @@ const ClientSidebar = () => {
     ],
     [
       { id: "settings", label: "Settings", icon: <MdSettings size={20} /> },
+      { 
+        id: "users", 
+        label: isLoaded ? user?.fullName || user?.emailAddresses[0].emailAddress || "" : " ",
+        icon: <UserButton />,
+        onClick: () => {
+          // 查找UserButton组件中的按钮元素并点击它
+          const userButton = document.querySelector('.cl-userButtonTrigger');
+          if (userButton instanceof HTMLElement) {
+            userButton.click();
+          }
+        }
+      },
     ],
   ];
 
