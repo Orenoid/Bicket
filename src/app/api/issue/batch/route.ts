@@ -1,8 +1,32 @@
 import { NextRequest } from 'next/server';
 import { batchCreateIssues, CreateIssueInput } from '@/app/issue/services/create';
+import { auth } from '@clerk/nextjs/server';
 
 export async function POST(req: NextRequest) {
   try {
+    // 获取认证信息
+    const { userId, orgId } = await auth();
+    if (!userId) {
+      return new Response(JSON.stringify({
+        success: false,
+        message: '未授权'
+      }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // 验证组织ID
+    if (!orgId) {
+      return new Response(JSON.stringify({
+        success: false,
+        message: '缺少工作区ID'
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     // 解析请求体
     const requestBody = await req.json();
 
@@ -17,8 +41,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 提取issue列表
+    // 提取issue列表，并为每个 issue 添加 workspaceId
     const issues: CreateIssueInput[] = requestBody.issues.map((issue: Record<string, unknown>) => ({
+      workspaceId: orgId.toString(),
       propertyValues: issue.propertyValues || {}
     }));
 

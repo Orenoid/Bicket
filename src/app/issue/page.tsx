@@ -1,13 +1,13 @@
-// 导入共享的 Prisma 实例
 import { prisma } from '@/app/lib/prisma';
 import { IssuePage, Issue, PropertyValue, PropertyDefinition } from './components/IssuePage';
 import { FilterCondition } from '@/app/property/types';
 import { Prisma } from '@prisma/client';
+import { auth } from '@clerk/nextjs/server';
 
 // 反序列化筛选条件
 function deserializeFilters(filtersStr: string): FilterCondition[] {
     if (!filtersStr) return [];
-    
+
     try {
         return filtersStr.split(';').map(filterStr => {
             const [propertyId, propertyType, operator, valueStr] = filterStr.split(':');
@@ -78,10 +78,14 @@ async function getPropertyDefinitions(): Promise<PropertyDefinition[]> {
 }
 
 // 从数据库中获取工单数据
-async function getIssues(filters?: FilterCondition[]): Promise<Issue[]> {
+async function getIssues(filters: FilterCondition[] | undefined, workspaceId: string): Promise<Issue[]> {
     try {
-        // 基本条件：未删除的工单
-        const baseWhere: Prisma.issueWhereInput = { deletedAt: null };
+        // 基本条件：未删除的工单并且必须指定 workspace_id
+        // 使用类型断言解决类型错误
+        const baseWhere: Prisma.issueWhereInput = {
+            deletedAt: null,
+            workspace_id: workspaceId // 强制要求 workspace_id
+        };
         
         // 如果有筛选条件，应用筛选
         if (filters && filters.length > 0) {
@@ -279,7 +283,7 @@ async function getIssues(filters?: FilterCondition[]): Promise<Issue[]> {
 
 // 不带筛选条件的工单查询
 async function getIssuesWithoutFilter(baseWhere: Prisma.issueWhereInput): Promise<Issue[]> {
-    // 查询所有工单
+    // 查询所有工单 (baseWhere 已经包含了 workspace_id 条件)
     const issues = await prisma.issue.findMany({
         where: baseWhere,
         select: {
@@ -368,10 +372,19 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
         const filtersStr = resolvedParams.filters;
         const filters = filtersStr ? deserializeFilters(filtersStr) : [];
         
+        const { orgId } = await auth()
+        
+        // 必须有组织ID才能查询数据
+        if (!orgId) {
+            console.warn('没有获取到组织ID，无法查询工单数据')
+            const propertyDefinitions = await getPropertyDefinitions();
+            return <IssuePage issues={[]} propertyDefinitions={propertyDefinitions} />;
+        }
+
         // 获取属性定义和工单数据
         const [propertyDefinitions, issues] = await Promise.all([
             getPropertyDefinitions(),
-            getIssues(filters)
+            getIssues(filters, orgId.toString()) // 强制传递 orgId 作为 workspace_id
         ]);
 
         // 检查是否获取到了属性定义

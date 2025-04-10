@@ -65,10 +65,11 @@ model property_multi_value {
 }
 
 model issue {
-  id        String    @id @default(uuid()) // issue ID，主键
-  createdAt DateTime  @default(now())      // 创建时间
-  updatedAt DateTime  @updatedAt           // 更新时间
-  deletedAt DateTime?                      // 软删除时间，为null表示未删除
+  id           String    @id @default(uuid()) // issue ID，主键
+  workspace_id String?                        // 工作区ID，关联到工作区 TODO: 后续需要将此字段设为必填，并处理历史数据
+  createdAt    DateTime  @default(now())      // 创建时间
+  updatedAt    DateTime  @updatedAt           // 更新时间
+  deletedAt    DateTime?                      // 软删除时间，为null表示未删除
 
   @@map("issue")
 }

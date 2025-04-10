@@ -9,6 +9,8 @@ import { PropertyType } from '@/app/property/constants';
  * 创建 issue 的请求参数接口
  */
 export interface CreateIssueInput {
+  // 所属工作区ID
+  workspaceId: string;
   // 属性值数组
   propertyValues: {
     property_id: string;
@@ -70,8 +72,12 @@ export async function batchCreateIssues(
     const results = await prisma.$transaction(async (tx) => {
       const batchResults: CreateIssueResult[] = [];
       
-      // 创建所有 issues
-      const issueCreatePromises = inputs.map(() => tx.issue.create({ data: {} }));
+      // 创建所有 issues - 添加 workspace_id
+      const issueCreatePromises = inputs.map(input => tx.issue.create({ 
+        data: {
+          workspace_id: input.workspaceId 
+        } 
+      }));
       const createdIssues = await Promise.all(issueCreatePromises);
       
       // 准备所有属性值数据

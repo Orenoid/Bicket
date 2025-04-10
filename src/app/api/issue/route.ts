@@ -8,13 +8,24 @@ import { auth } from '@clerk/nextjs/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth()
+    const { userId, orgId } = await auth()
     if (!userId) {
       return new Response(JSON.stringify({
         success: false,
         message: '未授权'
       }), {
         status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // 验证组织ID
+    if (!orgId) {
+      return new Response(JSON.stringify({
+        success: false,
+        message: '缺少工作区ID'
+      }), {
+        status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
@@ -46,8 +57,9 @@ export async function POST(req: NextRequest) {
       });
     }
     
-    // 构建创建 Issue 的输入参数
+    // 构建创建 Issue 的输入参数，添加 workspaceId
     const input: CreateIssueInput = {
+      workspaceId: orgId.toString(),
       propertyValues
     };
     
