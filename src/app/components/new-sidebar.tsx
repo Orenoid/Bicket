@@ -109,7 +109,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sections = [[], [], []] }) => {
       </div>
 
       {/* Divider between top and middle sections */}
-      <Divider />
+      {/* <Divider /> */}
 
       {/* Middle section (with overflow) */}
       <div className="p-4 flex-1 overflow-y-auto overflow-x-hidden w-full">
