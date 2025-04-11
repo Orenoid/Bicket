@@ -20,6 +20,9 @@ import {
     MdTextFields
 } from 'react-icons/md';
 import { TbCheckbox } from 'react-icons/tb';
+import { PaginatedDropdown } from './paginated-dropdown';
+import { useOrganization } from '@clerk/clerk-react';
+import Image from 'next/image';
 
 // 属性值接口，与API接口保持一致
 export interface PropertyValue {
@@ -40,6 +43,16 @@ export interface Miner {
     manufacturer: string;      // 制造商
     status: string;            // 矿机状态
     ipAddress: string;         // IP 地址
+}
+
+// 用户类型接口，与Clerk的PublicUserData保持一致
+export interface UserData {
+    firstName: string | null;
+    lastName: string | null;
+    imageUrl: string;
+    hasImage: boolean;
+    identifier: string;
+    userId: string | null;
 }
 
 // 根据属性类型获取对应图标的工具函数
@@ -748,6 +761,149 @@ export const MinersPropertyInput = React.forwardRef<
 
 MinersPropertyInput.displayName = 'MinersPropertyInput';
 
+// 用户属性输入组件
+export const UserPropertyInput = React.forwardRef<
+    { onSubmit: () => { isValid: boolean; propertyValue: PropertyValue | null } },
+    PropertyInputProps
+>((props, ref) => {
+    const { propertyDefinition } = props;
+
+    // 存储组件内部状态
+    const [internalValue, setInternalValue] = useState<string>('');
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+
+    // 获取组织成员列表
+    const { memberships, isLoaded } = useOrganization({
+        memberships: {
+            infinite: true, // 使用无限滚动模式
+            keepPreviousData: true, // 保持之前的数据直到新数据加载完成
+        },
+    });
+
+    // 处理Clerk返回的数据，转换为内部使用的UserData
+    const users = React.useMemo(() => {
+        if (!isLoaded || !memberships?.data) return [];
+        
+        return memberships.data.map(membership => {
+            const publicUserData = membership.publicUserData;
+            return {
+                firstName: publicUserData.firstName,
+                lastName: publicUserData.lastName,
+                imageUrl: publicUserData.imageUrl,
+                hasImage: publicUserData.hasImage,
+                identifier: publicUserData.identifier,
+                userId: publicUserData.userId || membership.id // 使用用户ID或成员ID作为唯一标识
+            } as UserData;
+        });
+    }, [isLoaded, memberships?.data]);
+
+    // 当选中用户变更时更新内部值
+    useEffect(() => {
+        if (selectedUser) {
+            setInternalValue(selectedUser.userId || '');
+        } else {
+            setInternalValue('');
+        }
+    }, [selectedUser]);
+
+    // 暴露onSubmit方法
+    useImperativeHandle(ref, () => ({
+        onSubmit: () => {
+            // 执行校验逻辑
+            const isRequired = propertyDefinition.config?.required === true;
+            const isValid: boolean = Boolean(!isRequired || (internalValue && internalValue.trim() !== ''));
+
+            // 构造PropertyValue
+            return {
+                isValid,
+                propertyValue: isValid ? {
+                    property_id: propertyDefinition.id,
+                    value: internalValue
+                } : null
+            };
+        }
+    }));
+
+    // 渲染用户项
+    const renderUserItem = (user: UserData) => (
+        <div className="flex items-center">
+            <Image 
+                src={user.imageUrl} 
+                alt={`${user.firstName || ''} ${user.lastName || ''}`}
+                width={24}
+                height={24}
+                unoptimized
+                className="w-6 h-6 rounded-full mr-2 flex-shrink-0 object-cover border border-gray-200"
+            />
+            <span className="text-sm truncate">
+                {user.firstName || ''} {user.lastName || ''} 
+                <span className="text-gray-500 text-xs ml-1">
+                    {user.identifier}
+                </span>
+            </span>
+        </div>
+    );
+
+    // 渲染选中用户
+    const renderSelectedUser = (user: UserData) => (
+        <div className="flex items-center">
+            <Image 
+                src={user.imageUrl} 
+                alt={`${user.firstName || ''} ${user.lastName || ''}`}
+                width={20}
+                height={20}
+                unoptimized
+                className="w-5 h-5 rounded-full mr-2 flex-shrink-0 object-cover border border-gray-200"
+            />
+            <span className="text-sm truncate">
+                {user.firstName || ''} {user.lastName || ''}
+            </span>
+        </div>
+    );
+
+    // 处理加载更多用户
+    const handleLoadMore = () => {
+        if (memberships && memberships.hasNextPage) {
+            memberships.fetchNext();
+        }
+    };
+
+    return (
+        <div className="flex items-center">
+            <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+                <div className="w-5 flex-shrink-0 flex justify-center text-gray-500">
+                    {getPropertyTypeIcon(propertyDefinition.type)}
+                </div>
+                <span className="w-12">{propertyDefinition.name}</span>
+            </div>
+
+            <PaginatedDropdown<UserData>
+                isOpen={dropdownOpen}
+                onOpen={() => setDropdownOpen(true)}
+                onClose={() => setDropdownOpen(false)}
+                selectedItem={selectedUser}
+                onSelect={(user) => {
+                    setSelectedUser(user);
+                    setDropdownOpen(false);
+                }}
+                onClear={() => setSelectedUser(null)}
+                getItemKey={(user) => user.userId || user.identifier}
+                renderItem={renderUserItem}
+                renderSelectedItem={renderSelectedUser}
+                hasMore={memberships?.hasNextPage || false}
+                onLoadMore={handleLoadMore}
+                items={users}
+                isLoading={!isLoaded || memberships?.isFetching}
+                placeholder="选择用户"
+                emptyMessage="无可选用户"
+            />
+        </div>
+    );
+});
+
+UserPropertyInput.displayName = 'UserPropertyInput';
+
 // 属性输入组件映射表
 export const PROPERTY_INPUT_COMPONENTS: Record<
     string,
@@ -762,6 +918,7 @@ export const PROPERTY_INPUT_COMPONENTS: Record<
     [PropertyType.SELECT]: SelectPropertyInput,
     [PropertyType.MULTI_SELECT]: MultiSelectPropertyInput,
     [PropertyType.MINERS]: MinersPropertyInput,
+    [PropertyType.USER]: UserPropertyInput,
     // 可以扩展更多属性类型...
 }; 
 

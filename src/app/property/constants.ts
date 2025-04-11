@@ -13,6 +13,8 @@ export enum SystemPropertyId {
     DIAGNOSIS = 'property0009',      // 工单诊断
     LABEL = 'property0010',          // 工单标签
     MINERS = 'property0011',         // 矿机列表
+    ASIGNEE = 'property0012',        // 负责人
+    REPORTER = 'property0013',       // 报告人
 }
 
 
@@ -48,6 +50,8 @@ export const PROPERTY_ID_TYPE_MAP = {
     [SystemPropertyId.DIAGNOSIS]: PropertyType.SELECT,
     [SystemPropertyId.LABEL]: PropertyType.MULTI_SELECT,
     [SystemPropertyId.MINERS]: PropertyType.MINERS,
+    [SystemPropertyId.ASIGNEE]: PropertyType.USER,
+    [SystemPropertyId.REPORTER]: PropertyType.USER,
 };
 
 /**
