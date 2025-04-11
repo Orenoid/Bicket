@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FilterCondition } from '../types';
 import { PropertyDefinition } from '../../issue/components/IssuePage';
 import { FiX } from 'react-icons/fi';
 import { PropertyType } from '../constants';
 import { getMinerById, getMinerStatusStyle } from '../../miners/service';
+import { getUser } from '../../users/service';
 
 /**
  * 已应用筛选条件的属性接口
@@ -355,21 +356,152 @@ export const MinersAppliedFilter: AppliedFilterComponent = ({ filter }) => {
 };
 
 /**
- * 针对不同属性类型的已应用筛选组件映射
+ * 用户类型的已应用筛选组件
  * 
- * 类似于表格单元格和筛选面板，可以为不同属性类型注册专门的展示组件
+ * 显示用户类型属性的筛选条件，仅显示用户名
+ */
+export const UserAppliedFilter: AppliedFilterComponent = ({ filter }) => {
+    // 状态变量，存储已加载的用户数据
+    const [users, setUsers] = useState<Record<string, string>>({});
+    const [isLoading, setIsLoading] = useState(true);
+    
+    // 根据操作符显示不同的格式
+    const displayState = () => {
+        const userIds = filter.value as string[];
+        
+        if (userIds.length === 0) {
+            return <span>无选中用户</span>;
+        }
+        
+        if (isLoading) {
+            return <span className="text-gray-500">加载中...</span>;
+        }
+        
+        // 构建显示内容
+        if (userIds.length === 1) {
+            // 单个用户
+            return <span>{users[userIds[0]] || '未知用户'}</span>;
+        } else if (userIds.length <= 2) {
+            // 显示所有用户名称（最多2个）
+            return (
+                <span className="flex items-center flex-wrap gap-x-2">
+                    {userIds.map(id => (
+                        <span key={id}>
+                            {users[id] || '未知用户'}
+                        </span>
+                    ))}
+                </span>
+            );
+        } else {
+            // 超过2个用户，显示前2个和数量提示
+            return (
+                <span className="flex items-center flex-wrap gap-x-2">
+                    {userIds.slice(0, 2).map(id => (
+                        <span key={id}>
+                            {users[id] || '未知用户'}
+                        </span>
+                    ))}
+                    <span className="text-xs text-gray-500">
+                        +{userIds.length - 2}
+                    </span>
+                </span>
+            );
+        }
+    };
+    
+    // 加载用户数据
+    useEffect(() => {
+        const userIds = filter.value as string[];
+        if (userIds.length === 0) {
+            setIsLoading(false);
+            return;
+        }
+        
+        async function loadUsers() {
+            setIsLoading(true);
+            try {
+                // 创建一个用户ID到用户名的映射
+                const userMap: Record<string, string> = {};
+                
+                // 并行加载所有用户数据
+                await Promise.all(
+                    userIds.map(async (userId) => {
+                        try {
+                            const userData = await getUser(userId);
+                            userMap[userId] = userData.username;
+                        } catch (error) {
+                            console.error(`获取用户信息失败: ${userId}`, error);
+                            userMap[userId] = '未知用户';
+                        }
+                    })
+                );
+                
+                setUsers(userMap);
+            } catch (error) {
+                console.error('加载用户信息失败', error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        
+        loadUsers();
+    }, [filter.value]);
+    
+    // 处理不同的操作符
+    switch (filter.operator) {
+        case 'in':
+            return displayState();
+        default:
+            // 不支持的操作符，显示原始值
+            return <span>{String(filter.value)}</span>;
+    }
+};
+
+/**
+ * 已应用筛选组件映射表
+ * 
+ * 将属性类型映射到对应的应用筛选组件
  */
 export const APPLIED_FILTER_COMPONENTS: Record<string, AppliedFilterComponent> = {
-    // 文本类型使用 TextAppliedFilter 组件
+    // 基本类型使用 TextAppliedFilter 组件
     [PropertyType.TEXT]: TextAppliedFilter,
-    // ID 类型使用 IdAppliedFilter 组件
     [PropertyType.ID]: IdAppliedFilter,
-    // 单选类型使用 SelectAppliedFilter 组件
+    // 选项类型使用 SelectAppliedFilter 组件
     [PropertyType.SELECT]: SelectAppliedFilter,
     // 富文本类型使用 RichTextAppliedFilter 组件
     [PropertyType.RICH_TEXT]: RichTextAppliedFilter,
     // 多选类型使用 MultiSelectAppliedFilter 组件
     [PropertyType.MULTI_SELECT]: MultiSelectAppliedFilter,
     // 矿机列表类型使用 MinersAppliedFilter 组件
-    [PropertyType.MINERS]: MinersAppliedFilter
-}; 
+    [PropertyType.MINERS]: MinersAppliedFilter,
+    // 用户类型使用 UserAppliedFilter 组件
+    [PropertyType.USER]: UserAppliedFilter
+};
+
+/**
+ * 获取属性类型对应的应用筛选组件
+ * 
+ * @param propertyType 属性类型
+ * @returns 应用筛选组件
+ */
+export function getAppliedFilterComponent(propertyType: string): AppliedFilterComponent {
+    switch (propertyType) {
+        case PropertyType.TEXT:
+            return TextAppliedFilter;
+        case PropertyType.ID:
+            return IdAppliedFilter;
+        case PropertyType.SELECT:
+            return SelectAppliedFilter;
+        case PropertyType.RICH_TEXT:
+            return RichTextAppliedFilter;
+        case PropertyType.MULTI_SELECT:
+            return MultiSelectAppliedFilter;
+        case PropertyType.MINERS:
+            return MinersAppliedFilter;
+        case PropertyType.USER:
+            return UserAppliedFilter;
+        default:
+            // 默认返回文本过滤器
+            return TextAppliedFilter;
+    }
+} 

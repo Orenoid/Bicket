@@ -6,6 +6,7 @@ import { SelectFilterTransformer } from './transformers/select-transformer';
 import { RichTextFilterTransformer } from './transformers/rich-text-transformer';
 import { MultiSelectFilterTransformer } from './transformers/multi-select-transformer';
 import { MinersFilterTransformer } from './transformers/miners-transformer';
+import { UserFilterTransformer } from './transformers/user-transformer';
 
 /**
  * 筛选转换器上下文接口
@@ -102,6 +103,7 @@ export const FILTER_TRANSFORMERS: Record<string, FilterTransformer> = {
     [PropertyType.RICH_TEXT]: RichTextFilterTransformer,
     [PropertyType.MULTI_SELECT]: MultiSelectFilterTransformer,
     [PropertyType.MINERS]: MinersFilterTransformer,
+    [PropertyType.USER]: UserFilterTransformer,
     
     // 其他类型将在后续实现
 };

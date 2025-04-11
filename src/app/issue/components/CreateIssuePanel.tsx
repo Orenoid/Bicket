@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { PrimaryButton, SecondaryButton, ButtonGroup } from '../../components/ui/buttons';
-import { PropertyValue as InputPropertyValue, MultiSelectPropertyInput, SelectPropertyInput, TextareaPropertyInput, TextPropertyInput, MinersPropertyInput } from '@/app/property/components/input';
+import { PropertyValue as InputPropertyValue, MultiSelectPropertyInput, SelectPropertyInput, TextareaPropertyInput, TextPropertyInput, MinersPropertyInput, UserPropertyInput } from '@/app/property/components/input';
 import { SystemPropertyId } from '@/app/property/constants';
 
 // 从IssuePage.tsx导入需要的接口
@@ -147,6 +147,14 @@ export const CreateIssuePanel = ({ onClose, propertyDefinitions, onCreateSuccess
                         <MultiSelectPropertyInput
                             propertyDefinition={propertyDefinitions.find(p => p.id === SystemPropertyId.LABEL) as PropertyDefinition}
                             ref={(ref) => registerPropertyRef(SystemPropertyId.LABEL, ref)}
+                        />
+                        <UserPropertyInput
+                            propertyDefinition={propertyDefinitions.find(p => p.id === SystemPropertyId.ASIGNEE) as PropertyDefinition}
+                            ref={(ref) => registerPropertyRef(SystemPropertyId.ASIGNEE, ref)}
+                        />
+                        <UserPropertyInput
+                            propertyDefinition={propertyDefinitions.find(p => p.id === SystemPropertyId.REPORTER) as PropertyDefinition}
+                            ref={(ref) => registerPropertyRef(SystemPropertyId.REPORTER, ref)}
                         />
                     </div>
                     

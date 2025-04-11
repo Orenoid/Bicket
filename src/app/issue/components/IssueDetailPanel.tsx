@@ -1,7 +1,15 @@
 'use client';
 
 import { SecondaryButton } from '../../components/ui/buttons';
-import { SelectPropertyDetail, TitlePropertyDetail, MultiSelectPropertyDetail, MinersPropertyDetail, DatetimePropertyDetail, RichTextPropertyDetail } from '@/app/property/components/detail';
+import {
+    SelectPropertyDetail,
+    TitlePropertyDetail,
+    MultiSelectPropertyDetail,
+    MinersPropertyDetail,
+    DatetimePropertyDetail,
+    RichTextPropertyDetail,
+    UserPropertyDetail
+} from '@/app/property/components/detail';
 import { SystemPropertyId } from '@/app/property/constants';
 
 // 从IssuePage.tsx导入需要的接口
@@ -48,6 +56,10 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
     const createdAtProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.CREATED_AT);
     // 获取更新时间属性
     const updatedAtProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.UPDATED_AT);
+    // 获取经办人属性
+    const assigneeProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.ASIGNEE);
+    // 获取报告人属性
+    const reporterProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.REPORTER);
 
     // 获取ID属性值
     const getIdValue = (): string => {
@@ -113,6 +125,18 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
     const getUpdatedAtValue = () => {
         const updatedAtPropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.UPDATED_AT);
         return updatedAtPropertyValue ? updatedAtPropertyValue.value : null;
+    };
+
+    // 获取经办人属性值
+    const getAssigneeValue = () => {
+        const assigneePropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.ASIGNEE);
+        return assigneePropertyValue ? assigneePropertyValue.value : null;
+    };
+
+    // 获取报告人属性值
+    const getReporterValue = () => {
+        const reporterPropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.REPORTER);
+        return reporterPropertyValue ? reporterPropertyValue.value : null;
     };
 
     // 处理复制ID到剪贴板
@@ -248,6 +272,22 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
                             <SelectPropertyDetail
                                 propertyDefinition={diagnosisProperty}
                                 value={getDiagnosisValue()}
+                                onUpdate={handlePropertyUpdate}
+                            />
+                        )}
+                        {/* 经办人属性组件 */}
+                        {assigneeProperty && (
+                            <UserPropertyDetail
+                                propertyDefinition={assigneeProperty}
+                                value={getAssigneeValue()}
+                                onUpdate={handlePropertyUpdate}
+                            />
+                        )}
+                        {/* 报告人属性组件 */}
+                        {reporterProperty && (
+                            <UserPropertyDetail
+                                propertyDefinition={reporterProperty}
+                                value={getReporterValue()}
                                 onUpdate={handlePropertyUpdate}
                             />
                         )}

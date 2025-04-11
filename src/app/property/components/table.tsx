@@ -1,8 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { PropertyType } from '../constants';
 import { getMinerById, getMinerStatusStyle } from '../../miners/service';
+import Image from 'next/image';
+import { getUser, User } from '../../users/service';
 
 // 表头组件属性接口
 export interface PropertyHeaderCellProps {
@@ -402,6 +404,85 @@ export const DatetimePropertyCell: PropertyCellComponent = ({
     }
 };
 
+// 用户类型的单元格组件
+export const UserPropertyCell: PropertyCellComponent = ({ 
+    value 
+}) => {
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    
+    // 转换userId并设置effect
+    const userId = value !== null && value !== undefined && value !== "" 
+        ? String(value) 
+        : "";
+    
+    // 加载用户信息
+    useEffect(() => {
+        // 如果没有userId，不执行加载
+        if (!userId) {
+            setLoading(false);
+            return;
+        }
+        
+        async function loadUser() {
+            try {
+                setLoading(true);
+                setError(null);
+                const userData = await getUser(userId);
+                setUser(userData);
+            } catch (err) {
+                console.error('加载用户信息失败', err);
+                setError('加载用户信息失败');
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        loadUser();
+    }, [userId]);
+    
+    // 处理空值显示
+    if (!userId) {
+        return <span className="text-gray-400 italic">未分配</span>;
+    }
+    
+    // 加载中显示
+    if (loading) {
+        return <span className="text-gray-400">加载中...</span>;
+    }
+    
+    // 错误显示
+    if (error) {
+        return <span className="text-red-500">加载失败</span>;
+    }
+    
+    // 用户不存在显示
+    if (!user) {
+        return <span className="text-gray-400 italic">未知用户</span>;
+    }
+    
+    // 显示用户信息
+    return (
+        <div className="flex items-center">
+            {/* 用户头像 */}
+            <div className="w-6 h-6 rounded-full overflow-hidden mr-2 flex-shrink-0 border border-gray-200">
+                <Image 
+                    src={user.imageUrl} 
+                    alt={user.username}
+                    width={24}
+                    height={24}
+                    unoptimized
+                    className="w-full h-full object-cover"
+                />
+            </div>
+            
+            {/* 用户名 */}
+            <span className="text-sm truncate">{user.username}</span>
+        </div>
+    );
+};
+
 // 表头组件映射
 export const PROPERTY_HEADER_COMPONENTS: Record<string, PropertyHeaderCellComponent> = {
     [PropertyType.ID]: TextPropertyHeaderCell,
@@ -411,6 +492,7 @@ export const PROPERTY_HEADER_COMPONENTS: Record<string, PropertyHeaderCellCompon
     [PropertyType.MULTI_SELECT]: TextPropertyHeaderCell,
     [PropertyType.MINERS]: TextPropertyHeaderCell,
     [PropertyType.DATETIME]: DatetimePropertyHeaderCell,
+    [PropertyType.USER]: TextPropertyHeaderCell,
     // 其他类型的表头组件可以在这里添加
 };
 
@@ -423,5 +505,6 @@ export const PROPERTY_CELL_COMPONENTS: Record<string, PropertyCellComponent> = {
     [PropertyType.MULTI_SELECT]: MultiSelectPropertyCell,
     [PropertyType.MINERS]: MinersPropertyCell,
     [PropertyType.DATETIME]: DatetimePropertyCell,
+    [PropertyType.USER]: UserPropertyCell,
     // 其他类型的单元格组件可以在这里添加
 }; 

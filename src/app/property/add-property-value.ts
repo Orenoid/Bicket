@@ -70,6 +70,8 @@ export class PropertyProcessorFactory {
         return new MultiSelectPropertyProcessor();
       case PropertyType.MINERS:
         return new MinersPropertyProcessor();
+      case PropertyType.USER:
+        return new UserPropertyProcessor();
       default:
         throw new Error(`不支持的属性类型: ${propertyType}`);
     }
@@ -627,5 +629,72 @@ export class MinersPropertyProcessor extends BasePropertyProcessor {
     });
     
     return { multiValues };
+  }
+}
+
+/**
+ * 用户类型属性处理器
+ */
+export class UserPropertyProcessor extends BasePropertyProcessor {
+  validateFormat(property: property, value: unknown): ValidationResult {
+    // 检查值是否为可用值
+    if (value === null || value === undefined || value === '') {
+      // 所有属性都允许为空
+      return { valid: true };
+    }
+
+    // 用户ID应该是字符串
+    if (typeof value !== 'string') {
+      return {
+        valid: false,
+        errors: [`属性 ${property.name} 必须是字符串类型`]
+      };
+    }
+
+    return { valid: true };
+  }
+
+  validateBusinessRules(property: property, value: unknown): ValidationResult {
+    // 如果值为 null、undefined 或空字符串，允许通过验证
+    if (value === null || value === undefined || value === '') {
+      return { valid: true };
+    }
+
+    // TODO: 实现用户存在性校验，验证用户ID是否存在于系统中
+    // 这通常需要调用 Clerk API 或检查数据库中的用户记录
+    
+    return { valid: true };
+  }
+
+  transformToDbFormat(property: property, value: unknown, issueId: string): DbInsertData {
+    // 如果值为 null，存储 null
+    if (value === null || value === undefined || value === '') {
+      return {
+        singleValues: [
+          this.createSingleValue(
+            issueId,
+            property.id,
+            PropertyType.USER,
+            null,
+            null
+          )
+        ]
+      };
+    }
+
+    // 转换为字符串并存储
+    const stringValue = String(value);
+    
+    return {
+      singleValues: [
+        this.createSingleValue(
+          issueId,
+          property.id,
+          PropertyType.USER,
+          stringValue,
+          null
+        )
+      ]
+    };
   }
 }

@@ -30,6 +30,8 @@ import '@mdxeditor/editor/style.css';
 import { PrimaryButton, SecondaryButton, ButtonGroup } from '@/app/components/ui/buttons';
 import './mdxeditor.css';
 import { getSimpleMinersList, getMinerStatusStyle, getMinerById } from '../../miners/service';
+import { useOrganization } from '@clerk/clerk-react';
+import Image from 'next/image';
 
 // 属性值接口，与API接口保持一致
 export interface PropertyValue {
@@ -992,6 +994,285 @@ export const DatetimePropertyDetail: React.FC<PropertyDetailProps> = ({
 };
 
 /**
+ * 用户类型详情组件
+ * 用于显示和编辑与工单关联的用户，支持从组织成员中选择
+ */
+export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
+    propertyDefinition,
+    value,
+    onUpdate
+}) => {
+    // 状态管理
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isHovering, setIsHovering] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [selectedUser, setSelectedUser] = useState<{
+        firstName: string | null;
+        lastName: string | null;
+        imageUrl: string;
+        hasImage: boolean;
+        identifier: string;
+        userId: string | null;
+    } | null>(null);
+    const [isLoadingCurrentUser, setIsLoadingCurrentUser] = useState(false);
+    
+    // 下拉框引用，用于检测点击外部关闭
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    
+    // 获取组织成员列表
+    const { memberships, isLoaded } = useOrganization({
+        memberships: {
+            infinite: true, // 使用无限滚动模式
+            keepPreviousData: true, // 保持之前的数据直到新数据加载完成
+        },
+    });
+    
+    // 处理Clerk返回的数据，转换为内部使用的用户数据
+    const users = React.useMemo(() => {
+        if (!isLoaded || !memberships?.data) return [];
+        
+        return memberships.data.map(membership => {
+            const publicUserData = membership.publicUserData;
+            return {
+                firstName: publicUserData.firstName,
+                lastName: publicUserData.lastName,
+                imageUrl: publicUserData.imageUrl,
+                hasImage: publicUserData.hasImage,
+                identifier: publicUserData.identifier,
+                userId: publicUserData.userId || membership.id // 使用用户ID或成员ID作为唯一标识
+            };
+        });
+    }, [isLoaded, memberships?.data]);
+    
+    // 当属性值变化时更新内部状态
+    useEffect(() => {
+        if (value !== undefined && value !== null && value !== "") {
+            setSelectedUserId(String(value));
+            
+            // 尝试从当前加载的用户列表中查找
+            const userMatch = users.find(user => user.userId === String(value));
+            if (userMatch) {
+                setSelectedUser(userMatch);
+            } else {
+                // 如果当前列表中没有，需要单独加载用户信息
+                loadUserById(String(value));
+            }
+        } else {
+            setSelectedUserId(null);
+            setSelectedUser(null);
+        }
+    }, [value, users]);
+    
+    // 通过用户ID加载用户详细信息
+    const loadUserById = async (userId: string) => {
+        setIsLoadingCurrentUser(true);
+        try {
+            // 加载单个用户信息，使用服务器方法
+            const response = await fetch(`/api/users/${userId}`);
+            if (response.ok) {
+                const userData = await response.json();
+                // 构造用户对象
+                setSelectedUser({
+                    firstName: userData.firstName || null,
+                    lastName: userData.lastName || null,
+                    imageUrl: userData.imageUrl,
+                    hasImage: !!userData.imageUrl,
+                    identifier: userData.username || userData.email || userId,
+                    userId: userId
+                });
+            } else {
+                console.error('加载用户数据失败:', await response.text());
+                setSelectedUser(null);
+            }
+        } catch (error) {
+            console.error('加载用户数据出错:', error);
+            setSelectedUser(null);
+        } finally {
+            setIsLoadingCurrentUser(false);
+        }
+    };
+    
+    // 处理选择用户
+    const handleSelectUser = async (user: typeof selectedUser) => {
+        if (!user) {
+            return;
+        }
+        
+        const userId = user.userId;
+        if (!userId) {
+            return;
+        }
+        
+        if (onUpdate) {
+            // 使用createSetOperation创建更新操作
+            const operation = createSetOperation(propertyDefinition.id, userId);
+            
+            // 调用回调函数更新值
+            const success = await onUpdate(operation);
+            if (success) {
+                setSelectedUserId(userId);
+                setSelectedUser(user);
+            }
+        } else {
+            setSelectedUserId(userId);
+            setSelectedUser(user);
+        }
+        
+        setIsDropdownOpen(false);
+    };
+    
+    // 处理清除用户
+    const handleClearUser = async (e: React.MouseEvent) => {
+        e.stopPropagation(); // 阻止事件冒泡，防止触发下拉框
+        
+        if (onUpdate) {
+            // 使用createRemoveOperation创建删除操作
+            const operation = createRemoveOperation(propertyDefinition.id);
+            
+            // 调用回调函数更新值
+            const success = await onUpdate(operation);
+            if (success) {
+                setSelectedUserId(null);
+                setSelectedUser(null);
+            }
+        } else {
+            setSelectedUserId(null);
+            setSelectedUser(null);
+        }
+    };
+    
+    // 切换下拉框显示状态
+    const toggleDropdown = () => {
+        setIsDropdownOpen(!isDropdownOpen);
+    };
+    
+    // 点击外部关闭下拉框
+    useEffect(() => {
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false);
+            }
+        };
+        
+        document.addEventListener('mousedown', handleOutsideClick);
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+        };
+    }, []);
+    
+    // 处理加载更多用户
+    const handleLoadMore = () => {
+        if (memberships && memberships.hasNextPage) {
+            memberships.fetchNext();
+        }
+    };
+    
+    // 渲染用户项
+    const renderUserItem = (user: NonNullable<typeof selectedUser>) => (
+        <div className="flex items-center">
+            <Image 
+                src={user.imageUrl} 
+                alt={`${user.firstName || ''} ${user.lastName || ''}`}
+                width={24}
+                height={24}
+                unoptimized
+                className="w-6 h-6 rounded-full mr-2 flex-shrink-0 object-cover border border-gray-200"
+            />
+            <span className="text-sm truncate">
+                {user.firstName || ''} {user.lastName || ''} 
+                <span className="text-gray-500 text-xs ml-1">
+                    {user.identifier}
+                </span>
+            </span>
+        </div>
+    );
+    
+    return (
+        <div className="flex items-center">
+            <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+                <div className="w-5 flex-shrink-0 flex justify-center">
+                    {getPropertyTypeIcon(propertyDefinition.type)}
+                </div>
+                <span className="truncate" title={propertyDefinition.name}>{propertyDefinition.name}</span>
+            </div>
+            <div className="relative w-auto min-w-[120px] max-w-[240px] pl-3" ref={dropdownRef}>
+                {/* 触发下拉框的按钮/显示区域 */}
+                <div
+                    className="flex items-center w-full h-8 px-3 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={toggleDropdown}
+                    onMouseEnter={() => setIsHovering(true)}
+                    onMouseLeave={() => setIsHovering(false)}
+                >
+                    {isLoadingCurrentUser ? (
+                        <span className="text-gray-400 text-sm">加载中...</span>
+                    ) : selectedUser ? (
+                        <div className="flex items-center w-full justify-between">
+                            <div className="flex items-center truncate">
+                                <Image 
+                                    src={selectedUser.imageUrl} 
+                                    alt={`${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`}
+                                    width={20}
+                                    height={20}
+                                    unoptimized
+                                    className="w-5 h-5 rounded-full mr-2 flex-shrink-0 object-cover border border-gray-200"
+                                />
+                                <span className="text-sm truncate">
+                                    {selectedUser.firstName || ''} {selectedUser.lastName || ''}
+                                </span>
+                            </div>
+                            {isHovering && (
+                                <button
+                                    className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors p-1 -mr-1 cursor-pointer"
+                                    onClick={handleClearUser}
+                                    title="清除选择"
+                                >
+                                    <MdCancel size={16} />
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <span className="text-gray-400 text-sm">未分配</span>
+                    )}
+                </div>
+                
+                {/* 下拉选项列表 */}
+                {isDropdownOpen && (
+                    <div className="absolute z-10 mt-1 w-auto min-w-full max-w-[240px] bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        <div className="py-1">
+                            {users.length > 0 ? (
+                                users.map(user => (
+                                    <div
+                                        key={user.userId || user.identifier}
+                                        className={`px-4 py-2 hover:bg-gray-50 cursor-pointer transition-colors ${selectedUserId === user.userId ? 'bg-gray-50' : ''}`}
+                                        onClick={() => handleSelectUser(user)}
+                                    >
+                                        {renderUserItem(user)}
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="px-4 py-2 text-gray-500 text-sm">
+                                    {isLoaded ? '没有可选用户' : '加载中...'}
+                                </div>
+                            )}
+                            
+                            {/* 加载更多按钮 */}
+                            {memberships?.hasNextPage && (
+                                <div 
+                                    className="px-4 py-2 text-center text-sm text-blue-600 hover:bg-gray-50 cursor-pointer"
+                                    onClick={handleLoadMore}
+                                >
+                                    {memberships.isFetching ? '加载中...' : '加载更多'}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+/**
  * 富文本描述属性详情组件
  * 用于显示和编辑Issue的描述内容，支持Markdown格式
  */
@@ -1091,5 +1372,17 @@ value,
             )}
         </div>
     );
+};
+
+// 详情组件映射表，根据属性类型选择对应的组件
+export const PROPERTY_DETAIL_COMPONENTS: Record<string, React.FC<PropertyDetailProps>> = {
+    [PropertyType.TEXT]: TitlePropertyDetail,
+    [PropertyType.RICH_TEXT]: RichTextPropertyDetail,
+    [PropertyType.SELECT]: SelectPropertyDetail,
+    [PropertyType.MULTI_SELECT]: MultiSelectPropertyDetail,
+    [PropertyType.MINERS]: MinersPropertyDetail,
+    [PropertyType.DATETIME]: DatetimePropertyDetail,
+    [PropertyType.USER]: UserPropertyDetail,
+    // 可以扩展更多属性类型...
 };
 
