@@ -1,4 +1,5 @@
 import { ClerkProvider } from "@clerk/nextjs";
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import ClientSidebar from "./components/ClientSidebar";
@@ -25,13 +26,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          <ClientSidebar />
-          {/* <header className="flex justify-end items-center p-4 gap-4 h-16">
+    <NuqsAdapter>
+      <ClerkProvider>
+        <html lang="en">
+          <body
+            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          >
+            <ClientSidebar />
+            {/* <header className="flex justify-end items-center p-4 gap-4 h-16">
             <SignedOut>
               <SignInButton />
               <SignUpButton />
@@ -40,12 +42,13 @@ export default function RootLayout({
               <UserButton />
             </SignedIn>
           </header> */}
-          <main className="transition-all duration-300 sidebar-margin">
-            {children}
-          </main>
+            <main className="transition-all duration-300 sidebar-margin">
+              {children}
+            </main>
 
-        </body>
-      </html>
-    </ClerkProvider>
+          </body>
+        </html>
+      </ClerkProvider>
+    </NuqsAdapter>
   );
 }
