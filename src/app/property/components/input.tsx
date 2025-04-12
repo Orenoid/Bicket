@@ -292,14 +292,14 @@ export const SelectPropertyInput = React.forwardRef<
                                 <button
                                     className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors p-1 -mr-1 cursor-pointer"
                                     onClick={handleClearOption}
-                                    title="清除选择"
+                                    title="Clear selection"
                                 >
                                     <MdCancel size={16} />
                                 </button>
                             )}
                         </div>
                     ) : (
-                        <span className="text-gray-400 text-sm">未选择</span>
+                        <span className="text-gray-400 text-sm">No selection</span>
                     )}
                 </div>
 
@@ -324,7 +324,7 @@ export const SelectPropertyInput = React.forwardRef<
                             {/* 无选项时的提示 */}
                             {options.length === 0 && (
                                 <div className="px-4 py-2 text-gray-500 text-sm">
-                                    无可选选项
+                                    No options available
                                 </div>
                             )}
                         </div>
@@ -452,7 +452,7 @@ export const MultiSelectPropertyInput = React.forwardRef<
                                         <button
                                             className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors cursor-pointer"
                                             onClick={(e) => handleRemoveOption(option.id, e)}
-                                            title="移除标签"
+                                            title="Remove tag"
                                         >
                                             <MdCancel size={14} />
                                         </button>
@@ -463,14 +463,14 @@ export const MultiSelectPropertyInput = React.forwardRef<
                                 <button
                                     className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors p-1 -mr-1 cursor-pointer flex-shrink-0"
                                     onClick={handleClearAllOptions}
-                                    title="清除所有选择"
+                                    title="Clear all selection"
                                 >
                                     <MdCancel size={16} />
                                 </button>
                             )}
                         </div>
                     ) : (
-                        <span className="text-gray-400 text-sm">未选择</span>
+                        <span className="text-gray-400 text-sm">No selection</span>
                     )}
                 </div>
 
@@ -697,7 +697,7 @@ export const MinersPropertyInput = React.forwardRef<
                                         <button
                                             className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors cursor-pointer"
                                             onClick={(e) => handleRemoveMiner(miner.id, e)}
-                                            title="移除矿机"
+                                            title="Remove miner"
                                         >
                                             <MdCancel size={14} />
                                         </button>
@@ -708,14 +708,14 @@ export const MinersPropertyInput = React.forwardRef<
                                 <button
                                     className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors p-1 -mr-1 cursor-pointer flex-shrink-0"
                                     onClick={handleClearAllMiners}
-                                    title="清除所有选择"
+                                    title="Clear all selection"
                                 >
                                     <MdCancel size={16} />
                                 </button>
                             )}
                         </div>
                     ) : (
-                        <span className="text-gray-400 text-sm">未选择矿机</span>
+                        <span className="text-gray-400 text-sm">No miner selected</span>
                     )}
                 </div>
 
@@ -895,8 +895,8 @@ export const UserPropertyInput = React.forwardRef<
                 onLoadMore={handleLoadMore}
                 items={users}
                 isLoading={!isLoaded || memberships?.isFetching}
-                placeholder="选择用户"
-                emptyMessage="无可选用户"
+                placeholder="Select userct user"
+                emptyMessage="No users availableers available"
             />
         </div>
     );

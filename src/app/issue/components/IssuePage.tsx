@@ -8,6 +8,7 @@ import {
     PROPERTY_CELL_COMPONENTS
 } from '../../property/components/table';
 import { FilterCondition } from '@/app/property/types';
+import { PropertyType } from '@/app/property/constants';
 import { FiFilter, FiPlus } from 'react-icons/fi';
 import { DropDownMenuV2 } from '../../components/ui/dropdownMenu';
 import { FilterConstructorPanel } from '@/app/property/components/filter-construction';
@@ -222,16 +223,19 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
     };
 
     // 筛选属性菜单项
-    const filterMenuItems = propertyDefinitions.map(prop => ({
-        label: (
-            <div className="flex items-center">
-                <span>{prop.name}</span>
-            </div>
-        ),
-        onClick: () => {
-            setSelectedProperty(prop);
-        }
-    }));
+    const filterMenuItems = propertyDefinitions
+        // TODO: 暂不支持时间类型和富文本类型的筛选
+        .filter(prop => prop.type !== PropertyType.DATETIME && prop.type !== PropertyType.RICH_TEXT)
+        .map(prop => ({
+            label: (
+                <div className="flex items-center">
+                    <span>{prop.name}</span>
+                </div>
+            ),
+            onClick: () => {
+                setSelectedProperty(prop);
+            }
+        }));
 
     // 自定义筛选按钮
     const FilterButton = (
@@ -240,7 +244,7 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
             className="flex items-center px-2 py-1 text-sm text-gray-700"
         >
             <FiFilter className="mr-2 h-4 w-4 text-gray-500" />
-            <span>筛选</span>
+            <span>Filter</span>
         </div>
     );
 

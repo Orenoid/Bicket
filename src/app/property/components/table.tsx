@@ -170,7 +170,7 @@ export const SelectPropertyCell: PropertyCellComponent = ({
 }) => {
     // 处理空值显示
     if (value === null || value === undefined || value === "") {
-        return <span className="text-gray-400 italic">未设置</span>;
+        return <span className="text-gray-400 italic"></span>;
     }
     
     // 获取选项配置
@@ -217,7 +217,7 @@ export const MultiSelectPropertyCell: PropertyCellComponent = ({
     // 处理空值显示
     if (value === null || value === undefined || 
         (Array.isArray(value) && value.length === 0)) {
-        return <span className="text-gray-400 italic">未设置</span>;
+        return <span className="text-gray-400 italic"></span>;
     }
     
     // 确保值是数组
@@ -261,7 +261,7 @@ export const MinersPropertyCell: PropertyCellComponent = ({
     // 处理空值显示
     if (value === null || value === undefined || 
         (Array.isArray(value) && value.length === 0)) {
-        return <span className="text-gray-400 italic">未设置矿机</span>;
+        return <span className="text-gray-400 italic"></span>;
     }
     
     // 确保值是数组
@@ -340,7 +340,7 @@ export const DatetimePropertyCell: PropertyCellComponent = ({
 }) => {
     // 处理空值显示
     if (value === null || value === undefined || value === "") {
-        return <span className="text-gray-400 italic">{propertyConfig?.emptyText as string || "未设置"}</span>;
+        return <span className="text-gray-400 italic">{propertyConfig?.emptyText as string || ""}</span>;
     }
     
     try {
@@ -444,7 +444,7 @@ export const UserPropertyCell: PropertyCellComponent = ({
     
     // 处理空值显示
     if (!userId) {
-        return <span className="text-gray-400 italic">未分配</span>;
+        return <span className="text-gray-400 italic"></span>;
     }
     
     // 加载中显示

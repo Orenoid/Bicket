@@ -8,6 +8,7 @@ import { PropertyDefinition } from '../../issue/components/IssuePage';
 import { getSimpleMinersList, getMinerStatusStyle } from '../../miners/service';
 import { getUser } from '../../users/service';
 import { useOrganization } from '@clerk/clerk-react';
+import { TransparentOverlay } from '@/app/components/ui/overlay';
 
 /**
  * 筛选构造器面板属性接口
@@ -42,7 +43,7 @@ export const DefaultFilterConstructorPanel: FilterConstructorComponent = ({
     onCancel,
     position = {}
 }) => (
-    <div className="absolute z-20 bg-white border border-gray-200 rounded-md shadow-lg p-2 w-64"
+    <div className="absolute z-50 bg-white border border-gray-200 rounded-md shadow-lg p-2 w-64"
          style={{ ...position }}>
         <div className="text-red-500 text-sm p-2">
             不支持的筛选类型: {propertyDefinition.type}
@@ -97,7 +98,7 @@ export const TextFilterConstructorPanel: FilterConstructorComponent = ({
     };
 
     return (
-        <div className="absolute z-20 bg-white border border-gray-200 rounded-md shadow-lg p-3 w-64"
+        <div className="absolute z-50 bg-white border border-gray-200 rounded-md shadow-lg p-3 w-64"
              style={{ ...position }}>
             {/* 面板标题 */}
             <div className="text-xs font-medium text-gray-500 border-b border-gray-100 pb-2 mb-3">
@@ -110,7 +111,7 @@ export const TextFilterConstructorPanel: FilterConstructorComponent = ({
                     type="text"
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
-                    placeholder="输入包含的文本..."
+                    placeholder="Enter the text to search..."
                     className="w-full px-2 py-1 text-sm border border-gray-200 rounded"
                 />
             </div>
@@ -123,7 +124,7 @@ export const TextFilterConstructorPanel: FilterConstructorComponent = ({
                             onClick={handleClear}
                             className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
                         >
-                            清除
+                            Clear
                         </button>
                     )}
                 </div>
@@ -132,13 +133,13 @@ export const TextFilterConstructorPanel: FilterConstructorComponent = ({
                         onClick={onCancel}
                         className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
                     >
-                        取消
+                        Cancel
                     </button>
                     <button
                         onClick={handleApply}
                         className="px-3 py-1 text-xs bg-gray-700 text-white border border-gray-600 rounded hover:bg-gray-800"
                     >
-                        应用
+                        Apply
                     </button>
                 </div>
             </div>
@@ -151,7 +152,7 @@ export const TextFilterConstructorPanel: FilterConstructorComponent = ({
  * 
  * 用于 ID 类型属性的筛选条件设置，支持数值比较操作
  */
-export const IdFilterConstructorPanel: FilterConstructorComponent = ({
+export const IDFilterConstructorPanel: FilterConstructorComponent = ({
     propertyDefinition,
     currentFilter,
     onApply,
@@ -170,8 +171,8 @@ export const IdFilterConstructorPanel: FilterConstructorComponent = ({
 
     // ID 筛选操作符选项 - 简化只保留等于和包含操作
     const operatorOptions = [
-        { value: 'eq', label: '等于' },
-        { value: 'in', label: '包含于 (多个ID用逗号分隔)' }
+        { value: 'eq', label: 'Equal' },
+        { value: 'in', label: 'Contains (multiple IDs separated by commas)' }
     ];
 
     // 应用筛选条件
@@ -221,7 +222,7 @@ export const IdFilterConstructorPanel: FilterConstructorComponent = ({
     };
 
     return (
-        <div className="absolute z-20 bg-white border border-gray-200 rounded-md shadow-lg p-3 w-64"
+        <div className="absolute z-50 bg-white border border-gray-200 rounded-md shadow-lg p-3 w-64"
              style={{ ...position }}>
             {/* 面板标题 */}
             <div className="text-xs font-medium text-gray-500 border-b border-gray-100 pb-2 mb-3">
@@ -249,12 +250,12 @@ export const IdFilterConstructorPanel: FilterConstructorComponent = ({
                     type={operator === 'in' ? 'text' : 'number'}
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
-                    placeholder={operator === 'in' ? "1, 2, 3, ..." : "输入ID值..."}
+                    placeholder={operator === 'in' ? "1, 2, 3, ..." : "Enter te value ID value..."}
                     className="w-full px-2 py-1 text-sm border border-gray-200 rounded"
                 />
                 {operator === 'in' && (
                     <div className="text-xs text-gray-500 mt-1">
-                        请输入多个ID，以逗号分隔
+                        Please enter multiple IDs, separated by commas
                     </div>
                 )}
             </div>
@@ -267,7 +268,7 @@ export const IdFilterConstructorPanel: FilterConstructorComponent = ({
                             onClick={handleClear}
                             className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
                         >
-                            清除
+                            Clear
                         </button>
                     )}
                 </div>
@@ -276,13 +277,13 @@ export const IdFilterConstructorPanel: FilterConstructorComponent = ({
                         onClick={onCancel}
                         className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
                     >
-                        取消
+                        Cancel
                     </button>
                     <button
                         onClick={handleApply}
                         className="px-3 py-1 text-xs bg-gray-700 text-white border border-gray-600 rounded hover:bg-gray-800"
                     >
-                        应用
+                        Apply
                     </button>
                 </div>
             </div>
@@ -355,7 +356,7 @@ export const SelectFilterConstructorPanel: FilterConstructorComponent = ({
     };
 
     return (
-        <div className="absolute z-20 bg-white border border-gray-200 rounded-md shadow-lg p-3 w-64"
+        <div className="absolute z-50 bg-white border border-gray-200 rounded-md shadow-lg p-3 w-64"
              style={{ ...position }}>
             {/* 面板标题 */}
             <div className="text-xs font-medium text-gray-500 border-b border-gray-100 pb-2 mb-3">
@@ -391,7 +392,7 @@ export const SelectFilterConstructorPanel: FilterConstructorComponent = ({
                 </div>
             ) : (
                 <div className="text-sm text-gray-500 mb-3">
-                    无可选选项
+                    No options available
                 </div>
             )}
             
@@ -403,7 +404,7 @@ export const SelectFilterConstructorPanel: FilterConstructorComponent = ({
                             onClick={handleClear}
                             className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
                         >
-                            清除
+                            Clear
                         </button>
                     )}
                 </div>
@@ -412,13 +413,13 @@ export const SelectFilterConstructorPanel: FilterConstructorComponent = ({
                         onClick={onCancel}
                         className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
                     >
-                        取消
+                        Cancel
                     </button>
                     <button
                         onClick={handleApply}
                         className="px-3 py-1 text-xs bg-gray-700 text-white border border-gray-600 rounded hover:bg-gray-800"
                     >
-                        应用
+                        Apply
                     </button>
                 </div>
             </div>
@@ -465,7 +466,7 @@ export const RichTextFilterConstructorPanel: FilterConstructorComponent = ({
     };
 
     return (
-        <div className="absolute z-20 bg-white border border-gray-200 rounded-md shadow-lg p-3 w-64"
+        <div className="absolute z-50 bg-white border border-gray-200 rounded-md shadow-lg p-3 w-64"
              style={{ ...position }}>
             {/* 面板标题 */}
             <div className="text-xs font-medium text-gray-500 border-b border-gray-100 pb-2 mb-3">
@@ -478,11 +479,11 @@ export const RichTextFilterConstructorPanel: FilterConstructorComponent = ({
                     type="text"
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
-                    placeholder="输入包含的文本..."
+                    placeholder="Enter the text to search..."
                     className="w-full px-2 py-1 text-sm border border-gray-200 rounded"
                 />
                 <div className="text-xs text-gray-500 mt-1">
-                    搜索将在Markdown文本中进行，包括标题、段落等
+                    Search will be performed in Markdown text, including titles, paragraphs, etc.
                 </div>
             </div>
             
@@ -494,7 +495,7 @@ export const RichTextFilterConstructorPanel: FilterConstructorComponent = ({
                             onClick={handleClear}
                             className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
                         >
-                            清除
+                            Clear
                         </button>
                     )}
                 </div>
@@ -503,13 +504,13 @@ export const RichTextFilterConstructorPanel: FilterConstructorComponent = ({
                         onClick={onCancel}
                         className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
                     >
-                        取消
+                        Cancel
                     </button>
                     <button
                         onClick={handleApply}
                         className="px-3 py-1 text-xs bg-gray-700 text-white border border-gray-600 rounded hover:bg-gray-800"
                     >
-                        应用
+                        Apply
                     </button>
                 </div>
             </div>
@@ -571,7 +572,7 @@ export const MultiSelectFilterConstructorPanel: FilterConstructorComponent = ({
     };
 
     return (
-        <div className="absolute z-20 bg-white border border-gray-200 rounded-md shadow-lg p-3 w-64"
+        <div className="absolute z-50 bg-white border border-gray-200 rounded-md shadow-lg p-3 w-64"
              style={{ ...position }}>
             {/* 面板标题 */}
             <div className="text-xs font-medium text-gray-500 border-b border-gray-100 pb-2 mb-3">
@@ -619,7 +620,7 @@ export const MultiSelectFilterConstructorPanel: FilterConstructorComponent = ({
                             onClick={handleClear}
                             className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
                         >
-                            清除
+                            Clear
                         </button>
                     )}
                 </div>
@@ -628,13 +629,13 @@ export const MultiSelectFilterConstructorPanel: FilterConstructorComponent = ({
                         onClick={onCancel}
                         className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
                     >
-                        取消
+                        Cancel
                     </button>
                     <button
                         onClick={handleApply}
                         className="px-3 py-1 text-xs bg-gray-700 text-white border border-gray-600 rounded hover:bg-gray-800"
                     >
-                        应用
+                        Apply
                     </button>
                 </div>
             </div>
@@ -696,7 +697,7 @@ export const MinersFilterConstructorPanel: FilterConstructorComponent = ({
     };
 
     return (
-        <div className="absolute z-20 bg-white border border-gray-200 rounded-md shadow-lg p-3 w-64"
+        <div className="absolute z-50 bg-white border border-gray-200 rounded-md shadow-lg p-3 w-64"
              style={{ ...position }}>
             {/* 面板标题 */}
             <div className="text-xs font-medium text-gray-500 border-b border-gray-100 pb-2 mb-3">
@@ -732,7 +733,7 @@ export const MinersFilterConstructorPanel: FilterConstructorComponent = ({
                 </div>
             ) : (
                 <div className="text-sm text-gray-500 mb-3">
-                    无可选矿机
+                    No miners available
                 </div>
             )}
             
@@ -744,7 +745,7 @@ export const MinersFilterConstructorPanel: FilterConstructorComponent = ({
                             onClick={handleClear}
                             className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
                         >
-                            清除
+                            Clear
                         </button>
                     )}
                 </div>
@@ -753,13 +754,13 @@ export const MinersFilterConstructorPanel: FilterConstructorComponent = ({
                         onClick={onCancel}
                         className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
                     >
-                        取消
+                        Cancel
                     </button>
                     <button
                         onClick={handleApply}
                         className="px-3 py-1 text-xs bg-gray-700 text-white border border-gray-600 rounded hover:bg-gray-800"
                     >
-                        应用
+                        Apply
                     </button>
                 </div>
             </div>
@@ -900,7 +901,7 @@ export const UserFilterConstructorPanel: FilterConstructorComponent = ({
         : users;
 
     return (
-        <div className="absolute z-20 bg-white border border-gray-200 rounded-md shadow-lg p-3 w-64"
+        <div className="absolute z-50 bg-white border border-gray-200 rounded-md shadow-lg p-3 w-64"
              style={{ ...position }}>
             {/* 面板标题 */}
             <div className="text-xs font-medium text-gray-500 border-b border-gray-100 pb-2 mb-3">
@@ -913,7 +914,7 @@ export const UserFilterConstructorPanel: FilterConstructorComponent = ({
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="搜索用户..."
+                    placeholder="Search users..."
                     className="w-full px-2 py-1 text-sm border border-gray-200 rounded"
                 />
             </div>
@@ -941,12 +942,12 @@ export const UserFilterConstructorPanel: FilterConstructorComponent = ({
                         </div>
                     ) : (
                         <div className="text-sm text-gray-500 text-center py-2">
-                            {searchQuery.trim() !== '' ? '无匹配用户' : '无可选用户'}
+                            {searchQuery.trim() !== '' ? 'No matching users' : 'No users available'}
                         </div>
                     )
                 ) : (
                     <div className="text-sm text-gray-500 text-center py-2">
-                        加载中...
+                        Loading...
                     </div>
                 )}
             </div>
@@ -954,7 +955,7 @@ export const UserFilterConstructorPanel: FilterConstructorComponent = ({
             {/* 已选用户计数 */}
             {selectedUserIds.length > 0 && (
                 <div className="text-xs text-gray-600 mb-2">
-                    已选择 {selectedUserIds.length} 名用户
+                    Selected {selectedUserIds.length} users
                 </div>
             )}
             
@@ -966,7 +967,7 @@ export const UserFilterConstructorPanel: FilterConstructorComponent = ({
                             onClick={handleClear}
                             className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
                         >
-                            清除
+                            Clear
                         </button>
                     )}
                 </div>
@@ -975,14 +976,14 @@ export const UserFilterConstructorPanel: FilterConstructorComponent = ({
                         onClick={onCancel}
                         className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
                     >
-                        取消
+                        Cancel
                     </button>
                     <button
                         onClick={handleApply}
                         className="px-3 py-1 text-xs bg-gray-700 text-white border border-gray-600 rounded hover:bg-gray-800"
                         disabled={isLoadingUsers}
                     >
-                        应用
+                        Apply
                     </button>
                 </div>
             </div>
@@ -999,7 +1000,7 @@ export const FILTER_CONSTRUCTOR_PANELS: Record<string, FilterConstructorComponen
     // 注册文本筛选面板组件
     [PropertyType.TEXT]: TextFilterConstructorPanel,
     // 注册ID筛选面板组件
-    [PropertyType.ID]: IdFilterConstructorPanel,
+    [PropertyType.ID]: IDFilterConstructorPanel,
     // 注册单选筛选面板组件
     [PropertyType.SELECT]: SelectFilterConstructorPanel,
     // 注册富文本筛选面板组件
@@ -1023,7 +1024,7 @@ export function getFilterConstructorPanel(propertyType: string): FilterConstruct
         case PropertyType.TEXT:
             return TextFilterConstructorPanel;
         case PropertyType.ID:
-            return IdFilterConstructorPanel;
+            return IDFilterConstructorPanel;
         case PropertyType.SELECT:
             return SelectFilterConstructorPanel;
         case PropertyType.RICH_TEXT:
@@ -1045,7 +1046,15 @@ export function getFilterConstructorPanel(propertyType: string): FilterConstruct
  * 根据属性类型返回相应的筛选构造器面板组件
  */
 export function FilterConstructorPanel(props: FilterConstructorPanelProps): React.ReactElement {
-    const { propertyDefinition } = props;
+    const { propertyDefinition, onCancel } = props;
     const Panel = getFilterConstructorPanel(propertyDefinition.type);
-    return <Panel {...props} />;
+    
+    return (
+        <>
+            {/* 使用公共透明遮罩组件 */}
+            <TransparentOverlay onClick={onCancel} />
+            {/* 面板组件 */}
+            <Panel {...props} />
+        </>
+    );
 } 
