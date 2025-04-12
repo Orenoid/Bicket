@@ -228,7 +228,7 @@ export const TitlePropertyDetail: React.FC<PropertyDetailProps> = ({
         return (
             <div className="mb-4" onClick={handleClick}>
                 <h1 className="text-3xl px-3 py-2 cursor-text break-words">
-                    {internalValue || <span className="text-gray-400">无标题</span>}
+                    {internalValue || <span className="text-gray-400">No title</span>}
                 </h1>
             </div>
         );
@@ -1330,7 +1330,7 @@ value,
     
     // 渲染编辑模式
     return (
-        <div className="border-t border-gray-200 pt-4 mt-4 pb-4">
+        <div className="border-gray-200 pt-4 mt-4 pb-4">
             <MDXEditor
                 onChange={handleChange}
                 markdown={internalValue}

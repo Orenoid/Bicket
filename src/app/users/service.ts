@@ -1,11 +1,6 @@
 'use server';
 
-import { createClerkClient } from '@clerk/backend';
-
-// 创建Clerk客户端实例
-const clerkClient = createClerkClient({ 
-  secretKey: process.env.CLERK_SECRET_KEY
-});
+import { clerkClient } from '@/app/clerk/client';
 
 // 用户信息接口
 export interface User {

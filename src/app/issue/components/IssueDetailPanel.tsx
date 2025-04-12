@@ -11,6 +11,12 @@ import {
     UserPropertyDetail
 } from '@/app/property/components/detail';
 import { SystemPropertyId } from '@/app/property/constants';
+import { MdMoreHoriz } from 'react-icons/md';
+import { useState } from 'react';
+import { DropdownMenu } from '@/app/components/ui/dropdownMenu';
+import { MenuItem } from '@/app/components/ui/dropdownMenu';
+import { RiDeleteBinLine } from 'react-icons/ri';
+import { useRouter } from 'next/navigation';
 
 // 从IssuePage.tsx导入需要的接口
 export interface PropertyDefinition {
@@ -36,6 +42,14 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
     issue: Issue;
     propertyDefinitions: PropertyDefinition[];
 }) => {
+    // 添加下拉菜单状态
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    // 添加删除加载状态
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [isDeleting, setIsDeleting] = useState(false);
+    // 添加路由器
+    const router = useRouter();
+
     // 获取标题属性
     const titleProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.TITLE);
     // 获取描述属性
@@ -61,12 +75,6 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
     // 获取报告人属性
     const reporterProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.REPORTER);
 
-    // 获取ID属性值
-    const getIdValue = (): string => {
-        const idPropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.ID);
-        return idPropertyValue ? String(idPropertyValue.value) : '';
-    };
-    
     // 获取标题属性值
     const getTitleValue = () => {
         const titlePropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.TITLE);
@@ -139,20 +147,6 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
         return reporterPropertyValue ? reporterPropertyValue.value : null;
     };
 
-    // 处理复制ID到剪贴板
-    const handleCopyId = () => {
-        const idValue = getIdValue();
-        if (idValue) {
-            navigator.clipboard.writeText(idValue)
-                .then(() => {
-                    alert(`ID copied: ${idValue}`);
-                })
-                .catch(err => {
-                    console.error('Copy ID failed:', err);
-                });
-        }
-    };
-
     // 处理属性更新
     const handlePropertyUpdate = async (operation: {
         property_id: string;
@@ -187,6 +181,58 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
         }
     };
 
+    // 处理更多选项按钮点击
+    const handleMoreOptions = () => {
+        setIsMenuOpen(true);
+    };
+    // 处理菜单项点击
+    const handleMenuItemClick = (item: MenuItem) => {
+        if (item.id === 'delete') {
+            // 直接执行删除操作
+            handleDeleteIssue();
+        }
+    };
+    // 菜单项定义
+    const menuItems: MenuItem[] = [
+        {
+            id: 'delete',
+            label: '删除',
+            icon: <RiDeleteBinLine className="text-red-500" />
+        }
+    ];
+
+    // 计算下拉菜单位置
+    const getMenuPosition = () => {
+        return { top: '100%', right: 0 };
+    };
+
+    // 处理删除 Issue
+    const handleDeleteIssue = async () => {
+        try {
+            setIsDeleting(true);
+            // 调用删除 API
+            const response = await fetch(`/api/issues/${issue.issue_id}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                // 删除成功，关闭面板并刷新页面
+                onClose();
+                router.refresh();
+            } else {
+                // 处理错误
+                const data = await response.json();
+                console.error('删除失败:', data.error || '未知错误');
+                alert(`删除失败: ${data.error || '未知错误'}`);
+            }
+        } catch (error) {
+            console.error('删除 Issue 时发生错误:', error);
+            alert('删除 Issue 时发生错误');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     return (
         <div
             className="fixed top-0 right-0 h-full bg-white z-50 border-l border-gray-200"
@@ -199,12 +245,12 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
                 {/* 左侧面板内容 */}
                 <div className="flex flex-col h-full w-3/4 border-r border-gray-200">
                     {/* Issue ID 显示区域 */}
-                    <div className="absolute top-4 left-4 flex items-center cursor-pointer" onClick={handleCopyId}>
+                    {/* <div className="absolute top-4 left-4 flex items-center cursor-pointer" onClick={handleCopyId}>
                         <span className="text-2xl text-gray-400 hover:text-gray-500"># {getIdValue()}</span>
-                    </div>
+                    </div> */}
 
-                    <div className="pt-14 flex-grow overflow-auto p-4">
-                        {/* 添加标题组件 */}
+                    <div className="pt-8 flex-grow overflow-auto p-4">
+                        {/* 标题组件 */}
                         {titleProperty && (
                             <TitlePropertyDetail
                                 propertyDefinition={titleProperty}
@@ -212,7 +258,7 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
                                 onUpdate={handlePropertyUpdate}
                             />
                         )}
-                        
+
                         {/* 添加描述组件 */}
                         {descriptionProperty && (
                             <RichTextPropertyDetail
@@ -226,14 +272,32 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
                     {/* 面板底部：按钮操作区 */}
                     <div className="p-4 flex justify-start">
                         <SecondaryButton onClick={onClose} className="mr-4">
-                            <span className="text-gray-400 text-sm">关闭</span>
+                            <span className="text-gray-400 text-sm">Close</span>
                         </SecondaryButton>
                     </div>
                 </div>
                 {/* 右侧：属性列表 */}
                 <div className="flex flex-col w-1/4 h-full pl-5 pt-5 overflow-y-auto">
-                    {/* Properties 区域 */}
-                    <span className='text-sm text-gray-400 whitespace-nowrap font-sans mb-2'>Properties</span>
+                    {/* Properties 区域 - 修改为 Flex 容器 */}
+                    <div className='flex justify-between items-center mb-4 pr-4'>
+                        <span className='text-sm text-gray-400 whitespace-nowrap font-sans'>Properties</span>
+                        <button
+                            onClick={handleMoreOptions}
+                            className="text-gray-600 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 cursor-pointer relative"
+                        >
+                            <MdMoreHoriz size={18} />
+                            {/* 添加下拉菜单 */}
+                            <DropdownMenu
+                                items={menuItems}
+                                isOpen={isMenuOpen}
+                                onItemClick={handleMenuItemClick}
+                                onClose={() => setIsMenuOpen(false)}
+                                position={getMenuPosition()}
+                                className="z-50"
+                            />
+                        </button>
+
+                    </div>
                     <div className='flex flex-col gap-3 pl-3 mb-8'>
                         {/* 标签属性组件 */}
                         {labelProperty && (
@@ -292,7 +356,7 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
                             />
                         )}
                     </div>
-                    
+
                     {/* 矿机相关属性区域 */}
                     <span className='text-sm text-gray-400 whitespace-nowrap font-sans mb-2'>Miners Related</span>
                     <div className='flex flex-col gap-3 pl-3 mb-8'>
@@ -305,7 +369,7 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
                             />
                         )}
                     </div>
-                    
+
                     {/* Basic Info 区域 - 移到最底部 */}
                     <span className='text-sm text-gray-400 whitespace-nowrap font-sans mb-2'>Basic Info</span>
                     <div className='flex flex-col gap-3 pl-3 mb-8'>
