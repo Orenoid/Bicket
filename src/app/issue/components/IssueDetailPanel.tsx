@@ -38,10 +38,11 @@ export interface Issue {
 /**
  * Issue详情面板组件
  */
-export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
+export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions, onUpdateSuccess }: {
     onClose: () => void;
     issue: Issue;
     propertyDefinitions: PropertyDefinition[];
+    onUpdateSuccess?: () => void;
 }) => {
     // 添加下拉菜单状态
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -172,6 +173,12 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
 
             if (data.success) {
                 console.log('更新成功:', data);
+                // 如果更新成功并且提供了更新成功回调，则调用它
+                // 这允许父组件(IssuePage)刷新issue列表数据，同时保持详情面板打开
+                // 在IssuePage中，我们实现了在刷新后通过ID找回并更新选中的issue
+                if (onUpdateSuccess) {
+                    onUpdateSuccess();
+                }
                 return true;
             } else {
                 console.error('更新失败:', data.message || '未知错误');

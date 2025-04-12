@@ -82,6 +82,8 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
     // 新增：控制详情面板的显示状态和当前选中的issue
     const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
     const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
+    // 添加一个状态来保存当前打开的issue ID，用于在刷新后恢复选中的issue
+    const [currentIssueId, setCurrentIssueId] = useState<string | null>(null);
 
     // 刷新issue列表函数
     const refreshIssueList = () => {
@@ -92,8 +94,28 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
         currentParams.set('_t', Date.now().toString());
 
         // 刷新页面，获取最新数据
+        // 注意：这里不会关闭详情面板，因为我们使用了currentIssueId来记住当前打开的issue
         router.refresh();
     };
+
+    // 当选中issue变化时，更新currentIssueId
+    // 这样在刷新列表后，我们可以通过这个ID找到更新后的issue数据
+    useEffect(() => {
+        if (selectedIssue) {
+            setCurrentIssueId(selectedIssue.issue_id);
+        }
+    }, [selectedIssue]);
+
+    // 当issues数据变化时，如果有保存的currentIssueId，则更新selectedIssue为新数据
+    // 这个效果会在refreshIssueList触发页面刷新后执行，确保详情面板显示的是最新数据
+    useEffect(() => {
+        if (currentIssueId && isDetailPanelOpen) {
+            const updatedIssue = issues.find(issue => issue.issue_id === currentIssueId);
+            if (updatedIssue) {
+                setSelectedIssue(updatedIssue);
+            }
+        }
+    }, [issues, currentIssueId, isDetailPanelOpen]);
 
     // 当按钮引用或选中属性改变时，更新面板位置
     useEffect(() => {
@@ -368,6 +390,7 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
                         onClose={() => setIsDetailPanelOpen(false)}
                         issue={selectedIssue}
                         propertyDefinitions={propertyDefinitions}
+                        onUpdateSuccess={refreshIssueList}
                     />
                 </>
             )}
