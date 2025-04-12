@@ -1,7 +1,7 @@
 'use client';
 
-import { useRef } from 'react';
-import { PrimaryButton, SecondaryButton, ButtonGroup } from '../../components/ui/buttons';
+import { useRef, useState } from 'react';
+import { SecondaryButton, ButtonGroup, LoadingButton } from '../../components/ui/buttons';
 import { PropertyValue as InputPropertyValue, MultiSelectPropertyInput, SelectPropertyInput, TextareaPropertyInput, TextPropertyInput, MinersPropertyInput, UserPropertyInput } from '@/app/property/components/input';
 import { SystemPropertyId } from '@/app/property/constants';
 
@@ -21,6 +21,9 @@ export const CreateIssuePanel = ({ onClose, propertyDefinitions, onCreateSuccess
     propertyDefinitions: PropertyDefinition[];
     onCreateSuccess?: () => void;
 }) => {
+    // 添加 loading 状态
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    
     // 存储属性组件引用，用于调用onSubmit方法
     const propertyInputRefs = useRef<Record<string, {
         onSubmit: () => { isValid: boolean; propertyValue: InputPropertyValue | null }
@@ -36,6 +39,9 @@ export const CreateIssuePanel = ({ onClose, propertyDefinitions, onCreateSuccess
 
     // 处理提交
     const handleSubmit = async () => {
+        // 设置提交状态为 loading
+        setIsSubmitting(true);
+        
         // 收集所有属性的校验结果和构造的PropertyValue
         const submitResults = Object.values(propertyInputRefs.current).map(ref => {
             return ref.onSubmit();
@@ -45,6 +51,7 @@ export const CreateIssuePanel = ({ onClose, propertyDefinitions, onCreateSuccess
         const allValid = submitResults.every(result => result.isValid);
         if (!allValid) {
             // 如果有无效的属性，阻止提交
+            setIsSubmitting(false);
             return;
         }
 
@@ -82,6 +89,9 @@ export const CreateIssuePanel = ({ onClose, propertyDefinitions, onCreateSuccess
         } catch (error) {
             // 处理网络错误
             console.error('创建issue失败:', error);
+        } finally {
+            // 无论成功或失败，都重置提交状态
+            setIsSubmitting(false);
         }
     };
 
@@ -115,10 +125,18 @@ export const CreateIssuePanel = ({ onClose, propertyDefinitions, onCreateSuccess
                     {/* 面板底部：按钮操作区 */}
                     <div className="p-4 flex justify-start">
                         <ButtonGroup>
-                            <PrimaryButton className='mr-2' onClick={handleSubmit}>
+                            <LoadingButton 
+                                className='mr-2' 
+                                onClick={handleSubmit} 
+                                isLoading={isSubmitting}
+                            >
                                 <span className="text-white text-sm">Submit</span>
-                            </PrimaryButton>
-                            <SecondaryButton onClick={onClose} className="mr-4">
+                            </LoadingButton>
+                            <SecondaryButton 
+                                onClick={onClose} 
+                                className="mr-4" 
+                                disabled={isSubmitting}
+                            >
                                 <span className="text-gray-400 text-sm">Cancel</span>
                             </SecondaryButton>
                         </ButtonGroup>
