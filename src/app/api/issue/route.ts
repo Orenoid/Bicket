@@ -2,10 +2,6 @@ import { NextRequest } from 'next/server';
 import { createIssue, CreateIssueInput } from '@/app/issue/services/create';
 import { auth } from '@clerk/nextjs/server';
 
-// 预留认证中间件位置
-// 未来可以在这里添加身份验证逻辑
-// import { authMiddleware } from '@/lib/auth'
-
 export async function POST(req: NextRequest) {
   try {
     const { userId, orgId } = await auth()
