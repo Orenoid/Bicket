@@ -345,14 +345,14 @@ export const SelectPropertyDetail: React.FC<PropertyDetailProps> = ({
                                 <button
                                     className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors p-1 -mr-1 cursor-pointer"
                                     onClick={handleClearOption}
-                                    title="清除选择"
+                                    title="Clear selection"
                                 >
                                     <MdCancel size={16} />
                                 </button>
                             )}
                         </div>
                     ) : (
-                        <span className="text-gray-400 text-sm">未选择</span>
+                        <span className="text-gray-400 text-sm">No selection</span>
                     )}
                 </div>
                 
@@ -576,14 +576,14 @@ export const MultiSelectPropertyDetail: React.FC<PropertyDetailProps> = ({
                                 <button
                                     className="ml-auto text-gray-400 hover:text-gray-600 focus:outline-none transition-colors p-1 -mr-1 cursor-pointer shrink-0"
                                     onClick={handleClearAllOptions}
-                                    title="清除所有选择"
+                                    title="Clear all selection"
                                 >
                                     <MdCancel size={16} />
                                 </button>
                             )}
                         </div>
                     ) : (
-                        <span className="text-gray-400 text-sm">未选择</span>
+                        <span className="text-gray-400 text-sm">No selection</span>
                     )}
                 </div>
                 
@@ -804,7 +804,7 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
                                         <button
                                             className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
                                             onClick={(e) => handleRemoveMiner(miner.id, e)}
-                                            title="移除此矿机"
+                                            title="Remove this miner"
                                         >
                                             <MdCancel size={14} />
                                         </button>
@@ -817,14 +817,14 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
                                 <button
                                     onClick={handleClearAllMiners}
                                     className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors cursor-pointer"
-                                    title="清除所有矿机"
+                                    title="Clear all miners"
                                 >
                                     <MdCancel size={16} />
                                 </button>
                             )}
                         </div>
                     ) : (
-                        <span className="text-gray-400">选择矿机...</span>
+                        <span className="text-gray-400">Select miners</span>
                     )}
                 </div>
                 
@@ -892,7 +892,7 @@ export const DatetimePropertyDetail: React.FC<PropertyDetailProps> = ({
                     <span className="truncate" title={propertyDefinition.name}>{propertyDefinition.name}</span>
                 </div>
                 <div className="pl-3">
-                    <span className="text-gray-400 italic">未设置</span>
+                    <span className="text-gray-400 italic">Empty</span>
                 </div>
             </div>
         );
@@ -1224,14 +1224,14 @@ export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
                                 <button
                                     className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors p-1 -mr-1 cursor-pointer"
                                     onClick={handleClearUser}
-                                    title="清除选择"
+                                    title="Clear selection"
                                 >
                                     <MdCancel size={16} />
                                 </button>
                             )}
                         </div>
                     ) : (
-                        <span className="text-gray-400 text-sm">未分配</span>
+                        <span className="text-gray-400 text-sm">No selection</span>
                     )}
                 </div>
                 
@@ -1334,7 +1334,7 @@ value,
             <MDXEditor
                 onChange={handleChange}
                 markdown={internalValue}
-                placeholder={<span className="text-gray-400 text-md">Issue描述，支持markdown格式</span>}
+                placeholder={<span className="text-gray-400 text-md">Issue description, supports markdown format</span>}
                 plugins={[
                     headingsPlugin(),
                     quotePlugin(),

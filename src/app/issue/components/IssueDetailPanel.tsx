@@ -17,6 +17,7 @@ import { DropdownMenu } from '@/app/components/ui/dropdownMenu';
 import { MenuItem } from '@/app/components/ui/dropdownMenu';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import { useRouter } from 'next/navigation';
+import { ConfirmDialog } from '@/app/components/ui/confirmDialog';
 
 // 从IssuePage.tsx导入需要的接口
 export interface PropertyDefinition {
@@ -45,8 +46,9 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
     // 添加下拉菜单状态
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     // 添加删除加载状态
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [isDeleting, setIsDeleting] = useState(false);
+    // 添加确认对话框状态
+    const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
     // 添加路由器
     const router = useRouter();
 
@@ -188,15 +190,15 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
     // 处理菜单项点击
     const handleMenuItemClick = (item: MenuItem) => {
         if (item.id === 'delete') {
-            // 直接执行删除操作
-            handleDeleteIssue();
+            // 显示确认对话框
+            setIsConfirmDialogOpen(true);
         }
     };
     // 菜单项定义
     const menuItems: MenuItem[] = [
         {
             id: 'delete',
-            label: '删除',
+            label: 'Delete',
             icon: <RiDeleteBinLine className="text-red-500" />
         }
     ];
@@ -230,7 +232,13 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
             alert('删除 Issue 时发生错误');
         } finally {
             setIsDeleting(false);
+            setIsConfirmDialogOpen(false);
         }
+    };
+
+    // 处理取消删除
+    const handleCancelDelete = () => {
+        setIsConfirmDialogOpen(false);
     };
 
     return (
@@ -241,6 +249,17 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
                 width: 'calc(100vw * 2/3)'
             }}
         >
+            {/* 确认删除对话框 */}
+            <ConfirmDialog
+                isOpen={isConfirmDialogOpen}
+                title="Confirm Delete"
+                content={`Are you sure you want to delete Issue "${getTitleValue()}"? This action cannot be undone.`}
+                onConfirm={handleDeleteIssue}
+                onCancel={handleCancelDelete}
+                confirmButtonColor="danger"
+                isLoading={isDeleting}
+            />
+            
             <div className='flex flex-row h-full'>
                 {/* 左侧面板内容 */}
                 <div className="flex flex-col h-full w-3/4 border-r border-gray-200">
