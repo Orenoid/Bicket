@@ -17,7 +17,7 @@ export interface TableColumn {
     minWidth?: number;
 }
 
-// 自定义列元数据类型，用于存储表格列的额外信息
+// 修改自定义列元数据类型，使其与 TanStack Table 的 ColumnMeta 兼容
 interface CustomColumnMeta {
     width: string;  // 列的宽度，以字符串形式存储（如"150px"）
     originalColumn: TableColumn;  // 原始的列定义，保留原始配置信息
@@ -86,7 +86,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
         : {}; // 数据少时自动适应内容高度
 
     // 将我们的列格式转换为TanStack Table需要的格式
-    const tableColumns = useMemo<ColumnDef<Record<string, unknown>, unknown>[]>(() => {
+    const tableColumns = useMemo(() => {
         return filteredColumns.map((column) => ({
             id: column.id,
             accessorKey: column.id,
@@ -95,9 +95,9 @@ export const IssueTable: React.FC<IssueTableProps> = ({
             meta: {
                 width: getColumnWidth(column),
                 originalColumn: column,
-            } as CustomColumnMeta,
+            },
         }));
-    }, [filteredColumns, renderHeader, renderCell]);
+    }, [filteredColumns, renderHeader, renderCell]) as ColumnDef<Record<string, unknown>, unknown>[];
 
     // 初始化TanStack Table
     const table = useReactTable({

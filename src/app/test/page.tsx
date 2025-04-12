@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 import * as React from "react";
+import { Suspense } from 'react';
  
 interface Project {
   id: string;
@@ -61,7 +62,7 @@ const data: Project[] = [
   },
 ];
  
-export function DataTableDemo() {
+function DataTableDemo() {
   const [title] = useQueryState("title", parseAsString.withDefault(""));
   const [status] = useQueryState(
     "status",
@@ -212,6 +213,9 @@ export function DataTableDemo() {
     </div>
   );
 }
+
 export default function Page() {
-    return <DataTableDemo />
+    return <Suspense fallback={<div>Loading...</div>}>
+        <DataTableDemo />
+    </Suspense>
 }
