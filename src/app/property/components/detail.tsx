@@ -32,6 +32,7 @@ import './mdxeditor.css';
 import { getSimpleMinersList, getMinerStatusStyle, getMinerById } from '../../miners/service';
 import { useOrganization } from '@clerk/clerk-react';
 import Image from 'next/image';
+import { LoadingContainerOverlay } from '@/app/components/ui/overlay';
 
 // 属性值接口，与API接口保持一致
 export interface PropertyValue {
@@ -59,16 +60,16 @@ export const getPropertyTypeIcon = (propertyType: string): React.ReactNode => {
 // 属性类型图标映射表
 export const PROPERTY_TYPE_ICONS: Record<string, React.ReactNode> = {
     [PropertyType.ID]: <MdNumbers size={16} className="mr-1 text-gray-500" />,
-    [PropertyType.TEXT]: <MdTextFields size={16} className="mr-1 text-gray-500"/>,
-    [PropertyType.RICH_TEXT]: <MdSubject size={16} className="mr-1 text-gray-500"/>,
-    [PropertyType.NUMBER]: <MdNumbers size={16} className="mr-1 text-gray-500"/>,
-    [PropertyType.SELECT]: <TbCheckbox size={16} className="mr-1 text-gray-500"/>,
-    [PropertyType.MULTI_SELECT]: <BiSelectMultiple size={16} className="mr-1 text-gray-500"/>,
-    [PropertyType.DATETIME]: <MdDateRange size={16} className="mr-1 text-gray-500"/>,
-    [PropertyType.BOOLEAN]: <MdCheckBox size={16} className="mr-1 text-gray-500"/>,
-    [PropertyType.USER]: <MdPerson size={16} className="mr-1 text-gray-500"/>,
-    [PropertyType.RELATIONSHIP]: <MdLink size={16} className="mr-1 text-gray-500"/>,
-    [PropertyType.MINERS]: <HiOutlineServer size={16} className="mr-1 text-gray-500"/>
+    [PropertyType.TEXT]: <MdTextFields size={16} className="mr-1 text-gray-500" />,
+    [PropertyType.RICH_TEXT]: <MdSubject size={16} className="mr-1 text-gray-500" />,
+    [PropertyType.NUMBER]: <MdNumbers size={16} className="mr-1 text-gray-500" />,
+    [PropertyType.SELECT]: <TbCheckbox size={16} className="mr-1 text-gray-500" />,
+    [PropertyType.MULTI_SELECT]: <BiSelectMultiple size={16} className="mr-1 text-gray-500" />,
+    [PropertyType.DATETIME]: <MdDateRange size={16} className="mr-1 text-gray-500" />,
+    [PropertyType.BOOLEAN]: <MdCheckBox size={16} className="mr-1 text-gray-500" />,
+    [PropertyType.USER]: <MdPerson size={16} className="mr-1 text-gray-500" />,
+    [PropertyType.RELATIONSHIP]: <MdLink size={16} className="mr-1 text-gray-500" />,
+    [PropertyType.MINERS]: <HiOutlineServer size={16} className="mr-1 text-gray-500" />
 };
 
 // BUG: 改了一次标题后，如果再点击标题并什么都不改，依然会出现调用更新回调的情况
@@ -82,10 +83,10 @@ export const TitlePropertyDetail: React.FC<PropertyDetailProps> = ({
     const [internalValue, setInternalValue] = useState<string>('');
     const [isEditing, setIsEditing] = useState(false);
     const [showError, setShowError] = useState(false);
-    
+
     // 输入框引用，用于设置光标位置
     const inputRef = useRef<HTMLInputElement>(null);
-    
+
     // 记录点击位置
     const [clickPosition, setClickPosition] = useState<number | null>(null);
 
@@ -102,17 +103,17 @@ export const TitlePropertyDetail: React.FC<PropertyDetailProps> = ({
     useEffect(() => {
         if (isEditing && inputRef.current && clickPosition !== null) {
             inputRef.current.focus();
-            
+
             // 尝试将光标设置到点击位置
             try {
                 inputRef.current.setSelectionRange(clickPosition, clickPosition);
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (_error) {
                 // 如果设置失败（例如位置超出范围），将光标设置到末尾
                 const length = inputRef.current.value.length;
                 inputRef.current.setSelectionRange(length, length);
             }
-            
+
             // 重置点击位置
             setClickPosition(null);
         }
@@ -159,7 +160,7 @@ export const TitlePropertyDetail: React.FC<PropertyDetailProps> = ({
         if (onUpdate) {
             // 使用createSetOperation创建更新操作
             const operation = createSetOperation(_propertyDefinition.id, internalValue);
-            
+
             // 调用回调函数更新值
             const success = await onUpdate(operation);
             if (success) {
@@ -182,21 +183,21 @@ export const TitlePropertyDetail: React.FC<PropertyDetailProps> = ({
             if (textElement) {
                 const rect = textElement.getBoundingClientRect();
                 const clickX = e.clientX - rect.left;
-                
+
                 // 估算字符位置 - 使用平均字符宽度作为估算
                 // 这个值可能需要根据实际字体调整
                 const avgCharWidth = 18; // 根据字体大小估算的像素宽度
                 const estimatedPosition = Math.floor(clickX / avgCharWidth);
-                
+
                 // 确保位置在文本范围内
                 const clampedPosition = Math.min(
                     Math.max(0, estimatedPosition),
                     internalValue.length
                 );
-                
+
                 setClickPosition(clampedPosition);
             }
-            
+
             setIsEditing(true);
         }
     };
@@ -247,62 +248,61 @@ export const SelectPropertyDetail: React.FC<PropertyDetailProps> = ({
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isHovering, setIsHovering] = useState(false);
     const [selectedValue, setSelectedValue] = useState<string | null>(null);
-    
+    const [isLoading, setIsLoading] = useState(false);
+
     // 下拉框引用，用于检测点击外部关闭
     const dropdownRef = useRef<HTMLDivElement>(null);
-    
+
     // 从配置中获取选项
     const options = (propertyDefinition.config?.options || []) as Array<{ id: string; name: string; color: string }>;
-    
+
     // 当属性值变化时更新内部状态
     useEffect(() => {
         setSelectedValue(value !== undefined && value !== null ? String(value) : null);
     }, [value]);
-    
+
     // 当前选中的选项
     const selectedOption = options.find(option => option.id === selectedValue);
-    
+
     // 处理选择选项
     const handleSelectOption = async (optionId: string) => {
+        setIsDropdownOpen(false);
         if (onUpdate) {
             // 使用createSetOperation创建更新操作
             const operation = createSetOperation(propertyDefinition.id, optionId);
-            
+            setIsLoading(true);
             // 调用回调函数更新值
             const success = await onUpdate(operation);
             if (success) {
                 setSelectedValue(optionId);
             }
-        } else {
-            setSelectedValue(optionId);
+            setIsLoading(false);
         }
-        
-        setIsDropdownOpen(false);
     };
-    
+
     // 处理清除选择
     const handleClearOption = async (e: React.MouseEvent) => {
         e.stopPropagation(); // 阻止事件冒泡，防止触发下拉框
-        
+
         if (onUpdate) {
+            setIsLoading(true);
             // 使用createRemoveOperation创建删除操作
             const operation = createRemoveOperation(propertyDefinition.id);
-            
+
             // 调用回调函数更新值
             const success = await onUpdate(operation);
             if (success) {
                 setSelectedValue(null);
             }
-        } else {
-            setSelectedValue(null);
+            setIsLoading(false);
         }
     };
-    
+
     // 切换下拉框显示状态
     const toggleDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
     };
-    
+
     // 点击外部关闭下拉框
     useEffect(() => {
         const handleOutsideClick = (event: MouseEvent) => {
@@ -310,13 +310,13 @@ export const SelectPropertyDetail: React.FC<PropertyDetailProps> = ({
                 setIsDropdownOpen(false);
             }
         };
-        
+
         document.addEventListener('mousedown', handleOutsideClick);
         return () => {
             document.removeEventListener('mousedown', handleOutsideClick);
         };
     }, []);
-    
+
     return (
         <div className="flex items-center">
             <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
@@ -327,7 +327,7 @@ export const SelectPropertyDetail: React.FC<PropertyDetailProps> = ({
             </div>
             <div className="relative w-auto min-w-[120px] max-w-[240px] pl-3" ref={dropdownRef}>
                 <div
-                    className="flex items-center w-full h-8 px-3 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="flex items-center w-full h-8 px-3 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors relative"
                     onClick={toggleDropdown}
                     onMouseEnter={() => setIsHovering(true)}
                     onMouseLeave={() => setIsHovering(false)}
@@ -354,8 +354,9 @@ export const SelectPropertyDetail: React.FC<PropertyDetailProps> = ({
                     ) : (
                         <span className="text-gray-400 text-sm">No selection</span>
                     )}
+                    {isLoading && <LoadingContainerOverlay />}
                 </div>
-                
+
                 {/* 下拉选项列表 */}
                 {isDropdownOpen && (
                     <div className="absolute z-10 mt-1 w-auto min-w-full max-w-[240px] bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
@@ -373,7 +374,7 @@ export const SelectPropertyDetail: React.FC<PropertyDetailProps> = ({
                                     <span className="text-sm truncate">{option.name}</span>
                                 </div>
                             ))}
-                            
+
                             {/* 无选项时的提示 */}
                             {options.length === 0 && (
                                 <div className="px-4 py-2 text-gray-500 text-sm">
@@ -400,13 +401,13 @@ export const MultiSelectPropertyDetail: React.FC<PropertyDetailProps> = ({
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isHovering, setIsHovering] = useState(false);
     const [selectedValues, setSelectedValues] = useState<string[]>([]);
-    
+
     // 下拉框引用，用于检测点击外部关闭
     const dropdownRef = useRef<HTMLDivElement>(null);
-    
+
     // 从配置中获取选项
     const options = (propertyDefinition.config?.options || []) as Array<{ id: string; name: string; color: string }>;
-    
+
     // 当属性值变化时更新内部状态
     useEffect(() => {
         if (value === null || value === undefined) {
@@ -418,19 +419,19 @@ export const MultiSelectPropertyDetail: React.FC<PropertyDetailProps> = ({
             setSelectedValues([String(value)]);
         }
     }, [value]);
-    
+
     // 获取已选中的选项
     const selectedOptions = options.filter(option => selectedValues.includes(option.id));
-    
+
     // 处理选择选项
     const handleSelectOption = async (optionId: string) => {
         // 检查是否已选中
         const isAlreadySelected = selectedValues.includes(optionId);
-        
+
         if (isAlreadySelected) {
             // 若已选中，则从选中列表中移除
             const newValues = selectedValues.filter(id => id !== optionId);
-            
+
             if (onUpdate) {
                 if (newValues.length === 0) {
                     // 如果没有选中项，则使用REMOVE操作
@@ -453,7 +454,7 @@ export const MultiSelectPropertyDetail: React.FC<PropertyDetailProps> = ({
         } else {
             // 若未选中，则添加到选中列表
             const newValues = [...selectedValues, optionId];
-            
+
             if (onUpdate) {
                 // 使用UPDATE操作更新整个列表
                 const operation = createUpdateOperation(propertyDefinition.id, newValues);
@@ -466,11 +467,11 @@ export const MultiSelectPropertyDetail: React.FC<PropertyDetailProps> = ({
             }
         }
     };
-    
+
     // 处理清除所有选项
     const handleClearAllOptions = async (e: React.MouseEvent) => {
         e.stopPropagation(); // 阻止事件冒泡，防止触发下拉框
-        
+
         if (onUpdate) {
             // 使用REMOVE操作
             const operation = createRemoveOperation(propertyDefinition.id);
@@ -482,14 +483,14 @@ export const MultiSelectPropertyDetail: React.FC<PropertyDetailProps> = ({
             setSelectedValues([]);
         }
     };
-    
+
     // 处理删除单个选项
     const handleRemoveOption = async (optionId: string, e: React.MouseEvent) => {
         e.stopPropagation(); // 阻止事件冒泡，防止触发下拉框
-        
+
         // 从选中列表中移除
         const newValues = selectedValues.filter(id => id !== optionId);
-        
+
         if (onUpdate) {
             if (newValues.length === 0) {
                 // 如果没有选中项，则使用REMOVE操作
@@ -510,12 +511,12 @@ export const MultiSelectPropertyDetail: React.FC<PropertyDetailProps> = ({
             setSelectedValues(newValues);
         }
     };
-    
+
     // 切换下拉框显示状态
     const toggleDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
     };
-    
+
     // 点击外部关闭下拉框
     useEffect(() => {
         const handleOutsideClick = (event: MouseEvent) => {
@@ -523,13 +524,13 @@ export const MultiSelectPropertyDetail: React.FC<PropertyDetailProps> = ({
                 setIsDropdownOpen(false);
             }
         };
-        
+
         document.addEventListener('mousedown', handleOutsideClick);
         return () => {
             document.removeEventListener('mousedown', handleOutsideClick);
         };
     }, []);
-    
+
     return (
         <div className="flex items-center">
             <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
@@ -551,7 +552,7 @@ export const MultiSelectPropertyDetail: React.FC<PropertyDetailProps> = ({
                             {/* 显示选中的标签 */}
                             <div className="flex flex-wrap items-center gap-1 max-w-full">
                                 {selectedOptions.map(option => (
-                                    <div 
+                                    <div
                                         key={option.id}
                                         className="flex items-center bg-gray-100 rounded-full px-2 py-0.5 max-w-[120px] group"
                                     >
@@ -570,7 +571,7 @@ export const MultiSelectPropertyDetail: React.FC<PropertyDetailProps> = ({
                                     </div>
                                 ))}
                             </div>
-                            
+
                             {/* 清除所有按钮 */}
                             {isHovering && selectedOptions.length > 0 && (
                                 <button
@@ -586,7 +587,7 @@ export const MultiSelectPropertyDetail: React.FC<PropertyDetailProps> = ({
                         <span className="text-gray-400 text-sm">No selection</span>
                     )}
                 </div>
-                
+
                 {/* 下拉选项列表 */}
                 {isDropdownOpen && (
                     <div className="absolute z-10 mt-1 w-auto min-w-full max-w-[240px] bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
@@ -610,7 +611,7 @@ export const MultiSelectPropertyDetail: React.FC<PropertyDetailProps> = ({
                                     <span className="text-sm truncate">{option.name}</span>
                                 </div>
                             ))}
-                            
+
                             {/* 无选项时的提示 */}
                             {options.length === 0 && (
                                 <div className="px-4 py-2 text-gray-500 text-sm">
@@ -639,138 +640,154 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isHovering, setIsHovering] = useState(false);
     const [selectedMiners, setSelectedMiners] = useState<string[]>([]);
-    
+    const [tempSelectedMiners, setTempSelectedMiners] = useState<string[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [hasChanges, setHasChanges] = useState(false);
+
     // 下拉框引用，用于检测点击外部关闭
     const dropdownRef = useRef<HTMLDivElement>(null);
-    
+
     // 获取矿机列表数据
     const miners = getSimpleMinersList();
-    
+
     // 当属性值变化时更新内部状态
     useEffect(() => {
         if (value === null || value === undefined) {
             setSelectedMiners([]);
+            setTempSelectedMiners([]);
         } else if (Array.isArray(value)) {
-            setSelectedMiners(value.map(v => String(v)));
+            const minerIds = value.map(v => String(v));
+            setSelectedMiners(minerIds);
+            setTempSelectedMiners(minerIds);
         } else {
             // 单个值情况，转为数组
-            setSelectedMiners([String(value)]);
+            const minerIds = [String(value)];
+            setSelectedMiners(minerIds);
+            setTempSelectedMiners(minerIds);
         }
+        setHasChanges(false);
     }, [value]);
-    
+
     // 获取已选中的矿机信息
-    const selectedMinersInfo = selectedMiners
+    const selectedMinersInfo = (isDropdownOpen ? tempSelectedMiners : selectedMiners)
         .map(id => getMinerById(id))
         .filter(Boolean); // 过滤掉未找到的矿机
-    
-    // 处理选择矿机
-    const handleSelectMiner = async (minerId: string) => {
+
+    // 处理选择矿机（只更新临时状态）
+    const handleSelectMiner = (minerId: string) => {
         // 检查是否已选中
-        const isAlreadySelected = selectedMiners.includes(minerId);
-        
+        const isAlreadySelected = tempSelectedMiners.includes(minerId);
+
+        let newValues;
         if (isAlreadySelected) {
             // 若已选中，则从选中列表中移除
-            const newValues = selectedMiners.filter(id => id !== minerId);
-            
-            if (onUpdate) {
-                if (newValues.length === 0) {
-                    // 如果没有选中项，则使用REMOVE操作
-                    const operation = createRemoveOperation(propertyDefinition.id);
-                    const success = await onUpdate(operation);
-                    if (success) {
-                        setSelectedMiners([]);
-                    }
-                } else {
-                    // 否则更新选中项列表
-                    const operation = createUpdateOperation(propertyDefinition.id, newValues);
-                    const success = await onUpdate(operation);
-                    if (success) {
-                        setSelectedMiners(newValues);
-                    }
-                }
-            } else {
-                setSelectedMiners(newValues);
-            }
+            newValues = tempSelectedMiners.filter(id => id !== minerId);
         } else {
             // 若未选中，则添加到选中列表
-            const newValues = [...selectedMiners, minerId];
-            
-            if (onUpdate) {
-                // 使用UPDATE操作更新整个列表
-                const operation = createUpdateOperation(propertyDefinition.id, newValues);
-                const success = await onUpdate(operation);
-                if (success) {
-                    setSelectedMiners(newValues);
-                }
-            } else {
-                setSelectedMiners(newValues);
-            }
+            newValues = [...tempSelectedMiners, minerId];
         }
+        
+        // 更新临时状态
+        setTempSelectedMiners(newValues);
+        // 标记有未保存的变更
+        setHasChanges(JSON.stringify(newValues) !== JSON.stringify(selectedMiners));
     };
-    
+
     // 处理清除所有矿机
-    const handleClearAllMiners = async (e: React.MouseEvent) => {
+    const handleClearAllMiners = (e: React.MouseEvent) => {
         e.stopPropagation(); // 阻止事件冒泡，防止触发下拉框
-        
-        if (onUpdate) {
-            // 使用REMOVE操作
-            const operation = createRemoveOperation(propertyDefinition.id);
-            const success = await onUpdate(operation);
-            if (success) {
-                setSelectedMiners([]);
-            }
-        } else {
-            setSelectedMiners([]);
-        }
+
+        // 清空临时选择
+        setTempSelectedMiners([]);
+        // 标记有变更
+        setHasChanges(selectedMiners.length > 0);
     };
-    
+
     // 处理删除单个矿机
-    const handleRemoveMiner = async (minerId: string, e: React.MouseEvent) => {
+    const handleRemoveMiner = (minerId: string, e: React.MouseEvent) => {
         e.stopPropagation(); // 阻止事件冒泡，防止触发下拉框
-        
-        // 从选中列表中移除
-        const newValues = selectedMiners.filter(id => id !== minerId);
-        
-        if (onUpdate) {
-            if (newValues.length === 0) {
-                // 如果没有选中项，则使用REMOVE操作
-                const operation = createRemoveOperation(propertyDefinition.id);
-                const success = await onUpdate(operation);
-                if (success) {
-                    setSelectedMiners([]);
-                }
-            } else {
-                // 否则更新选中项列表
-                const operation = createUpdateOperation(propertyDefinition.id, newValues);
-                const success = await onUpdate(operation);
-                if (success) {
-                    setSelectedMiners(newValues);
-                }
-            }
+
+        if (isDropdownOpen) {
+            // 下拉框打开时，从临时列表中移除
+            const newValues = tempSelectedMiners.filter(id => id !== minerId);
+            setTempSelectedMiners(newValues);
+            // 标记有变更
+            setHasChanges(JSON.stringify(newValues) !== JSON.stringify(selectedMiners));
         } else {
-            setSelectedMiners(newValues);
+            // 下拉框关闭时，直接执行更新
+            updateMinersSelection(selectedMiners.filter(id => id !== minerId));
         }
     };
-    
+
+    // 将临时选择应用到实际选择并触发更新
+    const applyChanges = async () => {
+        if (hasChanges && onUpdate) {
+            updateMinersSelection(tempSelectedMiners);
+        }
+    };
+
+    // 更新矿机选择的统一处理函数
+    const updateMinersSelection = async (minerIds: string[]) => {
+        if (!onUpdate) return;
+
+        setIsLoading(true);
+        let operation;
+        
+        if (minerIds.length === 0) {
+            // 如果没有选中项，则使用REMOVE操作
+            operation = createRemoveOperation(propertyDefinition.id);
+        } else {
+            // 否则更新选中项列表
+            operation = createUpdateOperation(propertyDefinition.id, minerIds);
+        }
+
+        // 调用回调函数更新值
+        const success = await onUpdate(operation);
+        if (success) {
+            setSelectedMiners(minerIds);
+            setTempSelectedMiners(minerIds);
+            setHasChanges(false);
+        } else {
+            // 更新失败，恢复临时选择
+            setTempSelectedMiners(selectedMiners);
+        }
+        setIsLoading(false);
+    };
+
     // 切换下拉框显示状态
     const toggleDropdown = () => {
-        setIsDropdownOpen(!isDropdownOpen);
+        if (isDropdownOpen) {
+            // 如果要关闭下拉框，且有变更，则应用变更
+            if (hasChanges) {
+                applyChanges();
+            }
+            setIsDropdownOpen(false);
+        } else {
+            // 打开下拉框时，确保临时选择与当前选择一致
+            setTempSelectedMiners([...selectedMiners]);
+            setHasChanges(false);
+            setIsDropdownOpen(true);
+        }
     };
-    
+
     // 点击外部关闭下拉框
     useEffect(() => {
         const handleOutsideClick = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                // 如果有变更，则应用变更
+                if (hasChanges) {
+                    applyChanges();
+                }
                 setIsDropdownOpen(false);
             }
         };
-        
+
         document.addEventListener('mousedown', handleOutsideClick);
         return () => {
             document.removeEventListener('mousedown', handleOutsideClick);
         };
-    }, []);
-    
+    }, [hasChanges, selectedMiners, tempSelectedMiners]);
+
     return (
         <div className="flex items-center">
             <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
@@ -782,7 +799,7 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
             <div className="relative w-auto min-w-[120px] max-w-[320px] pl-3" ref={dropdownRef}>
                 {/* 触发下拉框的按钮/显示区域 */}
                 <div
-                    className="flex items-center w-full min-h-[32px] px-3 py-1 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="flex items-center w-full min-h-[32px] px-3 py-1 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors relative"
                     onClick={toggleDropdown}
                     onMouseEnter={() => setIsHovering(true)}
                     onMouseLeave={() => setIsHovering(false)}
@@ -792,7 +809,7 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
                             {/* 显示选中的矿机标签 */}
                             <div className="flex flex-wrap items-center gap-1 max-w-full">
                                 {selectedMinersInfo.map(miner => miner && (
-                                    <div 
+                                    <div
                                         key={miner.id}
                                         className="flex items-center bg-gray-100 rounded-full px-2 py-0.5 max-w-[140px] group"
                                         title={`${miner.model} - ${miner.status} - ${miner.ipAddress}`}
@@ -804,20 +821,20 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
                                         <button
                                             className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
                                             onClick={(e) => handleRemoveMiner(miner.id, e)}
-                                            title="Remove this miner"
+                                            title="移除此矿机"
                                         >
                                             <MdCancel size={14} />
                                         </button>
                                     </div>
                                 ))}
                             </div>
-                            
+
                             {/* 清除所有按钮 */}
                             {selectedMinersInfo.length > 1 && isHovering && (
                                 <button
                                     onClick={handleClearAllMiners}
                                     className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors cursor-pointer"
-                                    title="Clear all miners"
+                                    title="清除所有矿机"
                                 >
                                     <MdCancel size={16} />
                                 </button>
@@ -826,8 +843,9 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
                     ) : (
                         <span className="text-gray-400">Select miners</span>
                     )}
+                    {isLoading && <LoadingContainerOverlay />}
                 </div>
-                
+
                 {/* 下拉选项菜单 */}
                 {isDropdownOpen && (
                     <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
@@ -839,7 +857,7 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
                                         onClick={() => handleSelectMiner(miner.id)}
                                         className={`
                                             flex items-center p-2 hover:bg-gray-50 rounded-md transition-colors cursor-pointer
-                                            ${selectedMiners.includes(miner.id) ? 'bg-gray-100' : ''}
+                                            ${tempSelectedMiners.includes(miner.id) ? 'bg-gray-100' : ''}
                                         `}
                                     >
                                         <div className="flex items-center flex-1 min-w-0">
@@ -853,7 +871,7 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
                                                 </span>
                                             </div>
                                         </div>
-                                        {selectedMiners.includes(miner.id) && (
+                                        {tempSelectedMiners.includes(miner.id) && (
                                             <span className="ml-2 text-blue-500">✓</span>
                                         )}
                                     </div>
@@ -897,12 +915,12 @@ export const DatetimePropertyDetail: React.FC<PropertyDetailProps> = ({
             </div>
         );
     }
-    
+
     try {
         // 尝试解析日期时间字符串
         const dateString = String(value);
         const date = new Date(dateString);
-        
+
         // 检查日期是否有效
         if (isNaN(date.getTime())) {
             return (
@@ -919,32 +937,32 @@ export const DatetimePropertyDetail: React.FC<PropertyDetailProps> = ({
                 </div>
             );
         }
-        
+
         // 获取配置
         const config = propertyDefinition.config || {};
         const showTime = config.showTime !== false; // 默认显示时间
         const showSeconds = config.showSeconds !== false; // 默认显示秒
         const showTimezone = config.showTimezone === true; // 默认不显示时区
-        
+
         // 格式化日期部分 (YYYY-MM-DD)
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         const dateFormatted = `${year}-${month}-${day}`;
-        
+
         // 格式化时间部分
         let timeFormatted = '';
         if (showTime) {
             const hours = String(date.getHours()).padStart(2, '0');
             const minutes = String(date.getMinutes()).padStart(2, '0');
             timeFormatted = `${hours}:${minutes}`;
-            
+
             // 添加秒部分（如果需要）
             if (showSeconds) {
                 const seconds = String(date.getSeconds()).padStart(2, '0');
                 timeFormatted += `:${seconds}`;
             }
-            
+
             // 添加时区部分（如果需要）
             if (showTimezone) {
                 const timezoneOffset = date.getTimezoneOffset();
@@ -955,7 +973,7 @@ export const DatetimePropertyDetail: React.FC<PropertyDetailProps> = ({
                 timeFormatted += ` (UTC${timezoneFormatted})`;
             }
         }
-        
+
         // 返回完整的格式化日期时间，整体使用浅灰色
         return (
             <div className="flex items-center">
@@ -1015,10 +1033,11 @@ export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
         userId: string | null;
     } | null>(null);
     const [isLoadingCurrentUser, setIsLoadingCurrentUser] = useState(false);
-    
+    const [isLoading, setIsLoading] = useState(false);
+
     // 下拉框引用，用于检测点击外部关闭
     const dropdownRef = useRef<HTMLDivElement>(null);
-    
+
     // 获取组织成员列表
     const { memberships, isLoaded } = useOrganization({
         memberships: {
@@ -1026,11 +1045,11 @@ export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
             keepPreviousData: true, // 保持之前的数据直到新数据加载完成
         },
     });
-    
+
     // 处理Clerk返回的数据，转换为内部使用的用户数据
     const users = React.useMemo(() => {
         if (!isLoaded || !memberships?.data) return [];
-        
+
         return memberships.data.map(membership => {
             const publicUserData = membership.publicUserData;
             return {
@@ -1043,12 +1062,12 @@ export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
             };
         });
     }, [isLoaded, memberships?.data]);
-    
+
     // 当属性值变化时更新内部状态
     useEffect(() => {
         if (value !== undefined && value !== null && value !== "") {
             setSelectedUserId(String(value));
-            
+
             // 尝试从当前加载的用户列表中查找
             const userMatch = users.find(user => user.userId === String(value));
             if (userMatch) {
@@ -1062,7 +1081,7 @@ export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
             setSelectedUser(null);
         }
     }, [value, users]);
-    
+
     // 通过用户ID加载用户详细信息
     const loadUserById = async (userId: string) => {
         setIsLoadingCurrentUser(true);
@@ -1091,61 +1110,62 @@ export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
             setIsLoadingCurrentUser(false);
         }
     };
-    
+
     // 处理选择用户
     const handleSelectUser = async (user: typeof selectedUser) => {
         if (!user) {
             return;
         }
-        
+
         const userId = user.userId;
         if (!userId) {
             return;
         }
-        
+
         if (onUpdate) {
+            setIsDropdownOpen(false);
             // 使用createSetOperation创建更新操作
             const operation = createSetOperation(propertyDefinition.id, userId);
-            
+            // 显示加载状态
+            setIsLoading(true);
+
             // 调用回调函数更新值
             const success = await onUpdate(operation);
             if (success) {
                 setSelectedUserId(userId);
                 setSelectedUser(user);
             }
-        } else {
-            setSelectedUserId(userId);
-            setSelectedUser(user);
+            // 隐藏加载状态
+            setIsLoading(false);
         }
-        
-        setIsDropdownOpen(false);
     };
-    
+
     // 处理清除用户
     const handleClearUser = async (e: React.MouseEvent) => {
         e.stopPropagation(); // 阻止事件冒泡，防止触发下拉框
-        
+
         if (onUpdate) {
+            // 显示加载状态
+            setIsLoading(true);
             // 使用createRemoveOperation创建删除操作
             const operation = createRemoveOperation(propertyDefinition.id);
-            
+
             // 调用回调函数更新值
             const success = await onUpdate(operation);
             if (success) {
                 setSelectedUserId(null);
                 setSelectedUser(null);
             }
-        } else {
-            setSelectedUserId(null);
-            setSelectedUser(null);
+            // 隐藏加载状态
+            setIsLoading(false);
         }
     };
-    
+
     // 切换下拉框显示状态
     const toggleDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
     };
-    
+
     // 点击外部关闭下拉框
     useEffect(() => {
         const handleOutsideClick = (event: MouseEvent) => {
@@ -1153,25 +1173,25 @@ export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
                 setIsDropdownOpen(false);
             }
         };
-        
+
         document.addEventListener('mousedown', handleOutsideClick);
         return () => {
             document.removeEventListener('mousedown', handleOutsideClick);
         };
     }, []);
-    
+
     // 处理加载更多用户
     const handleLoadMore = () => {
         if (memberships && memberships.hasNextPage) {
             memberships.fetchNext();
         }
     };
-    
+
     // 渲染用户项
     const renderUserItem = (user: NonNullable<typeof selectedUser>) => (
         <div className="flex items-center">
-            <Image 
-                src={user.imageUrl} 
+            <Image
+                src={user.imageUrl}
                 alt={`${user.firstName || ''} ${user.lastName || ''}`}
                 width={24}
                 height={24}
@@ -1179,14 +1199,14 @@ export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
                 className="w-6 h-6 rounded-full mr-2 flex-shrink-0 object-cover border border-gray-200"
             />
             <span className="text-sm truncate">
-                {user.firstName || ''} {user.lastName || ''} 
+                {user.firstName || ''} {user.lastName || ''}
                 <span className="text-gray-500 text-xs ml-1">
                     {user.identifier}
                 </span>
             </span>
         </div>
     );
-    
+
     return (
         <div className="flex items-center">
             <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
@@ -1198,7 +1218,7 @@ export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
             <div className="relative w-auto min-w-[120px] max-w-[240px] pl-3" ref={dropdownRef}>
                 {/* 触发下拉框的按钮/显示区域 */}
                 <div
-                    className="flex items-center w-full h-8 px-3 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="flex items-center w-full h-8 px-3 rounded-md bg-white cursor-pointer hover:bg-gray-50 transition-colors relative"
                     onClick={toggleDropdown}
                     onMouseEnter={() => setIsHovering(true)}
                     onMouseLeave={() => setIsHovering(false)}
@@ -1208,8 +1228,8 @@ export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
                     ) : selectedUser ? (
                         <div className="flex items-center w-full justify-between">
                             <div className="flex items-center truncate">
-                                <Image 
-                                    src={selectedUser.imageUrl} 
+                                <Image
+                                    src={selectedUser.imageUrl}
                                     alt={`${selectedUser.firstName || ''} ${selectedUser.lastName || ''}`}
                                     width={20}
                                     height={20}
@@ -1233,8 +1253,9 @@ export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
                     ) : (
                         <span className="text-gray-400 text-sm">No selection</span>
                     )}
+                    {isLoading && <LoadingContainerOverlay />}
                 </div>
-                
+
                 {/* 下拉选项列表 */}
                 {isDropdownOpen && (
                     <div className="absolute z-10 mt-1 w-auto min-w-full max-w-[240px] bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
@@ -1254,10 +1275,10 @@ export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
                                     {isLoaded ? '没有可选用户' : '加载中...'}
                                 </div>
                             )}
-                            
+
                             {/* 加载更多按钮 */}
                             {memberships?.hasNextPage && (
-                                <div 
+                                <div
                                     className="px-4 py-2 text-center text-sm text-blue-600 hover:bg-gray-50 cursor-pointer"
                                     onClick={handleLoadMore}
                                 >
@@ -1277,15 +1298,15 @@ export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
  * 用于显示和编辑Issue的描述内容，支持Markdown格式
  */
 export const RichTextPropertyDetail: React.FC<PropertyDetailProps> = ({
-propertyDefinition,
-value,
+    propertyDefinition,
+    value,
     onUpdate
 }) => {
     // 组件状态
     const [internalValue, setInternalValue] = useState<string>(String(value));
     const [hasChanges, setHasChanges] = useState(false);
     const [originalValue, setOriginalValue] = useState<string>(String(value));
-    
+
     // 初始化和同步内部值
     useEffect(() => {
         if (value !== undefined && value !== null) {
@@ -1296,26 +1317,26 @@ value,
             setOriginalValue('');
         }
     }, [value]);
-    
+
     // 更新编辑器内容的处理函数
     const handleChange = (markdown: string) => {
         setInternalValue(markdown);
         // 检查是否有变化
         setHasChanges(markdown !== originalValue);
     };
-    
+
     // 处理取消操作
     const handleCancel = () => {
         setInternalValue(originalValue);
         setHasChanges(false);
     };
-    
+
     // 处理保存操作
     const handleSave = async () => {
         if (onUpdate) {
             // 使用createSetOperation创建更新操作
             const operation = createSetOperation(propertyDefinition.id, internalValue);
-            
+
             // 调用回调函数更新值
             const success = await onUpdate(operation);
             if (success) {
@@ -1327,7 +1348,7 @@ value,
             setHasChanges(false);
         }
     };
-    
+
     // 渲染编辑模式
     return (
         <div className="border-gray-200 pt-4 mt-4 pb-4">
@@ -1358,7 +1379,7 @@ value,
                     })
                 ]}
             />
-            
+
             {/* 操作按钮 - 只有在有变化时才显示 */}
             {hasChanges && (
                 <ButtonGroup className="mt-2">

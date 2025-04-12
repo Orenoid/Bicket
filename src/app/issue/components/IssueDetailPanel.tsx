@@ -319,9 +319,9 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions }: {
                     </div>
                     <div className='flex flex-col gap-3 pl-3 mb-8'>
                         {/* 标签属性组件 */}
-                        {labelProperty && (
+                        {false && ( // TODO 标签属性组件暂时隐藏
                             <MultiSelectPropertyDetail
-                                propertyDefinition={labelProperty}
+                                propertyDefinition={labelProperty!}
                                 value={getLabelValue()}
                                 onUpdate={handlePropertyUpdate}
                             />
