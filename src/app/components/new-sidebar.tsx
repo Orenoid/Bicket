@@ -3,7 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import Divider from './ui/divider-new';
 import { TbLayoutSidebarRightExpand, TbLayoutSidebarRightCollapse } from 'react-icons/tb';
-import { OrganizationSwitcher } from '@clerk/nextjs';
+import dynamic from 'next/dynamic';
+
+// 动态导入 OrganizationSwitcher 组件，并禁用 SSR
+const OrganizationSwitcher = dynamic(
+  () => import('@clerk/nextjs').then((mod) => mod.OrganizationSwitcher),
+  { ssr: false }
+);
 
 export interface SidebarItem {
   id: string;
@@ -88,6 +94,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sections = [[], [], []] }) => {
       <div className={`flex items-center p-2 ${collapsed ? 'justify-center' : 'justify-between'}`}>
         {!collapsed && (
           <div className="flex items-center">
+            {/* 只在客户端渲染 OrganizationSwitcher 组件 */}
             <OrganizationSwitcher hidePersonal={true} />
             {/* <Image src="/logo.png" alt="Bicket Logo" width={64} height={64} className="mr-1 pl-1" />
             <h1 className="text-2xl font-bold">Bicket</h1> */}
