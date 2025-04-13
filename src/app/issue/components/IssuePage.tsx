@@ -47,6 +47,7 @@ export interface PropertyDefinition {
 interface IssuePageProps {
     issues: Issue[];
     propertyDefinitions: PropertyDefinition[];
+    pageCount?: number; // 总页数参数，可选
 }
 
 // 序列化筛选条件为URL参数字符串
@@ -68,7 +69,7 @@ function serializeFilters(filters: FilterCondition[]): string {
     }).join(';');
 }
 
-export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
+export function IssuePage({ issues, propertyDefinitions, pageCount = 1 }: IssuePageProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -303,6 +304,7 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
                 propertyDefinitions={propertyDefinitions}
                 activeFilters={activeFilters}
                 onFilterChange={handleFilterChange}
+                pageCount={pageCount}
             />
 
             {/* 新建issue面板 */}

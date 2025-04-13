@@ -46,6 +46,7 @@ export interface IssueTableProps {
     propertyDefinitions: PropertyDefinition[];
     activeFilters?: FilterCondition[];
     onFilterChange?: (filters: FilterCondition[]) => void;
+    pageCount?: number; // 总页数
 }
 
 // 表格框架组件
@@ -57,6 +58,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     propertyDefinitions = [],
     activeFilters = [],
     onFilterChange,
+    pageCount = 1, // 默认为1页
 }) => {
     // TODO tech dept 应该通过某种配置项来判断是否允许在表格里展示
     // 过滤掉描述属性和 label 属性属性
@@ -239,7 +241,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     const { table } = useDataTable({
         data: data,
         columns: tanstackColumns,
-        pageCount: 1,
+        pageCount: pageCount,
         enableColumnResizing: true, // TODO bug: not working, even the doc says it's supported
         initialState: {},
         getRowId: (row) => row[SystemPropertyId.ID] as string,
@@ -300,6 +302,7 @@ function areEqual(prevProps: IssueTableProps, nextProps: IssueTableProps) {
     const renderCellEqual = prevProps.renderCell === nextProps.renderCell;
     const onRowClickEqual = prevProps.onRowClick === nextProps.onRowClick;
     const propertyDefinitionsEqual = prevProps.propertyDefinitions === nextProps.propertyDefinitions;
+    const pageCountEqual = prevProps.pageCount === nextProps.pageCount;
     
     // 比较 columns 数组
     let columnsEqual = prevProps.columns.length === nextProps.columns.length;
@@ -340,7 +343,8 @@ function areEqual(prevProps: IssueTableProps, nextProps: IssueTableProps) {
         columnsEqual &&
         renderCellEqual &&
         onRowClickEqual &&
-        propertyDefinitionsEqual;
+        propertyDefinitionsEqual &&
+        pageCountEqual;
     
     // 如果基本属性不相等，返回 false（需要重新渲染）
     if (!basicPropsEqual) {
