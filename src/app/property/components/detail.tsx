@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { PropertyDefinition } from '@/app/issue/components/IssuePage';
 import { createSetOperation, createRemoveOperation, createUpdateOperation } from '../update-operations';
 import { MdCancel, MdCheckBox, MdDateRange, MdLink, MdNumbers, MdPerson, MdSubject, MdTextFields } from 'react-icons/md';
@@ -33,6 +33,8 @@ import { getSimpleMinersList, getMinerStatusStyle, getMinerById } from '../../mi
 import { useOrganization } from '@clerk/clerk-react';
 import Image from 'next/image';
 import { LoadingContainerOverlay } from '@/app/components/ui/overlay';
+import { UserDataContext } from '@/app/issue/components/IssuePage';
+import { getUser } from '@/app/users/service';
 
 // 属性值接口，与API接口保持一致
 export interface PropertyValue {
@@ -258,8 +260,12 @@ export const SelectPropertyDetail: React.FC<PropertyDetailProps> = ({
 
     // 当属性值变化时更新内部状态
     useEffect(() => {
-        setSelectedValue(value !== undefined && value !== null ? String(value) : null);
-    }, [value]);
+        // 避免不必要的状态更新，只有当值真正变化时才更新状态
+        const newValue = value !== undefined && value !== null ? String(value) : null;
+        if (selectedValue !== newValue) {
+            setSelectedValue(newValue);
+        }
+    }, [value, selectedValue]);
 
     // 当前选中的选项
     const selectedOption = options.find(option => option.id === selectedValue);
@@ -410,15 +416,21 @@ export const MultiSelectPropertyDetail: React.FC<PropertyDetailProps> = ({
 
     // 当属性值变化时更新内部状态
     useEffect(() => {
+        let newValues: string[] = [];
         if (value === null || value === undefined) {
-            setSelectedValues([]);
+            newValues = [];
         } else if (Array.isArray(value)) {
-            setSelectedValues(value.map(v => String(v)));
+            newValues = value.map(v => String(v));
         } else {
             // 单个值情况，转为数组
-            setSelectedValues([String(value)]);
+            newValues = [String(value)];
         }
-    }, [value]);
+        
+        // 比较数组内容，避免不必要的更新
+        if (JSON.stringify(newValues) !== JSON.stringify(selectedValues)) {
+            setSelectedValues(newValues);
+        }
+    }, [value, selectedValues]);
 
     // 获取已选中的选项
     const selectedOptions = options.filter(option => selectedValues.includes(option.id));
@@ -1020,6 +1032,9 @@ export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
     value,
     onUpdate
 }) => {
+    // 使用上下文中的用户数据
+    const { userData, isLoading: isContextLoading } = useContext(UserDataContext);
+    
     // 状态管理
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isHovering, setIsHovering] = useState(false);
@@ -1063,53 +1078,71 @@ export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
         });
     }, [isLoaded, memberships?.data]);
 
-    // 当属性值变化时更新内部状态
-    useEffect(() => {
-        if (value !== undefined && value !== null && value !== "") {
-            setSelectedUserId(String(value));
-
-            // 尝试从当前加载的用户列表中查找
-            const userMatch = users.find(user => user.userId === String(value));
-            if (userMatch) {
-                setSelectedUser(userMatch);
-            } else {
-                // 如果当前列表中没有，需要单独加载用户信息
-                loadUserById(String(value));
-            }
-        } else {
-            setSelectedUserId(null);
-            setSelectedUser(null);
-        }
-    }, [value, users]);
-
-    // 通过用户ID加载用户详细信息
-    const loadUserById = async (userId: string) => {
+    // 通过用户ID加载用户详细信息，从上下文或服务器获取
+    const loadUserById = React.useCallback(async (userId: string) => {
         setIsLoadingCurrentUser(true);
         try {
-            // 加载单个用户信息，使用服务器方法
-            const response = await fetch(`/api/users/${userId}`);
-            if (response.ok) {
-                const userData = await response.json();
-                // 构造用户对象
+            // 检查上下文数据是否正在加载
+            if (isContextLoading) {
+                // 如果上下文数据正在加载，等待一会再重试
+                setTimeout(() => loadUserById(userId), 500);
+                return;
+            }
+            
+            // 首先尝试从上下文中获取用户数据
+            const contextUser = userData[userId];
+            if (contextUser) {
+                // 从上下文获取到用户数据
                 setSelectedUser({
-                    firstName: userData.firstName || null,
-                    lastName: userData.lastName || null,
-                    imageUrl: userData.imageUrl,
-                    hasImage: !!userData.imageUrl,
-                    identifier: userData.username || userData.email || userId,
+                    firstName: contextUser.username.split(' ')[0] || null,
+                    lastName: contextUser.username.split(' ').slice(1).join(' ') || null,
+                    imageUrl: contextUser.imageUrl,
+                    hasImage: contextUser.hasImage,
+                    identifier: contextUser.username,
                     userId: userId
                 });
             } else {
-                console.error('加载用户数据失败:', await response.text());
-                setSelectedUser(null);
+                // 上下文中没有，从服务器请求
+                const user = await getUser(userId);
+                setSelectedUser({
+                    firstName: user.username.split(' ')[0] || null,
+                    lastName: user.username.split(' ').slice(1).join(' ') || null,
+                    imageUrl: user.imageUrl,
+                    hasImage: user.hasImage,
+                    identifier: user.username,
+                    userId: userId
+                });
             }
         } catch (error) {
-            console.error('加载用户数据出错:', error);
+            console.error('加载用户数据失败:', error);
             setSelectedUser(null);
         } finally {
             setIsLoadingCurrentUser(false);
         }
-    };
+    }, [userData, isContextLoading]);
+
+    // 当属性值变化时更新内部状态
+    useEffect(() => {
+        const valueStr = value !== undefined && value !== null && value !== "" ? String(value) : null;
+        
+        // 避免不必要的状态更新
+        if (valueStr !== selectedUserId) {
+            setSelectedUserId(valueStr);
+            
+            if (valueStr) {
+                // 尝试从当前加载的用户列表中查找
+                const userMatch = users.find(user => user.userId === valueStr);
+                if (userMatch) {
+                    setSelectedUser(userMatch);
+                } else {
+                    // 如果当前列表中没有，从上下文或服务器加载
+                    loadUserById(valueStr);
+                }
+            } else {
+                setSelectedUser(null);
+            }
+        }
+    }, [value, users, selectedUserId, loadUserById]);
 
     // 处理选择用户
     const handleSelectUser = async (user: typeof selectedUser) => {

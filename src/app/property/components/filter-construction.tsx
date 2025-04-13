@@ -24,6 +24,8 @@ export interface FilterConstructorPanelProps {
     onCancel: () => void;
     // 面板定位（可选）
     position?: { top?: number; left?: number; right?: number; bottom?: number };
+    // 面板样式类名（可选）
+    className?: string;
 }
 
 /**
@@ -1050,11 +1052,12 @@ export function FilterConstructorPanel(props: FilterConstructorPanelProps): Reac
     const Panel = getFilterConstructorPanel(propertyDefinition.type);
     
     return (
-        <>
+        // 阻止冒泡，防止触发 applied-filter 的点击事件（在编辑状态下， panel 会作为 applied-filter 的子组件）
+        <div className={`${props.className}`} onClick={(e) => { e.stopPropagation(); }}>
             {/* 使用公共透明遮罩组件 */}
             <TransparentOverlay onClick={onCancel} />
             {/* 面板组件 */}
             <Panel {...props} />
-        </>
+        </div>
     );
 } 

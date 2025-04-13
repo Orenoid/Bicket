@@ -3,6 +3,12 @@ import { IssuePage, Issue, PropertyValue, PropertyDefinition } from './component
 import { FilterCondition } from '@/app/property/types';
 import { Prisma } from '@prisma/client';
 import { auth } from '@clerk/nextjs/server';
+import { SystemPropertyId } from '@/app/property/constants';
+
+// TODO tech dept AI 生成的一些代码不太合理，需要优化
+// 1. 有些查询应该能并行
+// 2. 有/无筛选条件的查询逻辑应该能合并
+// 3. URL 参数解析应该有现成的方案可以用，待替换
 
 // 反序列化筛选条件
 function deserializeFilters(filtersStr: string): FilterCondition[] {
@@ -72,6 +78,29 @@ async function getPropertyDefinitions(): Promise<PropertyDefinition[]> {
             config: prop.config as Record<string, unknown> | undefined
         }));
         
+        // 定义属性的优先级顺序
+        // TODO tech dept shadcn table 暂不支持配置 column 顺序，手动指定顺序
+        const priorityOrder: Record<string, number> = {
+            [SystemPropertyId.ID]: 1,        // 工单 ID
+            [SystemPropertyId.TITLE]: 2,     // 工单标题
+            [SystemPropertyId.STATUS]: 3,    // 工单状态
+            [SystemPropertyId.PRIORITY]: 4,  // 工单优先级
+            [SystemPropertyId.CATEGORY]: 5,  // 工单类别
+            [SystemPropertyId.DIAGNOSIS]: 6, // 工单诊断
+            [SystemPropertyId.MINERS]: 7,    // 矿机列表
+            [SystemPropertyId.ASIGNEE]: 8,   // 负责人
+            [SystemPropertyId.REPORTER]: 9,  // 报告人
+            [SystemPropertyId.CREATED_AT]: 10, // 创建时间
+            [SystemPropertyId.UPDATED_AT]: 11, // 更新时间
+        };
+
+        // 根据优先级顺序排序
+        result.sort((a, b) => {
+            const priorityA = priorityOrder[a.id] || 999; // 没有指定优先级的放到最后
+            const priorityB = priorityOrder[b.id] || 999;
+            return priorityA - priorityB;
+        });
+        
         return result;
     } catch (error) {
         console.error('获取属性定义失败:', error);
@@ -80,7 +109,19 @@ async function getPropertyDefinitions(): Promise<PropertyDefinition[]> {
 }
 
 // 不带筛选条件的工单查询
-async function getIssuesWithoutFilter(baseWhere: Prisma.issueWhereInput): Promise<Issue[]> {
+async function getIssuesWithoutFilter(
+    baseWhere: Prisma.issueWhereInput, 
+    page: number,
+    pageSize: number
+): Promise<{issues: Issue[], total: number}> {
+    // 查询符合条件的工单总数
+    const total = await prisma.issue.count({
+        where: baseWhere
+    });
+    
+    // 计算分页偏移量
+    const skip = (page - 1) * pageSize;
+    
     // 查询所有工单 (baseWhere 已经包含了 workspace_id 条件)
     const issues = await prisma.issue.findMany({
         where: baseWhere,
@@ -89,11 +130,13 @@ async function getIssuesWithoutFilter(baseWhere: Prisma.issueWhereInput): Promis
         },
         orderBy: {
             createdAt: 'desc' // 按创建时间倒序排序
-        }
+        },
+        skip, // 分页偏移
+        take: pageSize // 每页数量
     });
     
     if (issues.length === 0) {
-        return [];
+        return { issues: [], total };
     }
     
     // 提取所有工单ID
@@ -194,11 +237,16 @@ async function getIssuesWithoutFilter(baseWhere: Prisma.issueWhereInput): Promis
         });
     }
     
-    return issueData;
+    return { issues: issueData, total };
 }
 
 // 从数据库中获取工单数据
-async function getIssues(filters: FilterCondition[] | undefined, workspaceId: string): Promise<Issue[]> {
+async function getIssues(
+    filters: FilterCondition[] | undefined, 
+    workspaceId: string,
+    page: number,
+    pageSize: number
+): Promise<{issues: Issue[], total: number}> {
     try {
         // 基本条件：未删除的工单并且必须指定 workspace_id
         // 使用类型断言解决类型错误
@@ -294,16 +342,29 @@ async function getIssues(filters: FilterCondition[] | undefined, workspaceId: st
                 
                 // 如果已经没有符合条件的工单了，直接返回空结果
                 if (issueIds.size === 0 && hasSearched) {
-                    return [];
+                    return { issues: [], total: 0 };
                 }
             }
             
             // 如果有筛选结果，查询这些工单
             if (issueIds.size > 0) {
+                // 先获取符合筛选条件的总数量
+                const total = issueIds.size;
+                
+                // 计算分页范围
+                const issueIdsArray = Array.from(issueIds);
+                const startIndex = (page - 1) * pageSize;
+                const endIndex = Math.min(startIndex + pageSize, issueIdsArray.length);
+                const paginatedIds = issueIdsArray.slice(startIndex, endIndex);
+
+                if (paginatedIds.length === 0) {
+                    return { issues: [], total };
+                }
+                
                 // 构建 issue 查询条件
                 const whereCondition: Prisma.issueWhereInput = {
                     ...baseWhere,
-                    id: { in: Array.from(issueIds) }
+                    id: { in: paginatedIds }
                 };
                 
                 // 查询符合条件的工单
@@ -318,16 +379,16 @@ async function getIssues(filters: FilterCondition[] | undefined, workspaceId: st
                 });
                 
                 if (issues.length === 0) {
-                    return [];
+                    return { issues: [], total };
                 }
                 
                 // 查询每个工单的属性值 - 使用批量查询替代循环查询
-                const issueIdsArray = issues.map(issue => issue.id);
+                const paginatedIssueIds = issues.map(issue => issue.id);
                 
                 // 批量查询所有工单的单值属性
                 const singlePropertyValues = await prisma.property_single_value.findMany({
                     where: {
-                        issue_id: { in: issueIdsArray },
+                        issue_id: { in: paginatedIssueIds },
                         deletedAt: null
                     },
                     select: {
@@ -341,7 +402,7 @@ async function getIssues(filters: FilterCondition[] | undefined, workspaceId: st
                 // 批量查询所有工单的多值属性
                 const multiPropertyValues = await prisma.property_multi_value.findMany({
                     where: {
-                        issue_id: { in: issueIdsArray },
+                        issue_id: { in: paginatedIssueIds },
                         deletedAt: null
                     },
                     select: {
@@ -419,15 +480,15 @@ async function getIssues(filters: FilterCondition[] | undefined, workspaceId: st
                     });
                 }
                 
-                return issueData;
+                return { issues: issueData, total };
             } else {
                 // 没有筛选条件或没有找到符合条件的工单，查询所有工单
-                const result = await getIssuesWithoutFilter(baseWhere);
+                const result = await getIssuesWithoutFilter(baseWhere, page, pageSize);
                 return result;
             }
         } else {
             // 没有筛选条件，查询所有工单
-            const result = await getIssuesWithoutFilter(baseWhere);
+            const result = await getIssuesWithoutFilter(baseWhere, page, pageSize);
             return result;
         }
     } catch (error) {
@@ -437,13 +498,21 @@ async function getIssues(filters: FilterCondition[] | undefined, workspaceId: st
 }
 
 // 页面主组件
-export default async function Page({ searchParams }: { searchParams: Promise<{ filters?: string }> }) {
+export default async function Page({ searchParams }: { searchParams: Promise<{ filters?: string, page?: string, perPage?: string }> }) {
     try {
-        // 从 URL 参数获取筛选条件
+        // 从 URL 参数获取筛选条件和分页信息
         const resolvedParams = await searchParams;
         
         const filtersStr = resolvedParams.filters;
         const filters = filtersStr ? deserializeFilters(filtersStr) : [];
+        
+        // 获取分页参数
+        const pageParam = resolvedParams.page;
+        const perPageParam = resolvedParams.perPage;
+
+        // 解析分页参数，默认第1页，每页10条
+        const page = pageParam ? parseInt(pageParam, 10) : 1;
+        const perPage = perPageParam ? parseInt(perPageParam, 10) : 10;
         
         const { orgId } = await auth();
         
@@ -452,14 +521,17 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
             console.warn('没有获取到组织ID，无法查询工单数据');
             const propertyDefinitions = await getPropertyDefinitions();
             
-            return <IssuePage issues={[]} propertyDefinitions={propertyDefinitions} />;
+            return <IssuePage issues={[]} propertyDefinitions={propertyDefinitions} pageCount={0} />;
         }
 
         // 获取属性定义和工单数据
-        const [propertyDefinitions, issues] = await Promise.all([
+        const [propertyDefinitions, issuesResult] = await Promise.all([
             getPropertyDefinitions(),
-            getIssues(filters, orgId.toString()) // 强制传递 orgId 作为 workspace_id
+            getIssues(filters, orgId.toString(), page, perPage) // 强制传递 orgId 作为 workspace_id，并传递分页参数
         ]);
+
+        // 计算总页数
+        const totalPages = Math.ceil(issuesResult.total / perPage);
 
         // 检查是否获取到了属性定义
         if (propertyDefinitions.length === 0) {
@@ -467,7 +539,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
         }
         
         // 渲染客户端组件，传递数据
-        return <IssuePage issues={issues} propertyDefinitions={propertyDefinitions} />;
+        return <IssuePage 
+            issues={issuesResult.issues} 
+            propertyDefinitions={propertyDefinitions} 
+            pageCount={totalPages} 
+        />;
     } catch (error) {
         // 捕获并显示错误
         console.error('渲染页面时出错:', error);

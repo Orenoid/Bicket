@@ -1,26 +1,39 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import React from 'react';
 import {
-    useReactTable,
-    getCoreRowModel,
+    Column,
     ColumnDef,
-    flexRender
+    Row
 } from '@tanstack/react-table';
 import { SystemPropertyId } from '@/app/property/constants';
+import { useDataTable } from '@/hooks/use-data-table';
+import { DataTable } from '@/components/data-table';
+import { DataTableColumnHeader } from '@/components/data-table-column-header';
+import { DropDownMenuV2 } from '@/app/components/ui/dropdownMenu';
+import { FilterConstructorPanel } from '@/app/property/components/filter-construction';
+import {
+    AppliedFilterWrapper,
+    APPLIED_FILTER_COMPONENTS
+} from '@/app/property/components/applied-filter';
+import { FilterCondition } from '@/app/property/types';
+import { PropertyType } from '@/app/property/constants';
 
+import { DataTableToolbar } from '@/components/data-table-toolbar';
+import { MdFilterList, MdClose } from 'react-icons/md';
 export interface TableColumn {
     id: string;
     title: string;
     width?: number;
-    minWidth?: number;
 }
 
-// 自定义列元数据类型，用于存储表格列的额外信息
-interface CustomColumnMeta {
-    width: string;  // 列的宽度，以字符串形式存储（如"150px"）
-    originalColumn: TableColumn;  // 原始的列定义，保留原始配置信息
+// 属性定义接口
+export interface PropertyDefinition {
+    id: string;
+    name: string;
+    type: string;
+    config?: Record<string, unknown>;
 }
 
 export interface IssueTableProps {
@@ -29,134 +42,350 @@ export interface IssueTableProps {
     renderHeader?: (column: TableColumn) => React.ReactNode;
     renderCell?: (column: TableColumn, rowData: Record<string, unknown>, rowIndex: number) => React.ReactNode;
     onRowClick?: (rowData: Record<string, unknown>) => void;
+    // 新增：筛选器相关属性
+    propertyDefinitions: PropertyDefinition[];
+    activeFilters?: FilterCondition[];
+    onFilterChange?: (filters: FilterCondition[]) => void;
+    pageCount?: number; // 总页数
 }
 
 // 表格框架组件
-export const IssueTable: React.FC<IssueTableProps> = ({ 
-    columns, 
-    data, 
-    renderHeader = (col) => col.title, 
-    renderCell = () => null,
-    onRowClick
+export const IssueTable: React.FC<IssueTableProps> = ({
+    columns,
+    data,
+    renderCell = () => <span></span>,
+    onRowClick,
+    propertyDefinitions = [],
+    activeFilters = [],
+    onFilterChange,
+    pageCount = 1, // 默认为1页
 }) => {
     // TODO tech dept 应该通过某种配置项来判断是否允许在表格里展示
-    // 过滤掉描述属性
+    // 过滤掉描述属性和 label 属性属性
     const filteredColumns = useMemo(() => {
-        return columns.filter(column => column.id !== SystemPropertyId.DESCRIPTION);
+        return columns.filter(column => column.id !== SystemPropertyId.DESCRIPTION && column.id !== SystemPropertyId.LABEL);
     }, [columns]);
 
-    // 处理列宽
-    const getColumnWidth = (column: TableColumn) => {
-        return column.width ? `${column.width}px` : column.minWidth ? `${column.minWidth}px` : '150px';
+    // 筛选器相关状态
+    const [selectedProperty, setSelectedProperty] = useState<PropertyDefinition | null>(null);
+    const [localActiveFilters, setLocalActiveFilters] = useState<FilterCondition[]>(activeFilters);
+    // 添加状态跟踪哪个过滤器正在被编辑
+    const [editingFilter, setEditingFilter] = useState<string | null>(null);
+
+    // 当父组件的 activeFilters 变化时，更新本地状态
+    useEffect(() => {
+        setLocalActiveFilters(activeFilters);
+    }, [activeFilters]);
+
+    // 当本地筛选条件变化并且有回调函数时，通知父组件
+    useEffect(() => {
+        if (onFilterChange) {
+            onFilterChange(localActiveFilters);
+        }
+    }, [localActiveFilters, onFilterChange]);
+
+
+    // 筛选条件应用回调
+    const handleFilterApply = (filter: FilterCondition | null) => {
+        if (filter) {
+            // 如果已有同一属性的筛选条件，则替换它
+            const existingFilterIndex = localActiveFilters.findIndex(f => f.propertyId === filter.propertyId);
+            if (existingFilterIndex >= 0) {
+                const newFilters = [...localActiveFilters];
+                newFilters[existingFilterIndex] = filter;
+                setLocalActiveFilters(newFilters);
+            } else {
+                // 否则添加新的筛选条件
+                setLocalActiveFilters([...localActiveFilters, filter]);
+            }
+        }
+        setSelectedProperty(null); // 关闭筛选面板
+        setEditingFilter(null); // 关闭编辑面板
     };
 
-    // 使用 useState 和 useEffect 跟踪表格容器和视口高度
-    const [containerRef, setContainerRef] = useState<HTMLDivElement | null>(null);
-    const [needScroll, setNeedScroll] = useState(false);
+    // 筛选条件取消回调
+    const handleFilterCancel = () => {
+        setSelectedProperty(null); // 关闭筛选面板
+        setEditingFilter(null); // 关闭编辑面板
+    };
 
-    // 计算表格是否需要滚动
-    useEffect(() => {
-        if (!containerRef) return;
-        
-        const calculateNeedScroll = () => {
-            // 获取表格内容的高度
-            const tableHeight = containerRef.scrollHeight;
-            // 获取视口高度（减去一些外边距，这里用200px作为页面其他元素的预留空间）
-            const viewportHeight = window.innerHeight - 200;
-            
-            // 如果表格高度大于视口高度，则需要滚动
-            setNeedScroll(tableHeight > viewportHeight);
-        };
-        
-        // 初始计算
-        calculateNeedScroll();
-        
-        // 监听窗口大小变化
-        window.addEventListener('resize', calculateNeedScroll);
-        
-        // 清理函数
-        return () => {
-            window.removeEventListener('resize', calculateNeedScroll);
-        };
-    }, [containerRef, data.length]);
-    
-    // 根据是否需要滚动确定样式
-    const tableStyles = needScroll 
-        ? { maxHeight: `calc(100vh - 200px)` } // 数据多时限制高度并允许滚动，使用 vh 单位根据视口高度计算
-        : {}; // 数据少时自动适应内容高度
+    // 移除筛选条件
+    const handleRemoveFilter = (filterId: string) => {
+        setLocalActiveFilters(localActiveFilters.filter(f => f.propertyId !== filterId));
+    };
 
-    // 将我们的列格式转换为TanStack Table需要的格式
-    const tableColumns = useMemo<ColumnDef<Record<string, unknown>, unknown>[]>(() => {
-        return filteredColumns.map((column) => ({
-            id: column.id,
-            accessorKey: column.id,
-            header: () => renderHeader(column),
-            cell: ({ row }) => renderCell(column, row.original, row.index),
-            meta: {
-                width: getColumnWidth(column),
-                originalColumn: column,
-            } as CustomColumnMeta,
+    // 清除所有筛选条件
+    const handleResetAllFilters = () => {
+        setLocalActiveFilters([]);
+        setSelectedProperty(null);
+        setEditingFilter(null);
+    };
+
+    // 获取当前属性的筛选条件
+    const getCurrentFilter = (propertyId: string): FilterCondition | null => {
+        return localActiveFilters.find(f => f.propertyId === propertyId) || null;
+    };
+
+    // 获取属性定义
+    const getPropertyDefinition = (propertyId: string): PropertyDefinition | null => {
+        return propertyDefinitions.find(p => p.id === propertyId) || null;
+    };
+
+    // 筛选属性菜单项
+    const filterMenuItems = propertyDefinitions
+        // TODO: 暂不支持时间类型和富文本类型的筛选
+        .filter(prop => prop.type !== PropertyType.DATETIME && prop.type !== PropertyType.RICH_TEXT)
+        // 过滤掉已经应用过滤条件的属性
+        .filter(prop => !localActiveFilters.some(filter => filter.propertyId === prop.id))
+        .map(prop => ({
+            label: (
+                <div className="flex items-center">
+                    <span>{prop.name}</span>
+                </div>
+            ),
+            onClick: () => {
+                setSelectedProperty(prop);
+            }
         }));
-    }, [filteredColumns, renderHeader, renderCell]);
 
-    // 初始化TanStack Table
-    const table = useReactTable({
-        data,
-        columns: tableColumns,
-        getCoreRowModel: getCoreRowModel(),
+    // 自定义筛选按钮
+    const FilterButton = (
+        <div
+            className="flex items-center text-sm text-gray-700"
+        >
+            <MdFilterList size={16} className={`${localActiveFilters.length === 0 ? "mr-2" : ""} text-gray-500`} />
+            {localActiveFilters.length === 0 && <span>Filter</span>}
+        </div>
+    );
+
+    // 渲染已应用的筛选条件
+    const renderAppliedFilters = () => {
+        return localActiveFilters.map(filter => {
+            const propertyDef = getPropertyDefinition(filter.propertyId);
+            if (!propertyDef) return null;
+
+            // 获取对应类型的筛选组件
+            const FilterComponent = APPLIED_FILTER_COMPONENTS[propertyDef.type];
+            if (!FilterComponent) return null;
+
+            // 判断当前过滤器是否处于编辑状态
+            const isEditing = editingFilter === filter.propertyId;
+
+            return (
+                <AppliedFilterWrapper
+                    key={filter.propertyId}
+                    filter={filter}
+                    propertyDefinition={propertyDef}
+                    onRemove={handleRemoveFilter}
+                    FilterComponent={FilterComponent}
+                    onClick={() => {
+                        // 如果已经在编辑，则关闭编辑面板；否则，打开编辑面板
+                        setEditingFilter(isEditing ? null : filter.propertyId);
+                    }}
+                >
+                    {isEditing && (
+                        <FilterConstructorPanel
+                            propertyDefinition={propertyDef}
+                            currentFilter={filter}
+                            onApply={handleFilterApply}
+                            onCancel={handleFilterCancel}
+                            className="absolute left-0 top-[100%]"
+                        />
+                    )}
+                </AppliedFilterWrapper>
+            );
+        });
+    };
+
+    // 把 props 的 columns 转换为 TanStack Table 的 ColumnDef
+    const tanstackColumns = useMemo<ColumnDef<Record<string, unknown>>[]>(
+        () => [
+            ...filteredColumns.map(
+                (column_) => ({
+                    id: column_.id,
+                    accessorKey: column_.id,
+                    enableSorting: false,
+                    // header: () => renderHeader(column),
+                    header: ({ column }: { column: Column<Record<string, unknown>, unknown> }) => (
+                        <DataTableColumnHeader className="cursor-pointer" column={column} title={column_.title} />
+                    ),
+                    cell: ({ row }: { row: Row<Record<string, unknown>> }) => (
+                        <CellWrapper onClick={() => {
+                            if (onRowClick) onRowClick(row.original);
+                        }}>
+                            {renderCell(column_, row.original, row.index)}
+                        </CellWrapper>
+                    ),
+                    // TODO tech dept 支持拖拽调整列宽
+                    // size: column_.id === SystemPropertyId.ASIGNEE || column_.id === SystemPropertyId.REPORTER ? 108 : undefined,
+                    // size: 108,
+                    meta: {
+                        label: column_.title,
+                    },
+                })
+            ),
+            // {
+            //     id: 'actions',
+            //     cell: ({ row }: { row: Row<Record<string, unknown>> }) => (
+            //         <div className="hover:cursor-pointer hover:bg-gray-200 rounded-md p-1 bg-white" onClick={(e) => {
+            //             e.stopPropagation(); // 阻止事件冒泡到行级别
+            //             if (onRowClick) onRowClick(row.original);
+            //         }}>
+            //             <FiEdit className="text-gray-500 hover:text-gray-700" />
+            //         </div>
+            //     ),
+            // }
+        ], [filteredColumns, renderCell, onRowClick]
+    )
+
+    const { table } = useDataTable({
+        data: data,
+        columns: tanstackColumns,
+        pageCount: pageCount,
+        enableColumnResizing: true, // TODO bug: not working, even the doc says it's supported
+        initialState: {},
+        getRowId: (row) => row[SystemPropertyId.ID] as string,
     });
 
     return (
-        <div 
-            ref={setContainerRef}
-            className={`overflow-auto border border-gray-200 rounded-lg ${!needScroll ? 'overflow-visible' : ''}`} 
-            style={tableStyles}
-        >
-            <div className="min-w-full inline-block align-middle">
-                <div className={needScroll ? 'overflow-hidden' : ''}>
-                    <table className="min-w-full border-collapse table-fixed">
-                        <thead className="bg-gray-50 sticky top-0 z-10">
-                            {table.getHeaderGroups().map(headerGroup => (
-                                <tr key={headerGroup.id}>
-                                    {headerGroup.headers.map((header, colIndex) => (
-                                        <th 
-                                            key={header.id}
-                                            className={`relative px-2 py-2 text-left text-sm font-semibold text-gray-700 ${colIndex > 0 ? 'border-l border-gray-200' : ''}`}
-                                            style={{ width: (header.column.columnDef.meta as CustomColumnMeta)?.width }}
-                                        >
-                                            <div className="flex items-center">
-                                                {flexRender(header.column.columnDef.header, header.getContext())}
-                                            </div>
-                                        </th>
-                                    ))}
-                                </tr>
-                            ))}
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {table.getRowModel().rows.map((row) => (
-                                <tr 
-                                    key={row.id}
-                                    className="hover:bg-gray-50 transition-colors cursor-pointer"
-                                    onClick={() => onRowClick && onRowClick(row.original)}
+        <div className="data-table-container">
+            <DataTable table={table}>
+                <div className="flex flex-row justify-between">
+                    {/* 筛选器相关UI */}
+                    <div className="flex flex-row items-center">
+                        <div className="flex flex-row items-center mr-2">
+                            {/* 显示已应用的筛选条件 */}
+                            {renderAppliedFilters()}
+                            {/* clear 按钮，当筛选条件数量大于等于 2 时显示 */}
+                            {localActiveFilters.length >= 2 && (
+                                <button
+                                    onClick={handleResetAllFilters}
+                                    className="flex items-center px-2 py-1 ml-1 mb-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
                                 >
-                                    {row.getVisibleCells().map((cell, colIndex) => (
-                                        <td 
-                                            key={cell.id}
-                                            className={`px-2 py-2 text-sm text-gray-500 truncate ${colIndex > 0 ? 'border-l border-gray-200' : ''}`}
-                                            style={{ 
-                                                width: (cell.column.columnDef.meta as CustomColumnMeta)?.width,
-                                                height: '35px'
-                                            }}
-                                        >
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                    <span className="mr-1">Clear</span>
+                                    <MdClose size={16} />
+                                </button>
+                            )}
+                        </div>
+                        <div className="mr-2 mb-2 relative">
+                            <DropDownMenuV2
+                                entryLabel={FilterButton}
+                                menuItems={filterMenuItems}
+                                entryClassName="border border-gray-200 rounded"
+                                menuClassName="w-64 bg-white border border-gray-200 rounded-md shadow-lg"
+                            />
+                            {/* 设置筛选条件的面板 */}
+                            {selectedProperty && (
+                                <FilterConstructorPanel
+                                    propertyDefinition={selectedProperty}
+                                    currentFilter={getCurrentFilter(selectedProperty.id)}
+                                    onApply={handleFilterApply}
+                                    onCancel={handleFilterCancel}
+                                    className="absolute top-[100%] left-0"
+                                />
+                            )}
+                        </div>
+
+                    </div>
+                    <DataTableToolbar table={table}>
+                    </DataTableToolbar>
                 </div>
-            </div>
+
+            </DataTable>
         </div>
     );
-}; 
+};
+
+// 添加这个自定义的比较函数来决定何时重新渲染
+function areEqual(prevProps: IssueTableProps, nextProps: IssueTableProps) {
+    // 检查基本属性是否相等
+    const renderCellEqual = prevProps.renderCell === nextProps.renderCell;
+    const onRowClickEqual = prevProps.onRowClick === nextProps.onRowClick;
+    const propertyDefinitionsEqual = prevProps.propertyDefinitions === nextProps.propertyDefinitions;
+    const pageCountEqual = prevProps.pageCount === nextProps.pageCount;
+    
+    // 比较 columns 数组
+    let columnsEqual = prevProps.columns.length === nextProps.columns.length;
+    if (columnsEqual) {
+        for (let i = 0; i < prevProps.columns.length; i++) {
+            const prevColumn = prevProps.columns[i];
+            const nextColumn = nextProps.columns[i];
+            if (prevColumn.id !== nextColumn.id || prevColumn.title !== nextColumn.title) {
+                columnsEqual = false;
+                break;
+            }
+        }
+    }
+    
+    // 比较 data 数组
+    let dataEqual = prevProps.data.length === nextProps.data.length;
+    if (dataEqual) {
+        for (let i = 0; i < prevProps.data.length; i++) {
+            const prevItem = prevProps.data[i];
+            const nextItem = nextProps.data[i];
+            
+            // 首先检查对象引用是否相同
+            if (prevItem !== nextItem) {
+                // 如果对象引用不同，尝试比较 ID (用 SystemPropertyId.ID 或 'issue_id')
+                const prevId = prevItem[SystemPropertyId.ID] || prevItem['issue_id'];
+                const nextId = nextItem[SystemPropertyId.ID] || nextItem['issue_id'];
+                
+                if (prevId !== nextId) {
+                    dataEqual = false;
+                    break;
+                }
+            }
+        }
+    }
+    
+    const basicPropsEqual = 
+        dataEqual &&
+        columnsEqual &&
+        renderCellEqual &&
+        onRowClickEqual &&
+        propertyDefinitionsEqual &&
+        pageCountEqual;
+    
+    // 如果基本属性不相等，返回 false（需要重新渲染）
+    if (!basicPropsEqual) {
+        return false;
+    }
+    
+    // 检查 activeFilters 是否相等
+    if (prevProps.activeFilters?.length !== nextProps.activeFilters?.length) {
+        return false;
+    }
+    
+    // 详细比较 activeFilters 中的每个元素
+    if (prevProps.activeFilters && nextProps.activeFilters) {
+        for (let i = 0; i < prevProps.activeFilters.length; i++) {
+            const prevFilter = prevProps.activeFilters[i];
+            const nextFilter = nextProps.activeFilters[i];
+            
+            if (
+                prevFilter.propertyId !== nextFilter.propertyId ||
+                prevFilter.propertyType !== nextFilter.propertyType ||
+                prevFilter.operator !== nextFilter.operator ||
+                JSON.stringify(prevFilter.value) !== JSON.stringify(nextFilter.value)
+            ) {
+                return false;
+            }
+        }
+    }
+    
+    // 如果所有检查都通过，返回 true（不需要重新渲染）
+    return true;
+}
+
+// 使用 React.memo 包装组件以避免不必要的重新渲染
+// 同时保留命名导出
+const MemoizedIssueTable = React.memo(IssueTable, areEqual);
+export default MemoizedIssueTable;
+
+const CellWrapper = ({ children, onClick }: { children: React.ReactNode, onClick: () => void }) => {
+    return (
+        <div className="hover:cursor-pointer" onClick={onClick}>
+            {children}
+        </div>
+    );
+};
