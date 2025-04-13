@@ -491,7 +491,7 @@ export const PROPERTY_HEADER_COMPONENTS: Record<string, PropertyHeaderCellCompon
     [PropertyType.RICH_TEXT]: TextPropertyHeaderCell,
     [PropertyType.MULTI_SELECT]: TextPropertyHeaderCell,
     [PropertyType.MINERS]: TextPropertyHeaderCell,
-    [PropertyType.DATETIME]: DatetimePropertyHeaderCell,
+    [PropertyType.DATETIME]: TextPropertyHeaderCell,
     [PropertyType.USER]: TextPropertyHeaderCell,
     // 其他类型的表头组件可以在这里添加
 };

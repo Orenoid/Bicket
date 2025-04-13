@@ -351,10 +351,6 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
                         renderCell={renderCell}
                         onRowClick={handleRowClick}
                     />
-                    {/* 数据统计 */}
-                    <div className="mt-4 text-sm text-gray-500">
-                        Total {issues.length} issues
-                    </div>
                 </>
             ) : (
                 <div className="p-4 text-gray-500 text-sm">暂无符合条件的工单</div>
