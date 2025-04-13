@@ -354,51 +354,13 @@ export const DatetimePropertyCell: PropertyCellComponent = ({
             return <span className="text-gray-400 italic">无效日期</span>;
         }
         
-        // 获取配置
-        const config = propertyConfig as DatetimePropertyConfig || {};
-        const showTime = config.showTime !== false; // 默认显示时间
-        const showSeconds = config.showSeconds !== false; // 默认显示秒
-        const showTimezone = config.showTimezone === true; // 默认不显示时区
-        
         // 格式化日期部分 (YYYY-MM-DD)
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         const dateFormatted = `${year}-${month}-${day}`;
         
-        // 如果不显示时间，只返回日期部分
-        if (!showTime) {
-            return <span>{dateFormatted}</span>;
-        }
-        
-        // 格式化时间部分
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        let timeFormatted = `${hours}:${minutes}`;
-        
-        // 添加秒部分（如果需要）
-        if (showSeconds) {
-            const seconds = String(date.getSeconds()).padStart(2, '0');
-            timeFormatted += `:${seconds}`;
-        }
-        
-        // 添加时区部分（如果需要）
-        if (showTimezone) {
-            const timezoneOffset = date.getTimezoneOffset();
-            const timezoneHours = Math.abs(Math.floor(timezoneOffset / 60));
-            const timezoneMinutes = Math.abs(timezoneOffset % 60);
-            const timezoneSign = timezoneOffset <= 0 ? '+' : '-'; // 注意：getTimezoneOffset 返回的是与 UTC 的差值的负数
-            const timezoneFormatted = `${timezoneSign}${String(timezoneHours).padStart(2, '0')}:${String(timezoneMinutes).padStart(2, '0')}`;
-            timeFormatted += ` (UTC${timezoneFormatted})`;
-        }
-        
-        // 返回完整的格式化日期时间
-        return (
-            <div className="whitespace-nowrap">
-                <span className="mr-2">{dateFormatted}</span>
-                <span className="text-gray-500">{timeFormatted}</span>
-            </div>
-        );
+        return <span>{dateFormatted}</span>;
     } catch (error) {
         console.error('日期格式化错误', error);
         return <span className="text-gray-400 italic">日期格式错误</span>;
