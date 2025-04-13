@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, createContext, useMemo } from 'react';
+import { useState, useEffect, createContext, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { IssueTable, TableColumn } from './IssueTable';
 import {
@@ -9,13 +9,7 @@ import {
 } from '../../property/components/table';
 import { FilterCondition } from '@/app/property/types';
 import { PropertyType } from '@/app/property/constants';
-import { FiFilter, FiPlus } from 'react-icons/fi';
-import { DropDownMenuV2 } from '../../components/ui/dropdownMenu';
-import { FilterConstructorPanel } from '@/app/property/components/filter-construction';
-import {
-    AppliedFilterWrapper,
-    APPLIED_FILTER_COMPONENTS
-} from '@/app/property/components/applied-filter';
+import { FiPlus } from 'react-icons/fi';
 import { CreateIssuePanel } from './CreateIssuePanel';
 import { IssueDetailPanel } from './IssueDetailPanel';
 import { User, getUserList } from '@/app/users/service';
@@ -78,13 +72,6 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    // 当前选中的属性（用于显示筛选面板）
-    const [selectedProperty, setSelectedProperty] = useState<PropertyDefinition | null>(null);
-
-    // 筛选按钮引用
-    const filterButtonRef = useRef<HTMLDivElement>(null);
-    // 筛选面板位置状态
-    const [panelPosition, setPanelPosition] = useState({ top: 0, left: 0 });
     // 活跃的筛选条件
     const [activeFilters, setActiveFilters] = useState<FilterCondition[]>([]);
 
@@ -108,6 +95,27 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
         isLoading: isLoadingUsers
     }), [userData, isLoadingUsers]);
 
+    // 当筛选条件变化时，更新URL
+    useEffect(() => {
+        const serialized = serializeFilters(activeFilters);
+
+        // 构建新的 URL 查询参数
+        const params = new URLSearchParams(searchParams);
+        if (serialized) {
+            params.set('filters', serialized);
+        } else {
+            params.delete('filters');
+        }
+
+        // 更新 URL，不触发页面刷新
+        router.push(`?${params.toString()}`, { scroll: false });
+    }, [activeFilters, router, searchParams]);
+
+    // 筛选条件变更处理函数
+    const handleFilterChange = (filters: FilterCondition[]) => {
+        setActiveFilters(filters);
+    };
+    
     // 收集所有用户类型的属性值并批量加载用户信息
     useEffect(() => {
         async function loadUsersData() {
@@ -189,7 +197,6 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
             setCurrentIssueId(selectedIssue.issue_id);
         }
     }, [selectedIssue]);
-
     // 当issues数据变化时，如果有保存的currentIssueId，则更新selectedIssue为新数据
     // 这个效果会在refreshIssueList触发页面刷新后执行，确保详情面板显示的是最新数据
     useEffect(() => {
@@ -200,65 +207,6 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
             }
         }
     }, [issues, currentIssueId, isDetailPanelOpen]);
-
-    // 当按钮引用或选中属性改变时，更新面板位置
-    useEffect(() => {
-        if (filterButtonRef.current && selectedProperty) {
-            const rect = filterButtonRef.current.getBoundingClientRect();
-            setPanelPosition({
-                top: rect.height + 4, // 按钮底部 + 间距
-                left: 0
-            });
-        }
-    }, [selectedProperty]);
-
-    // 当筛选条件变化时，更新URL
-    useEffect(() => {
-        const serialized = serializeFilters(activeFilters);
-
-        // 构建新的 URL 查询参数
-        const params = new URLSearchParams(searchParams);
-        if (serialized) {
-            params.set('filters', serialized);
-        } else {
-            params.delete('filters');
-        }
-
-        // 更新 URL，不触发页面刷新
-        router.push(`?${params.toString()}`, { scroll: false });
-    }, [activeFilters, router, searchParams]);
-
-    // 筛选条件应用回调
-    const handleFilterApply = (filter: FilterCondition | null) => {
-        if (filter) {
-            // 如果已有同一属性的筛选条件，则替换它
-            const existingFilterIndex = activeFilters.findIndex(f => f.propertyId === filter.propertyId);
-            if (existingFilterIndex >= 0) {
-                const newFilters = [...activeFilters];
-                newFilters[existingFilterIndex] = filter;
-                setActiveFilters(newFilters);
-            } else {
-                // 否则添加新的筛选条件
-                setActiveFilters([...activeFilters, filter]);
-            }
-        }
-        setSelectedProperty(null); // 关闭筛选面板
-    };
-
-    // 筛选条件取消回调
-    const handleFilterCancel = () => {
-        setSelectedProperty(null); // 关闭筛选面板
-    };
-
-    // 移除筛选条件
-    const handleRemoveFilter = (filterId: string) => {
-        setActiveFilters(activeFilters.filter(f => f.propertyId !== filterId));
-    };
-
-    // 获取当前属性的筛选条件
-    const getCurrentFilter = (propertyId: string): FilterCondition | null => {
-        return activeFilters.find(f => f.propertyId === propertyId) || null;
-    };
 
     // 表格列定义
     const columns: TableColumn[] = propertyDefinitions.map(prop => ({
@@ -329,54 +277,6 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
         );
     };
 
-    // 筛选属性菜单项
-    const filterMenuItems = propertyDefinitions
-        // TODO: 暂不支持时间类型和富文本类型的筛选
-        .filter(prop => prop.type !== PropertyType.DATETIME && prop.type !== PropertyType.RICH_TEXT)
-        .map(prop => ({
-            label: (
-                <div className="flex items-center">
-                    <span>{prop.name}</span>
-                </div>
-            ),
-            onClick: () => {
-                setSelectedProperty(prop);
-            }
-        }));
-
-    // 自定义筛选按钮
-    const FilterButton = (
-        <div
-            ref={filterButtonRef}
-            className="flex items-center px-2 py-1 text-sm text-gray-700"
-        >
-            <FiFilter className="mr-2 h-4 w-4 text-gray-500" />
-            <span>Filter</span>
-        </div>
-    );
-
-    // 渲染已应用的筛选条件
-    const renderAppliedFilters = () => {
-        return activeFilters.map(filter => {
-            const propertyDef = getPropertyDefinition(filter.propertyId);
-            if (!propertyDef) return null;
-
-            // 获取对应类型的筛选组件
-            const FilterComponent = APPLIED_FILTER_COMPONENTS[propertyDef.type];
-            if (!FilterComponent) return null;
-
-            return (
-                <AppliedFilterWrapper
-                    key={filter.propertyId}
-                    filter={filter}
-                    propertyDefinition={propertyDef}
-                    onRemove={handleRemoveFilter}
-                    FilterComponent={FilterComponent}
-                />
-            );
-        });
-    };
-
     // 新增：行点击处理函数
     const handleRowClick = (issue: Record<string, unknown>) => {
         // 如果已经打开了面板，先关闭再打开，避免状态冲突
@@ -395,45 +295,15 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
 
     return (
         <div className="p-8">
-            {/* 工具栏 */}
-            <div className="mb-4 relative">
-                <div className="flex flex-wrap items-center justify-between">
-                    <div className="flex flex-wrap items-center">
-                        <div className="mr-2 mb-2">
-                            <DropDownMenuV2
-                                entryLabel={FilterButton}
-                                menuItems={filterMenuItems}
-                                entryClassName="border border-gray-200 rounded"
-                                menuClassName="w-64 bg-white border border-gray-200 rounded-md shadow-lg"
-                            />
-                        </div>
-
-                        {/* 显示已应用的筛选条件 */}
-                        {renderAppliedFilters()}
-                    </div>
-
-                    {/* 添加新建issue按钮 */}
-                    <div className="mb-2">
-                        <button
-                            className="p-2 rounded text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200 focus:outline-none cursor-pointer"
-                            aria-label="创建新工单"
-                            onClick={() => setIsCreatePanelOpen(true)}
-                        >
-                            <FiPlus className="h-5 w-5" />
-                        </button>
-                    </div>
-                </div>
-
-                {/* 设置筛选条件的面板 */}
-                {selectedProperty && (
-                    <FilterConstructorPanel
-                        propertyDefinition={selectedProperty}
-                        currentFilter={getCurrentFilter(selectedProperty.id)}
-                        onApply={handleFilterApply}
-                        onCancel={handleFilterCancel}
-                        position={panelPosition}
-                    />
-                )}
+            {/* 工具栏 - 创建Issue按钮 */}
+            <div className="mb-4 flex justify-end">
+                <button
+                    className="p-2 rounded text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200 focus:outline-none cursor-pointer"
+                    aria-label="创建新工单"
+                    onClick={() => setIsCreatePanelOpen(true)}
+                >
+                    <FiPlus className="h-5 w-5" />
+                </button>
             </div>
 
             {/* 表格组件 */}
@@ -443,6 +313,9 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
                 renderHeader={renderHeader}
                 renderCell={renderCell}
                 onRowClick={handleRowClick}
+                propertyDefinitions={propertyDefinitions}
+                activeFilters={activeFilters}
+                onFilterChange={handleFilterChange}
             />
 
             {/* 新建issue面板 */}

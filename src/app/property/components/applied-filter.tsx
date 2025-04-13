@@ -37,6 +37,10 @@ export interface AppliedFilterWrapperProps {
     onRemove: (filterId: string) => void;
     // 要使用的筛选组件
     FilterComponent: AppliedFilterComponent;
+    // 点击已应用筛选条件的回调
+    onClick?: () => void;
+    // 子组件
+    children?: React.ReactNode;
 }
 
 /**
@@ -48,10 +52,20 @@ export const AppliedFilterWrapper: React.FC<AppliedFilterWrapperProps> = ({
     filter,
     propertyDefinition,
     onRemove,
-    FilterComponent
+    FilterComponent,
+    onClick,
+    children,
 }) => {
     return (
-        <div className="inline-flex items-center bg-gray-100 rounded-full px-3 py-1 text-sm mr-2 mb-2">
+        <div 
+            className="flex items-center bg-gray-100 rounded-full px-3 py-1 text-sm mr-2 mb-2 hover:cursor-pointer relative"
+            onClick={(e) => {
+                // 阻止事件冒泡，避免触发表格行点击事件
+                e.stopPropagation();
+                // 如果提供了点击回调，则调用
+                if (onClick) onClick();
+            }}
+        >
             <span className="font-medium text-gray-700 mr-1">{propertyDefinition.name}:</span>
             <div className="mr-2">
                 <FilterComponent 
@@ -60,12 +74,17 @@ export const AppliedFilterWrapper: React.FC<AppliedFilterWrapperProps> = ({
                 />
             </div>
             <button 
-                onClick={() => onRemove(filter.propertyId)}
+                onClick={(e) => {
+                    // 阻止事件冒泡，避免触发筛选条件点击事件
+                    e.stopPropagation();
+                    onRemove(filter.propertyId);
+                }}
                 className="text-gray-500 hover:text-gray-700 focus:outline-none p-1 rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
                 aria-label={`移除${propertyDefinition.name}筛选`}
             >
                 <FiX size={14} />
             </button>
+            {children}
         </div>
     );
 };
@@ -84,16 +103,16 @@ export const TextAppliedFilter: AppliedFilterComponent = ({ filter }) => {
     // 根据操作符显示不同的格式
     switch (filter.operator) {
         case 'contains':
-            return <span>包含 &ldquo;{value}&rdquo;</span>;
+            return <div className="flex items-center whitespace-nowrap">contains &ldquo;{value}&rdquo;</div>;
         // 以下操作符当前筛选构造器未实现，但为未来扩展做准备
         case 'eq':
-            return <span>等于 &ldquo;{value}&rdquo;</span>;
+            return <span>eq &ldquo;{value}&rdquo;</span>;
         case 'startsWith':
             return <span>以 &ldquo;{value}&rdquo; 开头</span>;
         case 'endsWith':
             return <span>以 &ldquo;{value}&rdquo; 结尾</span>;
         default:
-            return <span>{value}</span>;
+            return <div className="flex items-center whitespace-nowrap">{value}</div>;
     }
 };
 
@@ -107,21 +126,21 @@ export const IdAppliedFilter: AppliedFilterComponent = ({ filter }) => {
     switch (filter.operator) {
         case 'eq':
             // 等于操作符，值为单个数字
-            return <span>等于 {String(filter.value)}</span>;
+            return <div className="flex items-center whitespace-nowrap"> equal to {String(filter.value)}</div>;
         case 'in':
             // 包含操作符，值为数字数组
             const values = filter.value as number[];
             if (values.length === 1) {
-                return <span>等于 {values[0]}</span>;
+                return <div className="flex items-center whitespace-nowrap">equal to {values[0]}</div>;
             } else if (values.length <= 3) {
                 // 最多显示3个值
-                return <span>是 {values.join('、')}</span>;
+                return <div className="flex items-center whitespace-nowrap">is {values.join('、')}</div>;
             } else {
                 // 超过3个值，显示数量
-                return <span>包含 {values.length} 个值</span>;
+                return <div className="flex items-center whitespace-nowrap">contains {values.length} values</div>;
             }
         default:
-            return <span>{String(filter.value)}</span>;
+            return <div className="flex items-center">{String(filter.value)}</div>;
     }
 };
 
@@ -148,46 +167,46 @@ export const SelectAppliedFilter: AppliedFilterComponent = ({ filter, propertyDe
                 // 单选情况
                 const option = selectedOptions[0];
                 return (
-                    <span className="flex items-center">
+                    <div className="flex items-center whitespace-nowrap">
                         <span 
                             className="inline-block w-2 h-2 rounded-full mr-1" 
                             style={{ backgroundColor: option.color }} 
                         />
                         {option.name}
-                    </span>
+                    </div>
                 );
             } else if (selectedOptions.length <= 2) {
                 // 显示所有选中的选项名称（最多2个）
                 return (
-                    <span className="flex items-center flex-wrap gap-x-2">
+                    <div className="flex items-center gap-x-2 whitespace-nowrap">
                         {selectedOptions.map(option => (
-                            <span key={option.id} className="flex items-center">
+                            <div key={option.id} className="flex items-center">
                                 <span 
                                     className="inline-block w-2 h-2 rounded-full mr-1" 
                                     style={{ backgroundColor: option.color }} 
                                 />
                                 {option.name}
-                            </span>
+                            </div>
                         ))}
-                    </span>
+                    </div>
                 );
             } else {
                 // 超过2个选项，显示前2个和数量提示
                 return (
-                    <span className="flex items-center flex-wrap gap-x-2">
+                    <div className="flex items-center gap-x-2 whitespace-nowrap">
                         {selectedOptions.slice(0, 2).map(option => (
-                            <span key={option.id} className="flex items-center">
+                            <div key={option.id} className="flex items-center">
                                 <span 
                                     className="inline-block w-2 h-2 rounded-full mr-1" 
                                     style={{ backgroundColor: option.color }} 
                                 />
                                 {option.name}
-                            </span>
+                            </div>
                         ))}
                         <span className="text-xs text-gray-500">
                             +{selectedOptions.length - 2}
                         </span>
-                    </span>
+                    </div>
                 );
             }
         default:
@@ -231,51 +250,51 @@ export const MultiSelectAppliedFilter: AppliedFilterComponent = ({ filter, prope
             const selectedOptions = options.filter(option => selectedIds.includes(option.id));
             
             if (selectedOptions.length === 0) {
-                return <span>无选中选项</span>;
+                return <div className="flex items-center whitespace-nowrap">无选中选项</div>;
             } else if (selectedOptions.length === 1) {
                 // 单个选项情况
                 const option = selectedOptions[0];
                 return (
-                    <span className="flex items-center">
+                    <div className="flex items-center whitespace-nowrap">
                         <span 
                             className="inline-block w-2 h-2 rounded-full mr-1" 
                             style={{ backgroundColor: option.color }} 
                         />
                         {option.name}
-                    </span>
+                    </div>
                 );
             } else if (selectedOptions.length <= 3) {
                 // 显示所有选中的选项名称（最多3个）
                 return (
-                    <span className="flex items-center flex-wrap gap-x-2">
+                    <div className="flex items-center gap-x-2 whitespace-nowrap">
                         {selectedOptions.map(option => (
-                            <span key={option.id} className="flex items-center">
+                            <div key={option.id} className="flex items-center">
                                 <span 
                                     className="inline-block w-2 h-2 rounded-full mr-1" 
                                     style={{ backgroundColor: option.color }} 
                                 />
                                 {option.name}
-                            </span>
+                            </div>
                         ))}
-                    </span>
+                    </div>
                 );
             } else {
                 // 超过3个选项，显示前2个和数量提示
                 return (
-                    <span className="flex items-center flex-wrap gap-x-2">
+                    <div className="flex items-center gap-x-2 whitespace-nowrap">
                         {selectedOptions.slice(0, 2).map(option => (
-                            <span key={option.id} className="flex items-center">
+                            <div key={option.id} className="flex items-center">
                                 <span 
                                     className="inline-block w-2 h-2 rounded-full mr-1" 
                                     style={{ backgroundColor: option.color }} 
                                 />
                                 {option.name}
-                            </span>
+                            </div>
                         ))}
                         <span className="text-xs text-gray-500">
                             +{selectedOptions.length - 2}
                         </span>
-                    </span>
+                    </div>
                 );
             }
         default:
@@ -313,7 +332,7 @@ export const MinersAppliedFilter: AppliedFilterComponent = ({ filter }) => {
             } else if (selectedIds.length <= 3) {
                 // 显示所有选中的矿机ID（最多3个）
                 return (
-                    <span className="flex items-center flex-wrap gap-x-2">
+                    <div className="flex items-center gap-x-2 whitespace-nowrap">
                         {selectedIds.map(minerId => {
                             const miner = getMinerById(minerId);
                             const statusStyle = miner ? getMinerStatusStyle(miner.status) : getMinerStatusStyle('未知');
@@ -326,12 +345,12 @@ export const MinersAppliedFilter: AppliedFilterComponent = ({ filter }) => {
                                 </span>
                             );
                         })}
-                    </span>
+                    </div>
                 );
             } else {
                 // 超过3个矿机，显示前2个和数量提示
                 return (
-                    <span className="flex items-center flex-wrap gap-x-2">
+                    <div className="flex items-center gap-x-2 whitespace-nowrap">
                         {selectedIds.slice(0, 2).map(minerId => {
                             const miner = getMinerById(minerId);
                             const statusStyle = miner ? getMinerStatusStyle(miner.status) : getMinerStatusStyle('未知');
@@ -347,7 +366,7 @@ export const MinersAppliedFilter: AppliedFilterComponent = ({ filter }) => {
                         <span className="text-xs text-gray-500">
                             +{selectedIds.length - 2}
                         </span>
-                    </span>
+                    </div>
                 );
             }
         default:
@@ -384,27 +403,27 @@ export const UserAppliedFilter: AppliedFilterComponent = ({ filter }) => {
         } else if (userIds.length <= 2) {
             // 显示所有用户名称（最多2个）
             return (
-                <span className="flex items-center flex-wrap gap-x-2">
+                <div className="flex items-center gap-x-2 whitespace-nowrap">
                     {userIds.map(id => (
-                        <span key={id}>
+                        <div key={id}>
                             {users[id] || '未知用户'}
-                        </span>
+                        </div>
                     ))}
-                </span>
+                </div>
             );
         } else {
             // 超过2个用户，显示前2个和数量提示
             return (
-                <span className="flex items-center flex-wrap gap-x-2">
+                <div className="flex items-center gap-x-2 whitespace-nowrap">
                     {userIds.slice(0, 2).map(id => (
-                        <span key={id}>
+                        <div key={id}>
                             {users[id] || '未知用户'}
-                        </span>
+                        </div>
                     ))}
                     <span className="text-xs text-gray-500">
                         +{userIds.length - 2}
                     </span>
-                </span>
+                </div>
             );
         }
     };

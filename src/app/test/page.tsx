@@ -1,9 +1,9 @@
 "use client";
- 
+
 import { DataTable } from "@/components/data-table";
 import { DataTableColumnHeader } from "@/components/data-table-column-header";
 import { DataTableToolbar } from "@/components/data-table-toolbar";
- 
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useDataTable } from "@/hooks/use-data-table";
- 
+
 import type { Column, ColumnDef } from "@tanstack/react-table";
 import {
   CheckCircle,
@@ -27,14 +27,14 @@ import {
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 import * as React from "react";
 import { Suspense } from 'react';
- 
+
 interface Project {
   id: string;
   title: string;
   status: "active" | "inactive";
   budget: number;
 }
- 
+
 const data: Project[] = [
   {
     id: "1",
@@ -61,14 +61,14 @@ const data: Project[] = [
     budget: 100000,
   },
 ];
- 
+
 function DataTableDemo() {
   const [title] = useQueryState("title", parseAsString.withDefault(""));
   const [status] = useQueryState(
     "status",
     parseAsArrayOf(parseAsString).withDefault([]),
   );
- 
+
   // Ideally we would filter the data server-side, but for the sake of this example, we'll filter the data client-side
   const filteredData = React.useMemo(() => {
     return data.filter((project) => {
@@ -77,11 +77,11 @@ function DataTableDemo() {
         project.title.toLowerCase().includes(title.toLowerCase());
       const matchesStatus =
         status.length === 0 || status.includes(project.status);
- 
+
       return matchesTitle && matchesStatus;
     });
   }, [title, status]);
- 
+
   const columns = React.useMemo<ColumnDef<Project>[]>(
     () => [
       {
@@ -133,7 +133,7 @@ function DataTableDemo() {
         cell: ({ cell }) => {
           const status = cell.getValue<Project["status"]>();
           const Icon = status === "active" ? CheckCircle2 : XCircle;
- 
+
           return (
             <Badge variant="outline" className="capitalize">
               <Icon />
@@ -159,7 +159,7 @@ function DataTableDemo() {
         ),
         cell: ({ cell }) => {
           const budget = cell.getValue<Project["budget"]>();
- 
+
           return (
             <div className="flex items-center gap-1">
               <DollarSign className="size-4" />
@@ -194,7 +194,7 @@ function DataTableDemo() {
     ],
     [],
   );
- 
+
   const { table } = useDataTable({
     data: filteredData,
     columns,
@@ -205,18 +205,21 @@ function DataTableDemo() {
     },
     getRowId: (row) => row.id,
   });
- 
+
   return (
     <div className="data-table-container">
       <DataTable table={table}>
-        <DataTableToolbar table={table} />
+        <div className="flex flex-row justify-between">
+
+          <DataTableToolbar table={table} />
+        </div>
       </DataTable>
     </div>
   );
 }
 
 export default function Page() {
-    return <Suspense fallback={<div>Loading...</div>}>
-        <DataTableDemo />
-    </Suspense>
+  return <Suspense fallback={<div>Loading...</div>}>
+    <DataTableDemo />
+  </Suspense>
 }

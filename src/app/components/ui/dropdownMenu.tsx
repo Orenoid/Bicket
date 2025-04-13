@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FaChevronDown } from 'react-icons/fa';
 import { TransparentOverlay } from './overlay';
 
 export function DropDownMenuV2({ entryLabel, entryClassName, menuItems, menuClassName }: {
@@ -38,7 +37,6 @@ export function DropDownMenuV2({ entryLabel, entryClassName, menuItems, menuClas
                     className={`flex flex-row items-center hover:bg-gray-100 cursor-pointer rounded-md p-2 pl-3 ${entryClassName}`}
                     onClick={() => setShowMenu(!showMenu)}>
                     <div className="mr-2">{entryLabel}</div>
-                    <FaChevronDown size={12} />
                 </div>
                 {/* 下拉菜单 */}
                 {showMenu &&
