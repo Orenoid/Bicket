@@ -294,6 +294,90 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     );
 };
 
+// 添加这个自定义的比较函数来决定何时重新渲染
+function areEqual(prevProps: IssueTableProps, nextProps: IssueTableProps) {
+    // 检查基本属性是否相等
+    const renderCellEqual = prevProps.renderCell === nextProps.renderCell;
+    const onRowClickEqual = prevProps.onRowClick === nextProps.onRowClick;
+    const propertyDefinitionsEqual = prevProps.propertyDefinitions === nextProps.propertyDefinitions;
+    
+    // 比较 columns 数组
+    let columnsEqual = prevProps.columns.length === nextProps.columns.length;
+    if (columnsEqual) {
+        for (let i = 0; i < prevProps.columns.length; i++) {
+            const prevColumn = prevProps.columns[i];
+            const nextColumn = nextProps.columns[i];
+            if (prevColumn.id !== nextColumn.id || prevColumn.title !== nextColumn.title) {
+                columnsEqual = false;
+                break;
+            }
+        }
+    }
+    
+    // 比较 data 数组
+    let dataEqual = prevProps.data.length === nextProps.data.length;
+    if (dataEqual) {
+        for (let i = 0; i < prevProps.data.length; i++) {
+            const prevItem = prevProps.data[i];
+            const nextItem = nextProps.data[i];
+            
+            // 首先检查对象引用是否相同
+            if (prevItem !== nextItem) {
+                // 如果对象引用不同，尝试比较 ID (用 SystemPropertyId.ID 或 'issue_id')
+                const prevId = prevItem[SystemPropertyId.ID] || prevItem['issue_id'];
+                const nextId = nextItem[SystemPropertyId.ID] || nextItem['issue_id'];
+                
+                if (prevId !== nextId) {
+                    dataEqual = false;
+                    break;
+                }
+            }
+        }
+    }
+    
+    const basicPropsEqual = 
+        dataEqual &&
+        columnsEqual &&
+        renderCellEqual &&
+        onRowClickEqual &&
+        propertyDefinitionsEqual;
+    
+    // 如果基本属性不相等，返回 false（需要重新渲染）
+    if (!basicPropsEqual) {
+        return false;
+    }
+    
+    // 检查 activeFilters 是否相等
+    if (prevProps.activeFilters?.length !== nextProps.activeFilters?.length) {
+        return false;
+    }
+    
+    // 详细比较 activeFilters 中的每个元素
+    if (prevProps.activeFilters && nextProps.activeFilters) {
+        for (let i = 0; i < prevProps.activeFilters.length; i++) {
+            const prevFilter = prevProps.activeFilters[i];
+            const nextFilter = nextProps.activeFilters[i];
+            
+            if (
+                prevFilter.propertyId !== nextFilter.propertyId ||
+                prevFilter.propertyType !== nextFilter.propertyType ||
+                prevFilter.operator !== nextFilter.operator ||
+                JSON.stringify(prevFilter.value) !== JSON.stringify(nextFilter.value)
+            ) {
+                return false;
+            }
+        }
+    }
+    
+    // 如果所有检查都通过，返回 true（不需要重新渲染）
+    return true;
+}
+
+// 使用 React.memo 包装组件以避免不必要的重新渲染
+// 同时保留命名导出
+const MemoizedIssueTable = React.memo(IssueTable, areEqual);
+export default MemoizedIssueTable;
+
 const CellWrapper = ({ children, onClick }: { children: React.ReactNode, onClick: () => void }) => {
     return (
         <div className="hover:cursor-pointer" onClick={onClick}>

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, createContext, useMemo } from 'react';
+import { useState, useEffect, createContext, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { IssueTable, TableColumn } from './IssueTable';
+import IssueTable, { TableColumn } from './IssueTable';
 import {
     PROPERTY_HEADER_COMPONENTS,
     PROPERTY_CELL_COMPONENTS
@@ -112,9 +112,9 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
     }, [activeFilters, router, searchParams]);
 
     // 筛选条件变更处理函数
-    const handleFilterChange = (filters: FilterCondition[]) => {
+    const handleFilterChange = useCallback((filters: FilterCondition[]) => {
         setActiveFilters(filters);
-    };
+    }, []);
     
     // 收集所有用户类型的属性值并批量加载用户信息
     useEffect(() => {
@@ -209,25 +209,22 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
     }, [issues, currentIssueId, isDetailPanelOpen]);
 
     // 表格列定义
-    const columns: TableColumn[] = propertyDefinitions.map(prop => ({
-        id: prop.id,
-        title: prop.name,
-    }));
-
-    // 获取行中特定属性的值
-    const getPropertyValue = (issue: Issue, propertyId: string): PropertyValue | null => {
-        return issue.property_values.find(p => p.property_id === propertyId) || null;
-    };
-
-    // 获取属性定义
-    const getPropertyDefinition = (propertyId: string): PropertyDefinition | null => {
-        return propertyDefinitions.find(p => p.id === propertyId) || null;
-    };
-
+    // const columns: TableColumn[] = propertyDefinitions.map(prop => ({
+    //     id: prop.id,
+    //     title: prop.name,
+    // }));
+    
+    // 修改为使用 useMemo 记忆化 columns 数组
+    const columns = useMemo<TableColumn[]>(() => 
+        propertyDefinitions.map(prop => ({
+            id: prop.id,
+            title: prop.name,
+        }))
+    , [propertyDefinitions]);
 
     // 渲染表头
-    const renderHeader = (column: TableColumn) => {
-        const propertyDef = getPropertyDefinition(column.id);
+    const renderHeader = useCallback((column: TableColumn) => {
+        const propertyDef = propertyDefinitions.find(p => p.id === column.id);
         if (!propertyDef) return column.title;
 
         // 从映射中获取对应的表头组件
@@ -243,15 +240,15 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
                 propertyConfig={propertyDef.config}
             />
         );
-    };
+    }, [propertyDefinitions]);
 
     // 渲染单元格
-    const renderCell = (column: TableColumn, row: Record<string, unknown>) => {
+    const renderCell = useCallback((column: TableColumn, row: Record<string, unknown>) => {
         const issue = row as unknown as Issue;
-        const propertyValue = getPropertyValue(issue, column.id);
+        const propertyValue = issue.property_values.find(p => p.property_id === column.id) || null;
         if (!propertyValue) return '';
 
-        const propertyDef = getPropertyDefinition(column.id);
+        const propertyDef = propertyDefinitions.find(p => p.id === column.id);
         if (!propertyDef) return '';
 
         // 从映射中获取对应的单元格组件
@@ -275,23 +272,13 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
                 />
             </UserDataContext.Provider>
         );
-    };
+    }, [propertyDefinitions, userDataContextValue]);
 
     // 新增：行点击处理函数
-    const handleRowClick = (issue: Record<string, unknown>) => {
-        // 如果已经打开了面板，先关闭再打开，避免状态冲突
-        if (isDetailPanelOpen) {
-            setIsDetailPanelOpen(false);
-            // 使用setTimeout确保状态更新完成后再打开新面板
-            setTimeout(() => {
-                setSelectedIssue(issue as unknown as Issue);
-                setIsDetailPanelOpen(true);
-            }, 50);
-        } else {
-            setSelectedIssue(issue as unknown as Issue);
-            setIsDetailPanelOpen(true);
-        }
-    };
+    const handleRowClick = useCallback((issue: Record<string, unknown>) => {
+        setSelectedIssue(issue as unknown as Issue);
+        setIsDetailPanelOpen(true);
+    }, []);
 
     return (
         <div className="p-8">
