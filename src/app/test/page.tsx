@@ -8,21 +8,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useDataTable } from "@/hooks/use-data-table";
  
 import type { Column, ColumnDef } from "@tanstack/react-table";
 import {
-    CheckCircle,
-    CheckCircle2,
-    DollarSign,
-    MoreHorizontal,
-    Text,
-    XCircle,
+  CheckCircle,
+  CheckCircle2,
+  DollarSign,
+  MoreHorizontal,
+  Text,
+  XCircle,
 } from "lucide-react";
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 import * as React from "react";
@@ -167,6 +167,7 @@ function DataTableDemo() {
             </div>
           );
         },
+        enableResizing: true,
       },
       {
         id: "actions",
@@ -188,7 +189,7 @@ function DataTableDemo() {
             </DropdownMenu>
           );
         },
-        size: 32,
+        size: 500,
       },
     ],
     [],

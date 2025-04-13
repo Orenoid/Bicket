@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, createContext, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { IssueTable, TableColumn } from './IssueTable';
 import {
@@ -18,6 +18,18 @@ import {
 } from '@/app/property/components/applied-filter';
 import { CreateIssuePanel } from './CreateIssuePanel';
 import { IssueDetailPanel } from './IssueDetailPanel';
+import { User, getUserList } from '@/app/users/service';
+
+// 创建用户数据上下文
+export interface UserDataContextType {
+    userData: Record<string, User>;
+    isLoading: boolean;
+}
+
+export const UserDataContext = createContext<UserDataContextType>({
+    userData: {},
+    isLoading: true
+});
 
 // 数据类型
 export interface PropertyValue {
@@ -84,6 +96,78 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
     const [isDetailPanelOpen, setIsDetailPanelOpen] = useState(false);
     // 添加一个状态来保存当前打开的issue ID，用于在刷新后恢复选中的issue
     const [currentIssueId, setCurrentIssueId] = useState<string | null>(null);
+
+    // TODO tech dept 批量预加载 clerk 用户的临时解决方案，未来应该设计一套适用于所有属性类型的通用解决方案
+    // 新增：用户数据状态
+    const [userData, setUserData] = useState<Record<string, User>>({});
+    const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+    
+    // 创建用户数据上下文值
+    const userDataContextValue = useMemo(() => ({
+        userData,
+        isLoading: isLoadingUsers
+    }), [userData, isLoadingUsers]);
+
+    // 收集所有用户类型的属性值并批量加载用户信息
+    useEffect(() => {
+        async function loadUsersData() {
+            try {
+                // 找出所有用户类型的属性定义
+                const userPropertyIds = propertyDefinitions
+                    .filter(prop => prop.type === PropertyType.USER)
+                    .map(prop => prop.id);
+
+                if (userPropertyIds.length === 0) {
+                    setIsLoadingUsers(false);
+                    return;
+                }
+
+                // 从所有issue中收集用户ID
+                const userIds = new Set<string>();
+                
+                issues.forEach(issue => {
+                    issue.property_values.forEach(propValue => {
+                        if (
+                            userPropertyIds.includes(propValue.property_id) && 
+                            propValue.value !== null && 
+                            propValue.value !== undefined &&
+                            propValue.value !== ""
+                        ) {
+                            userIds.add(String(propValue.value));
+                        }
+                    });
+                });
+                
+                if (userIds.size === 0) {
+                    setIsLoadingUsers(false);
+                    return;
+                }
+
+                // 批量请求用户数据
+                const userIdsArray = Array.from(userIds);
+                const usersResponse = await getUserList({
+                    userId: userIdsArray
+                });
+
+                // 将用户数据转换为 ID -> User 映射
+                const userDataMap: Record<string, User> = {};
+                usersResponse.data.forEach(user => {
+                    const userId = userIdsArray[usersResponse.data.indexOf(user)];
+                    if (userId) {
+                        userDataMap[userId] = user;
+                    }
+                });
+
+                setUserData(userDataMap);
+            } catch (error) {
+                console.error('批量加载用户数据失败:', error);
+            } finally {
+                setIsLoadingUsers(false);
+            }
+        }
+
+        loadUsersData();
+    }, [issues, propertyDefinitions]);
 
     // 刷新issue列表函数
     const refreshIssueList = () => {
@@ -180,7 +264,6 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
     const columns: TableColumn[] = propertyDefinitions.map(prop => ({
         id: prop.id,
         title: prop.name,
-        minWidth: prop.id === 'id' ? 80 : prop.id === 'title' ? 200 : 120
     }));
 
     // 获取行中特定属性的值
@@ -231,16 +314,18 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
                 ? String(propertyValue.value)
                 : '';
         }
-        // 渲染单元格组件
+        // 渲染单元格组件，为用户类型的组件提供上下文
         return (
-            <CellComponent
-                propertyID={propertyValue.property_id}
-                propertyType={propertyDef.type}
-                value={propertyValue.value}
-                issueId={String(issue.issue_id)}
-                propertyConfig={propertyDef.config}
-                rowData={issue as unknown as Record<string, unknown>}
-            />
+            <UserDataContext.Provider value={userDataContextValue}>
+                <CellComponent
+                    propertyID={propertyValue.property_id}
+                    propertyType={propertyDef.type}
+                    value={propertyValue.value}
+                    issueId={String(issue.issue_id)}
+                    propertyConfig={propertyDef.config}
+                    rowData={issue as unknown as Record<string, unknown>}
+                />
+            </UserDataContext.Provider>
         );
     };
 
@@ -294,8 +379,18 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
 
     // 新增：行点击处理函数
     const handleRowClick = (issue: Record<string, unknown>) => {
-        setSelectedIssue(issue as unknown as Issue);
-        setIsDetailPanelOpen(true);
+        // 如果已经打开了面板，先关闭再打开，避免状态冲突
+        if (isDetailPanelOpen) {
+            setIsDetailPanelOpen(false);
+            // 使用setTimeout确保状态更新完成后再打开新面板
+            setTimeout(() => {
+                setSelectedIssue(issue as unknown as Issue);
+                setIsDetailPanelOpen(true);
+            }, 50);
+        } else {
+            setSelectedIssue(issue as unknown as Issue);
+            setIsDetailPanelOpen(true);
+        }
     };
 
     return (
@@ -342,19 +437,13 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
             </div>
 
             {/* 表格组件 */}
-            {issues.length > 0 ? (
-                <>
-                    <IssueTable
-                        columns={columns}
-                        data={issues as unknown as Record<string, unknown>[]}
-                        renderHeader={renderHeader}
-                        renderCell={renderCell}
-                        onRowClick={handleRowClick}
-                    />
-                </>
-            ) : (
-                <div className="p-4 text-gray-500 text-sm">暂无符合条件的工单</div>
-            )}
+            <IssueTable
+                columns={columns}
+                data={issues as unknown as Record<string, unknown>[]}
+                renderHeader={renderHeader}
+                renderCell={renderCell}
+                onRowClick={handleRowClick}
+            />
 
             {/* 新建issue面板 */}
             {isCreatePanelOpen && (
@@ -380,14 +469,27 @@ export function IssuePage({ issues, propertyDefinitions }: IssuePageProps) {
                     <div
                         className="fixed inset-0 z-40"
                         style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
-                        onClick={() => setIsDetailPanelOpen(false)}
+                        onClick={() => {
+                            setIsDetailPanelOpen(false);
+                            // 清除当前选中的issue和ID
+                            setSelectedIssue(null);
+                            setCurrentIssueId(null);
+                        }}
                     />
-                    <IssueDetailPanel
-                        onClose={() => setIsDetailPanelOpen(false)}
-                        issue={selectedIssue}
-                        propertyDefinitions={propertyDefinitions}
-                        onUpdateSuccess={refreshIssueList}
-                    />
+                    {/* TODO tech dept 严格来讲应该通过缓存来实现，但时间关系，这里先通过上下文来实现 */}
+                    <UserDataContext.Provider value={userDataContextValue}>
+                        <IssueDetailPanel
+                        onClose={() => {
+                            setIsDetailPanelOpen(false);
+                            // 清除当前选中的issue和ID
+                            setSelectedIssue(null);
+                            setCurrentIssueId(null);
+                            }}
+                            issue={selectedIssue}
+                            propertyDefinitions={propertyDefinitions}
+                            onUpdateSuccess={refreshIssueList}
+                        />
+                    </UserDataContext.Provider>
                 </>
             )}
         </div>
