@@ -36,9 +36,9 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     onRowClick,
 }) => {
     // TODO tech dept 应该通过某种配置项来判断是否允许在表格里展示
-    // 过滤掉描述属性
+    // 过滤掉描述属性和 label 属性属性
     const filteredColumns = useMemo(() => {
-        return columns.filter(column => column.id !== SystemPropertyId.DESCRIPTION);
+        return columns.filter(column => column.id !== SystemPropertyId.DESCRIPTION && column.id !== SystemPropertyId.LABEL);
     }, [columns]);
 
     // 把 props 的 columns 转换为 TanStack Table 的 ColumnDef

@@ -3,6 +3,7 @@ import { IssuePage, Issue, PropertyValue, PropertyDefinition } from './component
 import { FilterCondition } from '@/app/property/types';
 import { Prisma } from '@prisma/client';
 import { auth } from '@clerk/nextjs/server';
+import { SystemPropertyId } from '@/app/property/constants';
 
 // 反序列化筛选条件
 function deserializeFilters(filtersStr: string): FilterCondition[] {
@@ -71,6 +72,29 @@ async function getPropertyDefinitions(): Promise<PropertyDefinition[]> {
             type: prop.type,
             config: prop.config as Record<string, unknown> | undefined
         }));
+        
+        // 定义属性的优先级顺序
+        // TODO tech dept shadcn table 暂不支持配置 column 顺序，手动指定顺序
+        const priorityOrder: Record<string, number> = {
+            [SystemPropertyId.ID]: 1,        // 工单 ID
+            [SystemPropertyId.TITLE]: 2,     // 工单标题
+            [SystemPropertyId.STATUS]: 3,    // 工单状态
+            [SystemPropertyId.PRIORITY]: 4,  // 工单优先级
+            [SystemPropertyId.CATEGORY]: 5,  // 工单类别
+            [SystemPropertyId.DIAGNOSIS]: 6, // 工单诊断
+            [SystemPropertyId.MINERS]: 7,    // 矿机列表
+            [SystemPropertyId.ASIGNEE]: 8,   // 负责人
+            [SystemPropertyId.REPORTER]: 9,  // 报告人
+            [SystemPropertyId.CREATED_AT]: 10, // 创建时间
+            [SystemPropertyId.UPDATED_AT]: 11, // 更新时间
+        };
+
+        // 根据优先级顺序排序
+        result.sort((a, b) => {
+            const priorityA = priorityOrder[a.id] || 999; // 没有指定优先级的放到最后
+            const priorityB = priorityOrder[b.id] || 999;
+            return priorityA - priorityB;
+        });
         
         return result;
     } catch (error) {
