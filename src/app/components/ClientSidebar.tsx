@@ -1,17 +1,10 @@
 'use client';
 
-import { useUser } from '@clerk/nextjs';
-import dynamic from 'next/dynamic';
+import { UserButton, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { CiViewTimeline } from 'react-icons/ci';
 import { HiOutlineServer } from 'react-icons/hi';
 import Sidebar, { SidebarItem } from './new-sidebar';
-
-// 动态导入 UserButton 组件，并禁用 SSR
-const UserButton = dynamic(
-  () => import('@clerk/nextjs').then((mod) => mod.UserButton),
-  { ssr: false }
-);
 
 const ClientSidebar = () => {
   const router = useRouter();
