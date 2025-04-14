@@ -22,6 +22,8 @@ import { PropertyType } from '@/app/property/constants';
 
 import { DataTableToolbar } from '@/components/data-table-toolbar';
 import { MdFilterList, MdClose } from 'react-icons/md';
+import './IssueTable.css';
+
 export interface TableColumn {
     id: string;
     title: string;
@@ -381,10 +383,9 @@ function areEqual(prevProps: IssueTableProps, nextProps: IssueTableProps) {
 // 同时保留命名导出
 const MemoizedIssueTable = React.memo(IssueTable, areEqual);
 export default MemoizedIssueTable;
-
 const CellWrapper = ({ children, onClick }: { children: React.ReactNode, onClick: () => void }) => {
     return (
-        <div className="hover:cursor-pointer" onClick={onClick}>
+        <div className="hover:cursor-pointer w-full h-full" onClick={onClick}>
             {children}
         </div>
     );
