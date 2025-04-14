@@ -23,6 +23,7 @@ import { PropertyType } from '@/app/property/constants';
 import { DataTableToolbar } from '@/components/data-table-toolbar';
 import { MdFilterList, MdClose } from 'react-icons/md';
 import './IssueTable.css';
+import { DataTableSortList } from '@/components/data-table-sort-list';
 
 export interface TableColumn {
     id: string;
@@ -206,8 +207,9 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                 (column_) => ({
                     id: column_.id,
                     accessorKey: column_.id,
-                    enableSorting: false,
-                    // header: () => renderHeader(column),
+                    enableSorting: [
+                        SystemPropertyId.ID, SystemPropertyId.TITLE,
+                    ].includes(column_.id as SystemPropertyId),
                     header: ({ column }: { column: Column<Record<string, unknown>, unknown> }) => (
                         <DataTableColumnHeader className="cursor-pointer" column={column} title={column_.title} />
                     ),
@@ -245,7 +247,9 @@ export const IssueTable: React.FC<IssueTableProps> = ({
         columns: tanstackColumns,
         pageCount: pageCount,
         enableColumnResizing: true, // TODO bug: not working, even the doc says it's supported
-        initialState: {},
+        initialState: {
+            sorting: [{ id: SystemPropertyId.ID, desc: true }],
+        },
         getRowId: (row) => row[SystemPropertyId.ID] as string,
     });
 
@@ -290,6 +294,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
 
                     </div>
                     <DataTableToolbar table={table}>
+                        <DataTableSortList table={table} align="end" />
                     </DataTableToolbar>
                 </div>
 
