@@ -5,10 +5,8 @@ import { auth } from '@clerk/nextjs/server';
 export async function POST(req: NextRequest) {
   try {
     // 开始计时 - auth
-    const authStartTime = performance.now();
+
     const { userId, orgId } = await auth()
-    const authEndTime = performance.now();
-    console.log(`认证耗时: ${authEndTime - authStartTime}ms`);
     
     if (!userId) {
       return new Response(JSON.stringify({
@@ -31,11 +29,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 开始计时 - 解析请求体
-    const parseStartTime = performance.now();
     const requestBody = await req.json();
-    const parseEndTime = performance.now();
-    console.log(`解析请求体耗时: ${parseEndTime - parseStartTime}ms`);
+
+
     
     // 验证请求体格式
     if (!requestBody || typeof requestBody !== 'object') {
@@ -67,11 +63,7 @@ export async function POST(req: NextRequest) {
       propertyValues
     };
     
-    // 开始计时 - 创建 Issue
-    const createStartTime = performance.now();
     const result = await createIssue(input);
-    const createEndTime = performance.now();
-    console.log(`创建 Issue 服务耗时: ${createEndTime - createStartTime}ms`);
     
     if (!result.success) {
       // 创建失败，返回错误信息

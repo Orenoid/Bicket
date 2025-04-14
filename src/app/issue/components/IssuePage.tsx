@@ -282,7 +282,7 @@ export function IssuePage({ issues, propertyDefinitions, pageCount = 1 }: IssueP
     }, []);
 
     return (
-        <div className="p-8">
+        <div className="p-8 w-full h-full">
             {/* 工具栏 - 创建Issue按钮 */}
             <div className="mb-4 flex justify-end">
                 <button

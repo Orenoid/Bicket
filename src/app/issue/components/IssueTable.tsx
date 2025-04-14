@@ -248,8 +248,8 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     });
 
     return (
-        <div className="data-table-container">
-            <DataTable table={table}>
+        <div className="data-table-container h-full">
+            <DataTable table={table} className="h-full">
                 <div className="flex flex-row justify-between">
                     {/* 筛选器相关UI */}
                     <div className="flex flex-row items-center">

@@ -40,16 +40,12 @@ export async function batchCreateIssues(
     return [];
   }
   
-  // 开始计时 - 获取所有属性定义
-  const propertiesStartTime = performance.now();
   // 获取所有属性定义
   const properties = await prisma.property.findMany({
     where: {
       deletedAt: null
     }
   });
-  const propertiesEndTime = performance.now();
-  console.log(`createIssue 获取属性定义耗时: ${propertiesEndTime - propertiesStartTime}ms`);
 
   // 预处理和验证所有输入
   const preprocessResults = inputs.map(input => 
@@ -68,22 +64,16 @@ export async function batchCreateIssues(
     }));
   }
 
-  // 开始计时 - 分配 Issue IDs
-  const allocateStartTime = performance.now();
   // 批量分配 Issue IDs
   const issueIds = await allocateIssueIds(inputs.length);
-  const allocateEndTime = performance.now();
-  console.log(`createIssue 分配 Issue IDs 耗时: ${allocateEndTime - allocateStartTime}ms`);
+
   
   // 使用单个事务批量处理所有创建操作
   try {
-    // 开始计时 - 事务处理
-    const transactionStartTime = performance.now();
+
     const results = await prisma.$transaction(async (tx) => {
       const batchResults: CreateIssueResult[] = [];
       
-      // 开始计时 - 创建 issues
-      const createIssuesStartTime = performance.now();
       // 创建所有 issues - 添加 workspace_id
       const issueCreatePromises = inputs.map(input => tx.issue.create({ 
         data: {
@@ -91,8 +81,6 @@ export async function batchCreateIssues(
         } 
       }));
       const createdIssues = await Promise.all(issueCreatePromises);
-      const createIssuesEndTime = performance.now();
-      console.log(`createIssue 创建 issues 耗时: ${createIssuesEndTime - createIssuesStartTime}ms`);
       
       // 准备所有属性值数据
       const allSingleValues: Prisma.property_single_valueCreateManyInput[] = [];
@@ -165,31 +153,21 @@ export async function batchCreateIssues(
         });
       }
       
-      // 开始计时 - 创建单值属性
-      const createSingleStartTime = performance.now();
       // 批量创建所有属性值
       if (allSingleValues.length > 0) {
         await tx.property_single_value.createMany({
           data: allSingleValues
         });
       }
-      const createSingleEndTime = performance.now();
-      console.log(`createIssue 创建单值属性耗时: ${createSingleEndTime - createSingleStartTime}ms`);
       
-      // 开始计时 - 创建多值属性
-      const createMultiStartTime = performance.now();
       if (allMultiValues.length > 0) {
         await tx.property_multi_value.createMany({
           data: allMultiValues
         });
       }
-      const createMultiEndTime = performance.now();
-      console.log(`createIssue 创建多值属性耗时: ${createMultiEndTime - createMultiStartTime}ms`);
-      
+
       return batchResults;
     });
-    const transactionEndTime = performance.now();
-    console.log(`createIssue 事务处理总耗时: ${transactionEndTime - transactionStartTime}ms`);
     
     return results;
   } catch (error) {
@@ -212,11 +190,7 @@ async function allocateIssueIds(count: number): Promise<bigint[]> {
   if (count <= 0) {
     return [];
   }
-  // 开始计时 - 分配 ID
-  const startTime = performance.now();
   const result = await CounterService.allocateIds('issue', count);
-  const endTime = performance.now();
-  console.log(`createIssue 分配 ID 服务耗时: ${endTime - startTime}ms`);
   return result;
 }
 
@@ -301,9 +275,6 @@ function preprocessIssueInput(
  */
 export async function createIssue(input: CreateIssueInput): Promise<CreateIssueResult> {
   // 开始计时 - 创建单个 issue
-  const startTime = performance.now();
   const results = await batchCreateIssues([input]);
-  const endTime = performance.now();
-  console.log(`createIssue 单个 issue 创建总耗时: ${endTime - startTime}ms`);
   return results[0];
 }

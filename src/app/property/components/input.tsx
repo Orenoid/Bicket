@@ -76,7 +76,6 @@ export const TextPropertyInput = React.forwardRef<
         onSubmit: () => {
             // 执行校验逻辑
             const isValid: boolean = Boolean(internalValue && internalValue.trim() !== '');
-            console.log(isValid)
 
             // 更新错误状态
             setShowError(!isValid);

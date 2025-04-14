@@ -172,7 +172,6 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions, onUpdate
             const data = await response.json();
 
             if (data.success) {
-                console.log('更新成功:', data);
                 // 如果更新成功并且提供了更新成功回调，则调用它
                 // 这允许父组件(IssuePage)刷新issue列表数据，同时保持详情面板打开
                 // 在IssuePage中，我们实现了在刷新后通过ID找回并更新选中的issue

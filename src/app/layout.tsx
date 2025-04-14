@@ -42,7 +42,7 @@ export default function RootLayout({
               <UserButton />
             </SignedIn>
           </header> */}
-            <main className="transition-all duration-300 sidebar-margin">
+            <main className="transition-all duration-300 sidebar-margin h-screen">
               {children}
             </main>
 
