@@ -249,7 +249,7 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions, onUpdate
 
     return (
         <div
-            className="fixed top-0 right-0 h-full bg-white z-50 border-l border-gray-200"
+            className="fixed top-0 right-0 h-screen bg-white z-50 border-l border-gray-200"
             style={{
                 boxShadow: '-4px 0 15px rgba(0, 0, 0, 0.1)',
                 width: 'calc(100vw * 2/3)'
@@ -273,8 +273,7 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions, onUpdate
                     {/* <div className="absolute top-4 left-4 flex items-center cursor-pointer" onClick={handleCopyId}>
                         <span className="text-2xl text-gray-400 hover:text-gray-500"># {getIdValue()}</span>
                     </div> */}
-
-                    <div className="pt-8 flex-grow overflow-auto p-4">
+                    <div className="flex flex-col pt-8 p-4 flex-grow">
                         {/* 标题组件 */}
                         {titleProperty && (
                             <TitlePropertyDetail

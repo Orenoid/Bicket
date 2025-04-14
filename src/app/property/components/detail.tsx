@@ -35,6 +35,7 @@ import Image from 'next/image';
 import { LoadingContainerOverlay } from '@/app/components/ui/overlay';
 import { UserDataContext } from '@/app/issue/components/IssuePage';
 import { getUser } from '@/app/users/service';
+import './detail.css';
 
 // 属性值接口，与API接口保持一致
 export interface PropertyValue {
@@ -1381,11 +1382,12 @@ export const RichTextPropertyDetail: React.FC<PropertyDetailProps> = ({
 
     // 渲染编辑模式
     return (
-        <div className="border-gray-200 pt-4 mt-4 pb-4">
+        <div id="description-editor-container" className="border-gray-200 pt-4 mt-4 pb-4 flex-grow">
             <MDXEditor
                 onChange={handleChange}
                 markdown={internalValue}
                 placeholder={<span className="text-gray-400 text-md">Issue description, supports markdown format</span>}
+                contentEditableClassName='h-full'
                 plugins={[
                     headingsPlugin(),
                     quotePlugin(),
@@ -1412,7 +1414,7 @@ export const RichTextPropertyDetail: React.FC<PropertyDetailProps> = ({
 
             {/* 操作按钮 - 只有在有变化时才显示 */}
             {hasChanges && (
-                <ButtonGroup className="mt-2">
+                <ButtonGroup className="mt-2 z-50">
                     <SecondaryButton onClick={handleCancel} className="mr-2">
                         Cancel
                     </SecondaryButton>
