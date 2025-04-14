@@ -325,7 +325,7 @@ export const SelectPropertyDetail: React.FC<PropertyDetailProps> = ({
 
     return (
         <div className="flex items-center">
-            <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+            <div className="w-24 text-sm text-gray-600 font-semibold flex items-center">
                 <div className="w-5 flex-shrink-0 flex justify-center">
                     {getPropertyTypeIcon(propertyDefinition.type)}
                 </div>
@@ -365,7 +365,7 @@ export const SelectPropertyDetail: React.FC<PropertyDetailProps> = ({
 
                 {/* 下拉选项列表 */}
                 {isDropdownOpen && (
-                    <div className="absolute z-10 mt-1 w-auto min-w-full max-w-[240px] bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    <div className="absolute right-0 z-10 mt-1 w-auto min-w-full max-w-[240px] bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
                         <div className="py-1">
                             {options.map(option => (
                                 <div
@@ -802,7 +802,7 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
 
     return (
         <div className="flex items-center">
-            <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+            <div className="w-24 text-sm text-gray-600 font-semibold flex items-center">
                 <div className="w-5 flex-shrink-0 flex justify-center">
                     {getPropertyTypeIcon(propertyDefinition.type)}
                 </div>
@@ -860,7 +860,7 @@ export const MinersPropertyDetail: React.FC<PropertyDetailProps> = ({
 
                 {/* 下拉选项菜单 */}
                 {isDropdownOpen && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                    <div className="absolute right-0 z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
                         <div className="p-2">
                             {miners.length > 0 ? (
                                 miners.map(miner => (
@@ -915,14 +915,11 @@ export const DatetimePropertyDetail: React.FC<PropertyDetailProps> = ({
     if (value === null || value === undefined || value === "") {
         return (
             <div className="flex items-center">
-                <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+                <div className="w-25 text-sm text-gray-600 font-semibold flex items-center">
                     <div className="w-5 flex-shrink-0 flex justify-center">
                         {getPropertyTypeIcon(propertyDefinition.type)}
                     </div>
                     <span className="truncate" title={propertyDefinition.name}>{propertyDefinition.name}</span>
-                </div>
-                <div className="pl-3">
-                    <span className="text-gray-400 italic">Empty</span>
                 </div>
             </div>
         );
@@ -937,7 +934,7 @@ export const DatetimePropertyDetail: React.FC<PropertyDetailProps> = ({
         if (isNaN(date.getTime())) {
             return (
                 <div className="flex items-center">
-                    <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+                    <div className="w-25 text-sm text-gray-600 font-semibold flex items-center">
                         <div className="flex-shrink-0 flex justify-center">
                             {getPropertyTypeIcon(propertyDefinition.type)}
                         </div>
@@ -989,7 +986,7 @@ export const DatetimePropertyDetail: React.FC<PropertyDetailProps> = ({
         // 返回完整的格式化日期时间，整体使用浅灰色
         return (
             <div className="flex items-center">
-                <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+                <div className="w-25 text-sm text-gray-600 font-semibold flex items-center">
                     <div className="w-5 flex-shrink-0 flex justify-center">
                         {getPropertyTypeIcon(propertyDefinition.type)}
                     </div>
@@ -1009,7 +1006,7 @@ export const DatetimePropertyDetail: React.FC<PropertyDetailProps> = ({
         console.error('日期格式化错误', error);
         return (
             <div className="flex items-center">
-                <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+                <div className="w-25 text-sm text-gray-600 font-semibold flex items-center">
                     <div className="w-5 flex-shrink-0 flex justify-center">
                         {getPropertyTypeIcon(propertyDefinition.type)}
                     </div>
@@ -1242,7 +1239,7 @@ export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
 
     return (
         <div className="flex items-center">
-            <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+            <div className="w-24 text-sm text-gray-600 font-semibold flex items-center">
                 <div className="w-5 flex-shrink-0 flex justify-center">
                     {getPropertyTypeIcon(propertyDefinition.type)}
                 </div>
@@ -1291,7 +1288,7 @@ export const UserPropertyDetail: React.FC<PropertyDetailProps> = ({
 
                 {/* 下拉选项列表 */}
                 {isDropdownOpen && (
-                    <div className="absolute z-10 mt-1 w-auto min-w-full max-w-[240px] bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    <div className="absolute right-0 z-10 mt-1 w-auto min-w-full max-w-[240px] bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
                         <div className="py-1">
                             {users.length > 0 ? (
                                 users.map(user => (

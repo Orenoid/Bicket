@@ -265,7 +265,7 @@ export const SelectPropertyInput = React.forwardRef<
 
     return (
         <div className="flex items-center">
-            <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+            <div className="w-24 text-sm text-gray-600 font-semibold flex items-center">
                 <div className="w-5 flex-shrink-0 flex justify-center text-gray-500">
                     {getPropertyTypeIcon(propertyDefinition.type)}
                 </div>
@@ -304,7 +304,7 @@ export const SelectPropertyInput = React.forwardRef<
 
                 {/* 下拉选项列表 */}
                 {dropdownOpen && (
-                    <div className="absolute z-10 mt-1 w-auto min-w-full max-w-[240px] bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    <div className="absolute right-0 z-10 mt-1 w-auto min-w-full max-w-[240px] bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
                         <div className="py-1">
                             {options.map(option => (
                                 <div
@@ -668,7 +668,7 @@ export const MinersPropertyInput = React.forwardRef<
 
     return (
         <div className="flex items-center">
-            <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+            <div className="w-24 text-sm text-gray-600 font-semibold flex items-center">
                 <div className="w-5 flex-shrink-0 flex justify-center text-gray-500">
                     {getPropertyTypeIcon(propertyDefinition.type)}
                 </div>
@@ -720,7 +720,7 @@ export const MinersPropertyInput = React.forwardRef<
 
                 {/* 下拉选项列表 */}
                 {dropdownOpen && (
-                    <div className="absolute z-10 mt-1 w-auto min-w-full max-w-[240px] bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    <div className="absolute right-0 z-10 mt-1 w-auto min-w-full max-w-[240px] bg-white rounded-md shadow-lg max-h-60 overflow-y-auto">
                         <div className="py-1">
                             {availableMiners.map(miner => (
                                 <div
@@ -747,7 +747,7 @@ export const MinersPropertyInput = React.forwardRef<
                             {/* 无选项时的提示 */}
                             {availableMiners.length === 0 && (
                                 <div className="px-4 py-2 text-gray-500 text-sm">
-                                    无可选矿机
+                                    No miners available
                                 </div>
                             )}
                         </div>
@@ -870,7 +870,7 @@ export const UserPropertyInput = React.forwardRef<
 
     return (
         <div className="flex items-center">
-            <div className="w-20 text-sm text-gray-600 font-semibold flex items-center">
+            <div className="w-24 text-sm text-gray-600 font-semibold flex items-center">
                 <div className="w-5 flex-shrink-0 flex justify-center text-gray-500">
                     {getPropertyTypeIcon(propertyDefinition.type)}
                 </div>
