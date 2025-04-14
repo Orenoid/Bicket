@@ -41,7 +41,7 @@ import {
 import { dataTableConfig } from "@/config/data-table";
 import { cn } from "@/lib/utils";
 
-const OPEN_MENU_SHORTCUT = "s";
+// const OPEN_MENU_SHORTCUT = "s";
 const REMOVE_SORT_SHORTCUTS = ["backspace", "delete"];
 
 interface DataTableSortListProps<TData>
@@ -120,38 +120,39 @@ export function DataTableSortList<TData>({
     [onSortingChange, table.initialState.sorting],
   );
 
-  React.useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (
-        event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLTextAreaElement
-      ) {
-        return;
-      }
+  // TODO 暂时注释掉，因为在编辑器中按下 s 键会触发快捷键
+  // React.useEffect(() => {
+  //   function onKeyDown(event: KeyboardEvent) {
+  //     if (
+  //       event.target instanceof HTMLInputElement ||
+  //       event.target instanceof HTMLTextAreaElement
+  //     ) {
+  //       return;
+  //     }
 
-      if (
-        event.key.toLowerCase() === OPEN_MENU_SHORTCUT &&
-        !event.ctrlKey &&
-        !event.metaKey &&
-        !event.shiftKey
-      ) {
-        event.preventDefault();
-        setOpen(true);
-      }
+  //     if (
+  //       event.key.toLowerCase() === OPEN_MENU_SHORTCUT &&
+  //       !event.ctrlKey &&
+  //       !event.metaKey &&
+  //       !event.shiftKey
+  //     ) {
+  //       event.preventDefault();
+  //       setOpen(true);
+  //     }
 
-      if (
-        event.key.toLowerCase() === OPEN_MENU_SHORTCUT &&
-        event.shiftKey &&
-        sorting.length > 0
-      ) {
-        event.preventDefault();
-        onSortingReset();
-      }
-    }
+  //     if (
+  //       event.key.toLowerCase() === OPEN_MENU_SHORTCUT &&
+  //       event.shiftKey &&
+  //       sorting.length > 0
+  //     ) {
+  //       event.preventDefault();
+  //       onSortingReset();
+  //     }
+  //   }
 
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [sorting.length, onSortingReset]);
+  //   window.addEventListener("keydown", onKeyDown);
+  //   return () => window.removeEventListener("keydown", onKeyDown);
+  // }, [sorting.length, onSortingReset]);
 
   const onTriggerKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLButtonElement>) => {
