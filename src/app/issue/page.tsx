@@ -500,18 +500,30 @@ function buildOrderByParams(sortConfigs: SortConfig[]): string | undefined {
         const direction = sort.desc ? 'DESC' : 'ASC';
 
         // 使用 SQL 子查询获取属性值，用于排序
-        return `(
-            SELECT 
-                CASE 
-                    WHEN psv."number_value" IS NOT NULL THEN psv."number_value"::text 
-                    ELSE psv.value 
-                END
-            FROM property_single_value psv
-            WHERE psv."issue_id" = issue.id
-            AND psv."property_id" = '${propertyId}'
-            AND psv."deletedAt" IS NULL
-            LIMIT 1
-        ) ${direction} NULLS LAST`;
+        // 如果是 ID 类型的属性，则优先使用 number_value 排序
+        if (propertyId === SystemPropertyId.ID) {
+            return `(
+                SELECT psv."number_value"
+                FROM property_single_value psv
+                WHERE psv."issue_id" = issue.id
+                AND psv."property_id" = '${propertyId}'
+                AND psv."deletedAt" IS NULL
+                LIMIT 1
+            ) ${direction} NULLS LAST`;
+        } else {
+            return `(
+                SELECT 
+                    CASE 
+                        WHEN psv."number_value" IS NOT NULL THEN psv."number_value"::text 
+                        ELSE psv.value 
+                    END
+                FROM property_single_value psv
+                WHERE psv."issue_id" = issue.id
+                AND psv."property_id" = '${propertyId}'
+                AND psv."deletedAt" IS NULL
+                LIMIT 1
+            ) ${direction} NULLS LAST`;
+        }
     });
 
     // 组合所有排序表达式
