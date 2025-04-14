@@ -3,7 +3,6 @@
 import { UserButton, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { CiViewTimeline } from 'react-icons/ci';
-import { HiOutlineServer } from 'react-icons/hi';
 import Sidebar, { SidebarItem } from './new-sidebar';
 
 const ClientSidebar = () => {
@@ -22,12 +21,12 @@ const ClientSidebar = () => {
         icon: <CiViewTimeline size={18} />,
         onClick: () => router.push('/issue')
       },
-      { 
-        id: "miners", 
-        label: "Miners", 
-        icon: <HiOutlineServer size={18} />, 
-        onClick: () => router.push('/miners')
-      },
+      // { 
+      //   id: "miners", 
+      //   label: "Miners", 
+      //   icon: <HiOutlineServer size={18} />, 
+      //   onClick: () => router.push('/miners')
+      // },
     ],
     [
       // { id: "settings", label: "Settings", icon: <MdSettings size={20} /> },
