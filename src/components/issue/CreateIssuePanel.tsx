@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { SecondaryButton, ButtonGroup, LoadingButton } from '@/components/my-tmp-ui/buttons';
+import { SecondaryButton, ButtonGroup, LoadingButton } from '@/components/ui/buttons';
 import { PropertyValue as InputPropertyValue, SelectPropertyInput, TextareaPropertyInput, TextPropertyInput, MinersPropertyInput, UserPropertyInput } from '@/components/property/input';
 import { SystemPropertyId } from '@/lib/property/constants';
 

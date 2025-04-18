@@ -1,22 +1,22 @@
 'use client';
 
-import { SecondaryButton } from '@/components/my-tmp-ui/buttons';
+import { SecondaryButton } from '@/components/ui/buttons';
 import {
-    SelectPropertyDetail,
-    TitlePropertyDetail,
-    MinersPropertyDetail,
-    DatetimePropertyDetail,
-    RichTextPropertyDetail,
-    UserPropertyDetail
+  SelectPropertyDetail,
+  TitlePropertyDetail,
+  MinersPropertyDetail,
+  DatetimePropertyDetail,
+  RichTextPropertyDetail,
+  UserPropertyDetail
 } from '@/components/property/detail';
 import { SystemPropertyId } from '@/lib/property/constants';
 import { MdMoreHoriz } from 'react-icons/md';
 import { useState } from 'react';
-import { DropdownMenu } from '@/components/my-tmp-ui/dropdownMenu';
-import { MenuItem } from '@/components/my-tmp-ui/dropdownMenu';
+import { DropdownMenu } from '@/components/ui/dropdownMenu';
+import { MenuItem } from '@/components/ui/dropdownMenu';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import { useRouter } from 'next/navigation';
-import { ConfirmDialog } from '@/components/my-tmp-ui/confirmDialog';
+import { ConfirmDialog } from '@/components/ui/confirmDialog';
 
 // 从IssuePage.tsx导入需要的接口
 export interface PropertyDefinition {

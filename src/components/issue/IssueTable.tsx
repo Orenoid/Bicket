@@ -3,27 +3,27 @@
 import { useMemo, useState, useEffect } from 'react';
 import React from 'react';
 import {
-    Column,
-    ColumnDef,
-    Row
+  Column,
+  ColumnDef,
+  Row
 } from '@tanstack/react-table';
 import { SystemPropertyId } from '@/lib/property/constants';
 import { useDataTable } from '@/hooks/use-data-table';
-import { DataTable } from '@/components/data-table';
-import { DataTableColumnHeader } from '@/components/data-table-column-header';
-import { DropDownMenuV2 } from '@/components/my-tmp-ui/dropdownMenu';
+import { DataTable } from '@/components/shadcn/data-table/data-table';
+import { DataTableColumnHeader } from '@/components/shadcn/data-table/data-table-column-header';
+import { DropDownMenuV2 } from '@/components/ui/dropdownMenu';
 import { FilterConstructorPanel } from '@/components/property/filter-construction';
 import {
-    AppliedFilterWrapper,
-    APPLIED_FILTER_COMPONENTS
+  AppliedFilterWrapper,
+  APPLIED_FILTER_COMPONENTS
 } from '@/components/property/applied-filter';
 import { FilterCondition } from '@/lib/property/types';
 import { PropertyType } from '@/lib/property/constants';
 
-import { DataTableToolbar } from '@/components/data-table-toolbar';
+import { DataTableToolbar } from '@/components/shadcn/data-table/data-table-toolbar';
 import { MdFilterList, MdClose } from 'react-icons/md';
 import './IssueTable.css';
-import { DataTableSortList } from '@/components/data-table-sort-list';
+import { DataTableSortList } from '@/components/shadcn/data-table/data-table-sort-list';
 
 export interface TableColumn {
     id: string;

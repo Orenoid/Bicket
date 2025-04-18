@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import Divider from '@/components/my-tmp-ui/divider-new';
+import Divider from '@/components/ui/divider-new';
 import { TbLayoutSidebarRightExpand, TbLayoutSidebarRightCollapse } from 'react-icons/tb';
 import { OrganizationSwitcher } from '@clerk/nextjs';
 

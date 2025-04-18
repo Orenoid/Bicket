@@ -8,7 +8,7 @@ import { PropertyDefinition } from '../issue/IssuePage';
 import { getSimpleMinersList, getMinerStatusStyle } from '../../lib/miner/service';
 import { getUser } from '../../app/user/service';
 import { useOrganization } from '@clerk/clerk-react';
-import { TransparentOverlay } from '@/components/my-tmp-ui/overlay';
+import { TransparentOverlay } from '@/components/ui/overlay';
 
 /**
  * 筛选构造器面板属性接口

@@ -2,7 +2,7 @@ import { Prisma, property } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { PropertyProcessorFactory } from '@/lib/property/add-property-value';
 import { SystemPropertyId } from '@/lib/property/constants';
-import { CounterService } from '@/lib/counter';
+import { CounterService } from '@/lib/id-counter';
 import { PropertyType } from '@/lib/property/constants';
 
 /**
