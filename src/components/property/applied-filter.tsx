@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { FilterCondition } from '../types';
-import { PropertyDefinition } from '../../issue/components/IssuePage';
+import { FilterCondition } from '../../lib/property/types';
+import { PropertyDefinition } from '../issue/IssuePage';
 import { FiX } from 'react-icons/fi';
-import { PropertyType } from '../constants';
-import { getMinerById, getMinerStatusStyle } from '../../miners/service';
-import { getUser } from '../../users/service';
+import { PropertyType } from '../../lib/property/constants';
+import { getMinerById, getMinerStatusStyle } from '../../lib/miner/service';
+import { getUser } from '../../app/user/service';
 
 /**
  * 已应用筛选条件的属性接口

@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { PropertyDefinition } from '@/app/issue/components/IssuePage';
-import { createSetOperation, createRemoveOperation, createUpdateOperation } from '../update-operations';
+import { PropertyDefinition } from '@/components/issue/IssuePage';
+import { createSetOperation, createRemoveOperation, createUpdateOperation } from '../../lib/property/update-operations';
 import { MdCancel, MdCheckBox, MdDateRange, MdLink, MdNumbers, MdPerson, MdSubject, MdTextFields } from 'react-icons/md';
 import { BiSelectMultiple } from 'react-icons/bi';
 import { HiOutlineServer } from 'react-icons/hi';
 import { TbCheckbox } from 'react-icons/tb';
-import { PropertyType } from '../constants';
+import { PropertyType } from '../../lib/property/constants';
 import {
     MDXEditor,
     headingsPlugin,
@@ -27,14 +27,14 @@ import {
     InsertImage
 } from '@mdxeditor/editor';
 import '@mdxeditor/editor/style.css';
-import { PrimaryButton, SecondaryButton, ButtonGroup } from '@/app/components/ui/buttons';
+import { PrimaryButton, SecondaryButton, ButtonGroup } from '@/components/my-tmp-ui/buttons';
 import './mdxeditor.css';
-import { getSimpleMinersList, getMinerStatusStyle, getMinerById } from '../../miners/service';
+import { getSimpleMinersList, getMinerStatusStyle, getMinerById } from '../../lib/miner/service';
 import { useOrganization } from '@clerk/clerk-react';
 import Image from 'next/image';
-import { LoadingContainerOverlay } from '@/app/components/ui/overlay';
-import { UserDataContext } from '@/app/issue/components/IssuePage';
-import { getUser } from '@/app/users/service';
+import { LoadingContainerOverlay } from '@/components/my-tmp-ui/overlay';
+import { UserDataContext } from '@/components/issue/IssuePage';
+import { getUser } from '@/app/user/service';
 import './detail.css';
 
 // 属性值接口，与API接口保持一致
@@ -910,8 +910,6 @@ export const DatetimePropertyDetail: React.FC<PropertyDetailProps> = ({
     propertyDefinition,
     value
 }) => {
-    // TODO: 后续需要实现日期时间编辑功能，当前版本仅支持显示
-
     // 处理空值显示
     if (value === null || value === undefined || value === "") {
         return (

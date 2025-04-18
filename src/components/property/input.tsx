@@ -1,11 +1,11 @@
 'use client';
 
-import { PropertyDefinition } from '@/app/issue/components/IssuePage';
+import { PropertyDefinition } from '@/components/issue/IssuePage';
 import { BlockTypeSelect, BoldItalicUnderlineToggles, CodeToggle, CreateLink, headingsPlugin, imagePlugin, InsertImage, linkDialogPlugin, linkPlugin, listsPlugin, ListsToggle, markdownShortcutPlugin, MDXEditor, quotePlugin, thematicBreakPlugin, toolbarPlugin } from '@mdxeditor/editor';
 import '@mdxeditor/editor/style.css';
 import React, { useEffect, useImperativeHandle, useState } from 'react';
 import { MdCancel } from 'react-icons/md';
-import { PropertyType } from '../constants';
+import { PropertyType } from '../../lib/property/constants';
 import './mdxeditor.css';
 // 导入需要的图标
 import { BiSelectMultiple } from 'react-icons/bi';

@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FilterCondition } from '@/app/property/types';
-import { FilterOperator } from '@/app/property/types';
-import { PropertyType } from '../constants';
-import { PropertyDefinition } from '../../issue/components/IssuePage';
-import { getSimpleMinersList, getMinerStatusStyle } from '../../miners/service';
-import { getUser } from '../../users/service';
+import { FilterCondition } from '@/lib/property/types';
+import { FilterOperator } from '@/lib/property/types';
+import { PropertyType } from '../../lib/property/constants';
+import { PropertyDefinition } from '../issue/IssuePage';
+import { getSimpleMinersList, getMinerStatusStyle } from '../../lib/miner/service';
+import { getUser } from '../../app/user/service';
 import { useOrganization } from '@clerk/clerk-react';
-import { TransparentOverlay } from '@/app/components/ui/overlay';
+import { TransparentOverlay } from '@/components/my-tmp-ui/overlay';
 
 /**
  * 筛选构造器面板属性接口

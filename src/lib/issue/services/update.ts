@@ -1,6 +1,6 @@
-import { prisma } from '@/app/lib/prisma';
-import { PropertyUpdateProcessorFactory, MultiValueData } from '@/app/property/update-property-value';
-import { SystemPropertyId, PropertyType } from '@/app/property/constants';
+import { prisma } from '@/lib/prisma';
+import { PropertyUpdateProcessorFactory, MultiValueData } from '@/lib/property/update-property-value';
+import { SystemPropertyId, PropertyType } from '@/lib/property/constants';
 
 // 定义操作负载接口
 type OperationPayload = Record<string, unknown>;

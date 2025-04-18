@@ -1,7 +1,7 @@
-import prisma from "@/app/lib/prisma";
+import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { auth, OrganizationMembership } from "@clerk/nextjs/server";
-import { clerkClient } from "@/app/clerk/client";
+import { clerkClient } from "@/lib/clerk/client";
 
 export async function DELETE(
   request: NextRequest,
@@ -45,7 +45,6 @@ export async function DELETE(
     // 获取组织成员列表
     const { data: memberships } = await clerkClient.organizations.getOrganizationMembershipList({
       organizationId, limit: 100 // TODO deal with pagination
-      
     });
     // 检查当前用户是否在组织成员列表中
     const isMember = memberships.some((membership: OrganizationMembership) => 

@@ -1,9 +1,9 @@
 import { Prisma, property } from '@prisma/client';
-import { prisma } from '@/app/lib/prisma';
-import { PropertyProcessorFactory } from '@/app/property/add-property-value';
-import { SystemPropertyId } from '@/app/property/constants';
-import { CounterService } from '@/app/counter/services/counter';
-import { PropertyType } from '@/app/property/constants';
+import { prisma } from '@/lib/prisma';
+import { PropertyProcessorFactory } from '@/lib/property/add-property-value';
+import { SystemPropertyId } from '@/lib/property/constants';
+import { CounterService } from '@/lib/counter';
+import { PropertyType } from '@/lib/property/constants';
 
 /**
  * 创建 issue 的请求参数接口

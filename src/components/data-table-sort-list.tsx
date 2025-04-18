@@ -120,7 +120,6 @@ export function DataTableSortList<TData>({
     [onSortingChange, table.initialState.sorting],
   );
 
-  // TODO 暂时注释掉，因为在编辑器中按下 s 键会触发快捷键
   // React.useEffect(() => {
   //   function onKeyDown(event: KeyboardEvent) {
   //     if (

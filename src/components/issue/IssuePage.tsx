@@ -2,17 +2,17 @@
 
 import { useState, useEffect, createContext, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import IssueTable, { TableColumn } from './IssueTable';
+import IssueTable, { TableColumn } from '@/components/issue/IssueTable';
 import {
     PROPERTY_HEADER_COMPONENTS,
     PROPERTY_CELL_COMPONENTS
-} from '../../property/components/table';
-import { FilterCondition } from '@/app/property/types';
-import { PropertyType } from '@/app/property/constants';
+} from '../property/table';
+import { FilterCondition } from '@/lib/property/types';
+import { PropertyType } from '@/lib/property/constants';
 import { FiPlus } from 'react-icons/fi';
 import { CreateIssuePanel } from './CreateIssuePanel';
 import { IssueDetailPanel } from './IssueDetailPanel';
-import { User, getUserList } from '@/app/users/service';
+import { User, getUserList } from '@/app/user/service';
 
 // 创建用户数据上下文
 export interface UserDataContextType {

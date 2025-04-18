@@ -3,17 +3,13 @@
 import { UserButton, useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { CiViewTimeline } from 'react-icons/ci';
-import Sidebar, { SidebarItem } from './new-sidebar';
+import Sidebar, { SidebarItem } from '@/components/sidebar';
 
 const ClientSidebar = () => {
   const router = useRouter();
   const { user, isLoaded } = useUser()
 
   const sidebarSections: SidebarItem[][] = [
-    [
-      // { id: "inbox", label: "Inbox", icon: <IoNotificationsOutline size={20} /> },
-      // { id: "views", label: "Views", icon: <MdViewList size={20} /> },
-    ],
     [
       { 
         id: "issues", 
@@ -29,7 +25,6 @@ const ClientSidebar = () => {
       // },
     ],
     [
-      // { id: "settings", label: "Settings", icon: <MdSettings size={20} /> },
       { 
         id: "user", 
         label: isLoaded ? user?.fullName || user?.emailAddresses[0].emailAddress || "" : " ",

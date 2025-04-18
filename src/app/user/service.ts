@@ -1,6 +1,6 @@
 'use server';
 
-import { clerkClient } from '@/app/clerk/client';
+import { clerkClient } from '@/lib/clerk/client';
 
 // 用户信息接口
 export interface User {

@@ -36,7 +36,6 @@ export function DataTablePagination<TData>({
       {...props}
     >
       <div className="flex-1 whitespace-nowrap text-muted-foreground text-sm">
-        {/* TODO 暂时不提供选中功能 */}
         {/* {table.getFilteredSelectedRowModel().rows.length} of{" "}
         {table.getFilteredRowModel().rows.length} row(s) selected. */}
         {/* {table.getFilteredRowModel().rows.length} row(s). */}

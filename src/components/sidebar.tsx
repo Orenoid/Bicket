@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import Divider from './ui/divider-new';
+import Divider from '@/components/my-tmp-ui/divider-new';
 import { TbLayoutSidebarRightExpand, TbLayoutSidebarRightCollapse } from 'react-icons/tb';
 import { OrganizationSwitcher } from '@clerk/nextjs';
 
@@ -18,25 +18,6 @@ export interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ sections = [[], [], []] }) => {
   const [collapsed, setCollapsed] = useState(false);
-
-  // TODO 不知道为什么 useAuth() 这个 hook 完全用不了了，暂时注释掉这个自动设置 Active Organization 的逻辑
-  // const { orgId } = useAuth()
-  // const hasActiveOrg = orgId !== null
-
-  // const { isLoaded, setActive, userMemberships } = useOrganizationList()
-
-  // useEffect(() => {
-  //   if (hasActiveOrg) {
-  //     return
-  //   }
-
-  //   if (userMemberships.data && userMemberships.data.length > 0 && isLoaded ) {
-  //     setActive({
-  //       organization: userMemberships.data[0].organization.id,
-  //     })
-  //   }
-
-  // }, [hasActiveOrg, isLoaded, orgId, setActive, userMemberships.data])
 
   // 监听折叠状态变化，更新文档根元素的 class
   useEffect(() => {

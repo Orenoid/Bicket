@@ -1,23 +1,22 @@
 'use client';
 
-import { SecondaryButton } from '../../components/ui/buttons';
+import { SecondaryButton } from '@/components/my-tmp-ui/buttons';
 import {
     SelectPropertyDetail,
     TitlePropertyDetail,
-    MultiSelectPropertyDetail,
     MinersPropertyDetail,
     DatetimePropertyDetail,
     RichTextPropertyDetail,
     UserPropertyDetail
-} from '@/app/property/components/detail';
-import { SystemPropertyId } from '@/app/property/constants';
+} from '@/components/property/detail';
+import { SystemPropertyId } from '@/lib/property/constants';
 import { MdMoreHoriz } from 'react-icons/md';
 import { useState } from 'react';
-import { DropdownMenu } from '@/app/components/ui/dropdownMenu';
-import { MenuItem } from '@/app/components/ui/dropdownMenu';
+import { DropdownMenu } from '@/components/my-tmp-ui/dropdownMenu';
+import { MenuItem } from '@/components/my-tmp-ui/dropdownMenu';
 import { RiDeleteBinLine } from 'react-icons/ri';
 import { useRouter } from 'next/navigation';
-import { ConfirmDialog } from '@/app/components/ui/confirmDialog';
+import { ConfirmDialog } from '@/components/my-tmp-ui/confirmDialog';
 
 // 从IssuePage.tsx导入需要的接口
 export interface PropertyDefinition {
@@ -65,8 +64,6 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions, onUpdate
     const categoryProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.CATEGORY);
     // 获取诊断属性
     const diagnosisProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.DIAGNOSIS);
-    // 获取标签属性
-    const labelProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.LABEL);
     // 获取矿机列表属性
     const minersProperty = propertyDefinitions.find(p => p.id === SystemPropertyId.MINERS);
     // 获取创建时间属性
@@ -112,12 +109,6 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions, onUpdate
     const getDiagnosisValue = () => {
         const diagnosisPropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.DIAGNOSIS);
         return diagnosisPropertyValue ? diagnosisPropertyValue.value : null;
-    };
-
-    // 获取标签属性值
-    const getLabelValue = () => {
-        const labelPropertyValue = issue.property_values.find(pv => pv.property_id === SystemPropertyId.LABEL);
-        return labelPropertyValue ? labelPropertyValue.value : null;
     };
 
     // 获取矿机列表属性值
@@ -323,14 +314,6 @@ export const IssueDetailPanel = ({ onClose, issue, propertyDefinitions, onUpdate
 
                     </div>
                     <div className='flex flex-col gap-3 pl-3 mb-8'>
-                        {/* 标签属性组件 */}
-                        {false && ( // TODO 标签属性组件暂时隐藏
-                            <MultiSelectPropertyDetail
-                                propertyDefinition={labelProperty!}
-                                value={getLabelValue()}
-                                onUpdate={handlePropertyUpdate}
-                            />
-                        )}
                         {/* 状态属性组件 */}
                         {statusProperty && (
                             <SelectPropertyDetail

@@ -1,9 +1,9 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { SecondaryButton, ButtonGroup, LoadingButton } from '../../components/ui/buttons';
-import { PropertyValue as InputPropertyValue, SelectPropertyInput, TextareaPropertyInput, TextPropertyInput, MinersPropertyInput, UserPropertyInput } from '@/app/property/components/input';
-import { SystemPropertyId } from '@/app/property/constants';
+import { SecondaryButton, ButtonGroup, LoadingButton } from '@/components/my-tmp-ui/buttons';
+import { PropertyValue as InputPropertyValue, SelectPropertyInput, TextareaPropertyInput, TextPropertyInput, MinersPropertyInput, UserPropertyInput } from '@/components/property/input';
+import { SystemPropertyId } from '@/lib/property/constants';
 
 // 从IssuePage.tsx导入需要的接口
 export interface PropertyDefinition {
@@ -110,7 +110,6 @@ export const CreateIssuePanel = ({ onClose, propertyDefinitions, onCreateSuccess
                         <div className="flex">
                             {/* 左侧：标题和描述 */}
                             <div className="flex-grow pr-4 flex-col">
-                                {/* TODO tech dept 可能找不到这个属性 */}
                                 <TextPropertyInput
                                     propertyDefinition={propertyDefinitions.find(p => p.id === SystemPropertyId.TITLE) as PropertyDefinition}
                                     ref={(ref) => registerPropertyRef(SystemPropertyId.TITLE, ref)}

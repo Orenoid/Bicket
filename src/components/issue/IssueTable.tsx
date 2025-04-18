@@ -7,18 +7,18 @@ import {
     ColumnDef,
     Row
 } from '@tanstack/react-table';
-import { SystemPropertyId } from '@/app/property/constants';
+import { SystemPropertyId } from '@/lib/property/constants';
 import { useDataTable } from '@/hooks/use-data-table';
 import { DataTable } from '@/components/data-table';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
-import { DropDownMenuV2 } from '@/app/components/ui/dropdownMenu';
-import { FilterConstructorPanel } from '@/app/property/components/filter-construction';
+import { DropDownMenuV2 } from '@/components/my-tmp-ui/dropdownMenu';
+import { FilterConstructorPanel } from '@/components/property/filter-construction';
 import {
     AppliedFilterWrapper,
     APPLIED_FILTER_COMPONENTS
-} from '@/app/property/components/applied-filter';
-import { FilterCondition } from '@/app/property/types';
-import { PropertyType } from '@/app/property/constants';
+} from '@/components/property/applied-filter';
+import { FilterCondition } from '@/lib/property/types';
+import { PropertyType } from '@/lib/property/constants';
 
 import { DataTableToolbar } from '@/components/data-table-toolbar';
 import { MdFilterList, MdClose } from 'react-icons/md';
@@ -63,7 +63,6 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     onFilterChange,
     pageCount = 1, // 默认为1页
 }) => {
-    // TODO tech dept 应该通过某种配置项来判断是否允许在表格里展示
     // 过滤掉描述属性和 label 属性属性
     const filteredColumns = useMemo(() => {
         return columns.filter(column => column.id !== SystemPropertyId.DESCRIPTION && column.id !== SystemPropertyId.LABEL);
@@ -220,9 +219,6 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                             {renderCell(column_, row.original, row.index)}
                         </CellWrapper>
                     ),
-                    // TODO tech dept 支持拖拽调整列宽
-                    // size: column_.id === SystemPropertyId.ASIGNEE || column_.id === SystemPropertyId.REPORTER ? 108 : undefined,
-                    // size: 108,
                     meta: {
                         label: column_.title,
                     },
@@ -246,7 +242,6 @@ export const IssueTable: React.FC<IssueTableProps> = ({
         data: data,
         columns: tanstackColumns,
         pageCount: pageCount,
-        enableColumnResizing: true, // TODO bug: not working, even the doc says it's supported
         initialState: {
             sorting: [{ id: SystemPropertyId.ID, desc: true }],
         },
