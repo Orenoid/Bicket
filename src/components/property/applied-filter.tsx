@@ -6,7 +6,7 @@ import { PropertyDefinition } from '../issue/IssuePage';
 import { FiX } from 'react-icons/fi';
 import { PropertyType } from '../../lib/property/constants';
 import { getMinerById, getMinerStatusStyle } from '../../lib/miner/service';
-import { getUser } from '../../app/user/service';
+import { getUser } from '../../lib/user/service';
 
 /**
  * 已应用筛选条件的属性接口

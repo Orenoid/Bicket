@@ -12,7 +12,7 @@ import { PropertyType } from '@/lib/property/constants';
 import { FiPlus } from 'react-icons/fi';
 import { CreateIssuePanel } from './CreateIssuePanel';
 import { IssueDetailPanel } from './IssueDetailPanel';
-import { User, getUserList } from '@/app/user/service';
+import { User, getUserList } from '@/lib/user/service';
 
 // 创建用户数据上下文
 export interface UserDataContextType {

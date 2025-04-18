@@ -4,7 +4,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { PropertyType } from '../../lib/property/constants';
 import { getMinerById, getMinerStatusStyle } from '../../lib/miner/service';
 import Image from 'next/image';
-import { getUser, User } from '../../app/user/service';
+import { getUser, User } from '../../lib/user/service';
 import { UserDataContext } from '../issue/IssuePage';
 
 // 表头组件属性接口

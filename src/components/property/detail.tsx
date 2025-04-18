@@ -9,22 +9,22 @@ import { HiOutlineServer } from 'react-icons/hi';
 import { TbCheckbox } from 'react-icons/tb';
 import { PropertyType } from '../../lib/property/constants';
 import {
-  MDXEditor,
-  headingsPlugin,
-  listsPlugin,
-  quotePlugin,
-  thematicBreakPlugin,
-  markdownShortcutPlugin,
-  toolbarPlugin,
-  BoldItalicUnderlineToggles,
-  linkPlugin,
-  linkDialogPlugin,
-  CreateLink,
-  CodeToggle,
-  ListsToggle,
-  BlockTypeSelect,
-  imagePlugin,
-  InsertImage
+    MDXEditor,
+    headingsPlugin,
+    listsPlugin,
+    quotePlugin,
+    thematicBreakPlugin,
+    markdownShortcutPlugin,
+    toolbarPlugin,
+    BoldItalicUnderlineToggles,
+    linkPlugin,
+    linkDialogPlugin,
+    CreateLink,
+    CodeToggle,
+    ListsToggle,
+    BlockTypeSelect,
+    imagePlugin,
+    InsertImage
 } from '@mdxeditor/editor';
 import '@mdxeditor/editor/style.css';
 import { PrimaryButton, SecondaryButton, ButtonGroup } from '@/components/ui/buttons';
@@ -34,7 +34,7 @@ import { useOrganization } from '@clerk/clerk-react';
 import Image from 'next/image';
 import { LoadingContainerOverlay } from '@/components/ui/overlay';
 import { UserDataContext } from '@/components/issue/IssuePage';
-import { getUser } from '@/app/user/service';
+import { getUser } from '@/lib/user/service';
 import './detail.css';
 
 // 属性值接口，与API接口保持一致
