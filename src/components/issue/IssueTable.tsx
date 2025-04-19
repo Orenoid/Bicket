@@ -3,20 +3,17 @@
 import { useMemo, useState, useEffect } from 'react';
 import React from 'react';
 import {
-  Column,
-  ColumnDef,
-  Row
+    Column,
+    ColumnDef,
+    Row
 } from '@tanstack/react-table';
 import { SystemPropertyId } from '@/lib/property/constants';
 import { useDataTable } from '@/hooks/use-data-table';
 import { DataTable } from '@/components/shadcn/data-table/data-table';
 import { DataTableColumnHeader } from '@/components/shadcn/data-table/data-table-column-header';
 import { DropDownMenuV2 } from '@/components/ui/dropdownMenu';
-import { FilterConstructorPanel } from '@/components/property/filter-construction';
-import {
-  AppliedFilterWrapper,
-  APPLIED_FILTER_COMPONENTS
-} from '@/components/property/applied-filter';
+import { FilterConstructorPanel } from '@/components/property/filter/filter-constructor';
+import { AppliedFilterWrapper } from '../property/filter/applied-filter/AppliedFilterWrapper';
 import { FilterCondition } from '@/lib/property/types';
 import { PropertyType } from '@/lib/property/constants';
 
@@ -24,6 +21,7 @@ import { DataTableToolbar } from '@/components/shadcn/data-table/data-table-tool
 import { MdFilterList, MdClose } from 'react-icons/md';
 import './IssueTable.css';
 import { DataTableSortList } from '@/components/shadcn/data-table/data-table-sort-list';
+import { getAppliedFilterComponent } from '../property/filter';
 
 export interface TableColumn {
     id: string;
@@ -166,8 +164,8 @@ export const IssueTable: React.FC<IssueTableProps> = ({
             const propertyDef = getPropertyDefinition(filter.propertyId);
             if (!propertyDef) return null;
 
-            // 获取对应类型的筛选组件
-            const FilterComponent = APPLIED_FILTER_COMPONENTS[propertyDef.type];
+            // 使用新的工厂方法获取对应类型的筛选组件
+            const FilterComponent = getAppliedFilterComponent(propertyDef.type);
             if (!FilterComponent) return null;
 
             // 判断当前过滤器是否处于编辑状态

@@ -7,7 +7,6 @@ import React, { useEffect, useImperativeHandle, useState } from 'react';
 import { MdCancel } from 'react-icons/md';
 import { PropertyType } from '../../lib/property/constants';
 import './mdxeditor.css';
-// 导入需要的图标
 import { BiSelectMultiple } from 'react-icons/bi';
 import { HiOutlineServer } from 'react-icons/hi';
 import {
@@ -20,7 +19,7 @@ import {
     MdTextFields
 } from 'react-icons/md';
 import { TbCheckbox } from 'react-icons/tb';
-import { PaginatedDropdown } from './paginated-dropdown';
+import { PaginatedDropdown } from '../ui/paginated-dropdown';
 import { useOrganization } from '@clerk/clerk-react';
 import Image from 'next/image';
 

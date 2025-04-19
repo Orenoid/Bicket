@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { FilterCondition } from '@/lib/property/types';
 import { FilterOperator } from '@/lib/property/types';
-import { PropertyType } from '../../lib/property/constants';
-import { PropertyDefinition } from '../issue/IssuePage';
-import { getSimpleMinersList, getMinerStatusStyle } from '../../lib/miner/service';
-import { getUser } from '../../lib/user/service';
+import { PropertyType } from '../../../lib/property/constants';
+import { PropertyDefinition } from '../../issue/IssuePage';
+import { getSimpleMinersList, getMinerStatusStyle } from '../../../lib/miner/service';
+import { getUser } from '../../../lib/user/service';
 import { useOrganization } from '@clerk/clerk-react';
 import { TransparentOverlay } from '@/components/ui/overlay';
 

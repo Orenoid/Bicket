@@ -2,12 +2,12 @@
 
 import { SecondaryButton } from '@/components/ui/buttons';
 import {
-  SelectPropertyDetail,
-  TitlePropertyDetail,
-  MinersPropertyDetail,
-  DatetimePropertyDetail,
-  RichTextPropertyDetail,
-  UserPropertyDetail
+    SelectPropertyDetail,
+    TitlePropertyDetail,
+    MinersPropertyDetail,
+    DatetimePropertyDetail,
+    RichTextPropertyDetail,
+    UserPropertyDetail
 } from '@/components/property/detail';
 import { SystemPropertyId } from '@/lib/property/constants';
 import { MdMoreHoriz } from 'react-icons/md';

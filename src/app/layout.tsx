@@ -1,9 +1,12 @@
 import { ClerkProvider } from "@clerk/nextjs";
-import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import ClientSidebar from "../components/ClientSidebar";
 import "./globals.css";
+import inittializeApp from "./init";
+
+inittializeApp();
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
