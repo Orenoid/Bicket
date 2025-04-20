@@ -12,7 +12,7 @@ import { useDataTable } from '@/hooks/use-data-table';
 import { DataTable } from '@/components/shadcn/data-table/data-table';
 import { DataTableColumnHeader } from '@/components/shadcn/data-table/data-table-column-header';
 import { DropDownMenuV2 } from '@/components/ui/dropdownMenu';
-import { FilterConstructorPanel } from '@/components/property/filter/filter-constructor';
+import { FilterConstructorWrapperPanel } from '../property/filter/filter-constructor/FilterConstructorWrapperPanel';
 import { AppliedFilterWrapper } from '../property/filter/applied-filter/AppliedFilterWrapper';
 import { FilterCondition } from '@/lib/property/types';
 import { PropertyType } from '@/lib/property/constants';
@@ -21,7 +21,7 @@ import { DataTableToolbar } from '@/components/shadcn/data-table/data-table-tool
 import { MdFilterList, MdClose } from 'react-icons/md';
 import './IssueTable.css';
 import { DataTableSortList } from '@/components/shadcn/data-table/data-table-sort-list';
-import { getAppliedFilterComponent } from '../property/filter';
+import { getAppliedFilterComponent, getFilterConstructorComponent } from '@/components/property/filter';
 
 export interface TableColumn {
     id: string;
@@ -184,12 +184,15 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                     }}
                 >
                     {isEditing && (
-                        <FilterConstructorPanel
-                            propertyDefinition={propertyDef}
-                            currentFilter={filter}
-                            onApply={handleFilterApply}
-                            onCancel={handleFilterCancel}
-                            className="absolute left-0 top-[100%]"
+                        <FilterConstructorWrapperPanel
+                            ConstructorComponent={getFilterConstructorComponent(propertyDef.type)}
+                            props={{
+                                propertyDefinition: propertyDef,
+                                currentFilter: filter,
+                                onApply: handleFilterApply,
+                                onCancel: handleFilterCancel,
+                                className: "absolute left-0 top-[100%]"
+                            }}
                         />
                     )}
                 </AppliedFilterWrapper>
@@ -275,12 +278,15 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                             />
                             {/* 设置筛选条件的面板 */}
                             {selectedProperty && (
-                                <FilterConstructorPanel
-                                    propertyDefinition={selectedProperty}
-                                    currentFilter={getCurrentFilter(selectedProperty.id)}
-                                    onApply={handleFilterApply}
-                                    onCancel={handleFilterCancel}
-                                    className="absolute top-[100%] left-0"
+                                <FilterConstructorWrapperPanel
+                                    ConstructorComponent={getFilterConstructorComponent(selectedProperty.type)}
+                                    props={{
+                                        propertyDefinition: selectedProperty,
+                                        currentFilter: getCurrentFilter(selectedProperty.id),
+                                        onApply: handleFilterApply,
+                                        onCancel: handleFilterCancel,
+                                        className: "absolute top-[100%] left-0"
+                                    }}
                                 />
                             )}
                         </div>

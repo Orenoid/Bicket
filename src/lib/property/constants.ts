@@ -63,5 +63,3 @@ export enum PropertyOperationType {
     ADD = 'add',           // 添加属性值（多值）
     UPDATE = 'update',     // 更新属性值（多值）
 }
-
-

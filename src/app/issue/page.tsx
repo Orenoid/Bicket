@@ -343,8 +343,6 @@ async function getIssues(
                         LIMIT ${pageSize}
                     `;
 
-                    console.log('执行查询SQL:', query); // 添加日志帮助调试
-
                     issues = await prisma.$queryRawUnsafe<{ id: string }[]>(query);
                 } else {
                     // 使用默认排序
