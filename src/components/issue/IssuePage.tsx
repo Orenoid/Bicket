@@ -1,18 +1,17 @@
 'use client';
 
-import { useState, useEffect, createContext, useMemo, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import IssueTable, { TableColumn } from '@/components/issue/IssueTable';
+import { PropertyType } from '@/lib/property/constants';
+import { FilterCondition } from '@/lib/property/types';
+import { User, getUserList } from '@/lib/user/service';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
+import { FiPlus } from 'react-icons/fi';
 import {
-    PROPERTY_HEADER_COMPONENTS,
     PROPERTY_CELL_COMPONENTS
 } from '../property/table';
-import { FilterCondition } from '@/lib/property/types';
-import { PropertyType } from '@/lib/property/constants';
-import { FiPlus } from 'react-icons/fi';
 import { CreateIssuePanel } from './CreateIssuePanel';
 import { IssueDetailPanel } from './IssueDetailPanel';
-import { User, getUserList } from '@/lib/user/service';
 
 // 创建用户数据上下文
 export interface UserDataContextType {
@@ -223,26 +222,6 @@ export function IssuePage({ issues, propertyDefinitions, pageCount = 1 }: IssueP
         }))
     , [propertyDefinitions]);
 
-    // 渲染表头
-    const renderHeader = useCallback((column: TableColumn) => {
-        const propertyDef = propertyDefinitions.find(p => p.id === column.id);
-        if (!propertyDef) return column.title;
-
-        // 从映射中获取对应的表头组件
-        const HeaderComponent = PROPERTY_HEADER_COMPONENTS[propertyDef.type];
-        if (!HeaderComponent) return column.title;
-
-        // 渲染表头组件
-        return (
-            <HeaderComponent
-                propertyID={propertyDef.id}
-                propertyType={propertyDef.type}
-                propertyName={column.title}
-                propertyConfig={propertyDef.config}
-            />
-        );
-    }, [propertyDefinitions]);
-
     // 渲染单元格
     const renderCell = useCallback((column: TableColumn, row: Record<string, unknown>) => {
         const issue = row as unknown as Issue;
@@ -298,7 +277,6 @@ export function IssuePage({ issues, propertyDefinitions, pageCount = 1 }: IssueP
             <IssueTable
                 columns={columns}
                 data={issues as unknown as Record<string, unknown>[]}
-                renderHeader={renderHeader}
                 renderCell={renderCell}
                 onRowClick={handleRowClick}
                 propertyDefinitions={propertyDefinitions}

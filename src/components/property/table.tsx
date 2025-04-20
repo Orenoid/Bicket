@@ -7,16 +7,6 @@ import Image from 'next/image';
 import { getUser, User } from '../../lib/user/service';
 import { UserDataContext } from '../issue/IssuePage';
 
-// 表头组件属性接口
-export interface PropertyHeaderCellProps {
-    // 基础属性信息
-    propertyID: string;             // 属性ID
-    propertyType: string;           // 属性类型
-    propertyName: string;           // 属性名称
-    propertyConfig?: Record<string, unknown>;  // 属性配置信息(可以是JSON对象，包含该类型特有配置)
-}
-
-export type PropertyHeaderCellComponent = React.FC<PropertyHeaderCellProps>;
 
 /**
  * 状态选项的定义
@@ -61,21 +51,6 @@ export interface DatetimePropertyConfig extends Record<string, unknown> {
     showTimezone?: boolean;            // 是否显示时区部分
 }
 
-// 文本类型的表头组件
-export const TextPropertyHeaderCell: PropertyHeaderCellComponent = ({ 
-    propertyName, 
-    propertyConfig 
-}) => {
-    return (
-        <div className="flex items-center space-x-1">
-            <span className="font-medium text-gray-700">{propertyName}</span>
-            {Boolean(propertyConfig?.required) && (
-                <span className="text-red-500 text-xs">*</span>
-            )}
-        </div>
-    );
-};
-
 // 单元格组件属性接口
 export interface PropertyCellProps {
     // 基础属性信息
@@ -92,19 +67,19 @@ export interface PropertyCellProps {
 export type PropertyCellComponent = React.FC<PropertyCellProps>;
 
 // 文本类型的单元格组件
-export const TextPropertyCell: PropertyCellComponent = ({ 
-    value, 
-    propertyConfig 
+export const TextPropertyCell: PropertyCellComponent = ({
+    value,
+    propertyConfig
 }) => {
     // 处理空值显示
     if (value === null || value === undefined || value === "") {
         return <span className="text-gray-400 italic">{propertyConfig?.emptyText as string || "空"}</span>;
     }
-    
+
     // 处理文本值
     const textValue = String(value);
     const maxLength = (propertyConfig?.maxDisplayLength as number) || 100;
-    
+
     // 如果文本过长，截断并显示省略号
     if (textValue.length > maxLength) {
         return (
@@ -113,24 +88,24 @@ export const TextPropertyCell: PropertyCellComponent = ({
             </span>
         );
     }
-    
+
     return <span>{textValue}</span>;
 };
 
 // 富文本类型的单元格组件
-export const RichTextPropertyCell: PropertyCellComponent = ({ 
-    value, 
-    propertyConfig 
+export const RichTextPropertyCell: PropertyCellComponent = ({
+    value,
+    propertyConfig
 }) => {
     // 处理空值显示
     if (value === null || value === undefined || value === "") {
         return <span className="text-gray-400 italic">{propertyConfig?.emptyText as string || "空"}</span>;
     }
-    
+
     // 处理富文本值（Markdown格式）
     const markdownValue = String(value);
     const maxLength = (propertyConfig?.maxDisplayLength as number) || 150;
-    
+
     // 将Markdown转换为纯文本
     // 移除常见的Markdown标记：
     // - 标题 # ## ###
@@ -151,7 +126,7 @@ export const RichTextPropertyCell: PropertyCellComponent = ({
         .replace(/^\d+\.\s+/gm, '') // 移除有序列表标记
         .replace(/^>\s+/gm, '') // 移除引用标记
         .replace(/`{1,3}([^`]+?)`{1,3}/g, '$1'); // 移除代码块标记
-    
+
     // 如果文本过长，截断并显示省略号
     if (plainText.length > maxLength) {
         return (
@@ -160,25 +135,25 @@ export const RichTextPropertyCell: PropertyCellComponent = ({
             </span>
         );
     }
-    
+
     return <span>{plainText}</span>;
 };
 
 // 单选类型的单元格组件
-export const SelectPropertyCell: PropertyCellComponent = ({ 
-    value, 
-    propertyConfig 
+export const SelectPropertyCell: PropertyCellComponent = ({
+    value,
+    propertyConfig
 }) => {
     // 处理空值显示
     if (value === null || value === undefined || value === "") {
         return <span className="text-gray-400 italic"></span>;
     }
-    
+
     // 获取选项配置
     const options = (propertyConfig?.options as StatusOption[]) || [];
     // 查找匹配的选项
     const selectedOption = options.find(option => option.id === value);
-    
+
     if (!selectedOption) {
         return <span className="text-gray-400 italic">无效选项</span>;
     }
@@ -198,9 +173,9 @@ export const SelectPropertyCell: PropertyCellComponent = ({
 
     // 新样式：扁平风格，完全圆角
     return (
-        <span 
+        <span
             className="inline-block px-3 py-0.5 rounded-full text-xs font-medium"
-            style={{ 
+            style={{
                 backgroundColor: selectedOption.color,
                 color: selectedOption.color === '#e5e5e5' ? '#666666' : 'white'
             }}
@@ -211,26 +186,26 @@ export const SelectPropertyCell: PropertyCellComponent = ({
 };
 
 // 多选类型的单元格组件
-export const MultiSelectPropertyCell: PropertyCellComponent = ({ 
-    value, 
-    propertyConfig 
+export const MultiSelectPropertyCell: PropertyCellComponent = ({
+    value,
+    propertyConfig
 }) => {
     // 处理空值显示
-    if (value === null || value === undefined || 
+    if (value === null || value === undefined ||
         (Array.isArray(value) && value.length === 0)) {
         return <span className="text-gray-400 italic"></span>;
     }
-    
+
     // 确保值是数组
     const valueArray = Array.isArray(value) ? value : [value];
-    
+
     // 获取选项配置
     const options = (propertyConfig?.options as StatusOption[]) || [];
     // 查找匹配的选项
-    const selectedOptions = options.filter(option => 
+    const selectedOptions = options.filter(option =>
         valueArray.includes(option.id)
     );
-    
+
     if (selectedOptions.length === 0) {
         return <span className="text-gray-400 italic">无效选项</span>;
     }
@@ -239,10 +214,10 @@ export const MultiSelectPropertyCell: PropertyCellComponent = ({
     return (
         <div className="flex flex-row items-center gap-1 w-full overflow-x-auto whitespace-nowrap no-scrollbar">
             {selectedOptions.map(option => (
-                <span 
+                <span
                     key={option.id}
                     className="inline-flex items-center shrink-0 justify-center px-2 py-0.5 rounded-full text-xs font-medium"
-                    style={{ 
+                    style={{
                         backgroundColor: option.color,
                         color: option.color === '#e5e5e5' ? '#666666' : 'white'
                     }}
@@ -255,39 +230,39 @@ export const MultiSelectPropertyCell: PropertyCellComponent = ({
 };
 
 // 矿机列表类型的单元格组件
-export const MinersPropertyCell: PropertyCellComponent = ({ 
-    value, 
-    propertyConfig 
+export const MinersPropertyCell: PropertyCellComponent = ({
+    value,
+    propertyConfig
 }) => {
     // 处理空值显示
-    if (value === null || value === undefined || 
+    if (value === null || value === undefined ||
         (Array.isArray(value) && value.length === 0)) {
         return <span className="text-gray-400 italic"></span>;
     }
-    
+
     // 确保值是数组
     const valueArray = Array.isArray(value) ? value : [value];
-    
+
     // 获取配置(可选)
     const displayCount = (propertyConfig?.displayCount as number) || 3; // 默认显示3个
-    
+
     // 判断是否需要显示"更多"提示
     const showMore = valueArray.length > displayCount;
     const displayItems = showMore ? valueArray.slice(0, displayCount) : valueArray;
-    
+
     // 以标签组形式显示矿机ID列表，带有状态指示和悬停详情
     return (
         <div className="flex flex-row items-center gap-1 w-full overflow-hidden whitespace-nowrap">
             {displayItems.map(minerId => {
                 const miner = getMinerById(minerId.toString());
                 const statusStyle = miner ? getMinerStatusStyle(miner.status) : getMinerStatusStyle('未知');
-                
+
                 return (
-                    <div 
+                    <div
                         key={minerId}
                         className="relative group"
                     >
-                        <span 
+                        <span
                             className="inline-flex items-center shrink-0 justify-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-800"
                             title={miner ? `${miner.model} (${miner.ipAddress})` : '未知矿机'}
                         >
@@ -296,7 +271,7 @@ export const MinersPropertyCell: PropertyCellComponent = ({
                             ></span>
                             {minerId}
                         </span>
-                        
+
                         {/* 悬停提示 - 使用绝对定位但相对于父容器，避免被裁剪 */}
                         <div className="absolute z-20 left-0 bottom-full mb-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity">
                             <div className="bg-gray-800 text-white text-xs rounded shadow-lg py-1.5 px-3 whitespace-nowrap">
@@ -319,47 +294,32 @@ export const MinersPropertyCell: PropertyCellComponent = ({
     );
 };
 
-// 日期时间类型的表头组件
-export const DatetimePropertyHeaderCell: PropertyHeaderCellComponent = ({ 
-    propertyName, 
-    propertyConfig 
-}) => {
-    return (
-        <div className="flex items-center space-x-1">
-            <span className="font-medium text-gray-700">{propertyName}</span>
-            {Boolean(propertyConfig?.required) && (
-                <span className="text-red-500 text-xs">*</span>
-            )}
-        </div>
-    );
-};
-
 // 日期时间类型的单元格组件
-export const DatetimePropertyCell: PropertyCellComponent = ({ 
-    value, 
-    propertyConfig 
+export const DatetimePropertyCell: PropertyCellComponent = ({
+    value,
+    propertyConfig
 }) => {
     // 处理空值显示
     if (value === null || value === undefined || value === "") {
         return <span className="text-gray-400 italic">{propertyConfig?.emptyText as string || ""}</span>;
     }
-    
+
     try {
         // 尝试解析日期时间字符串
         const dateString = String(value);
         const date = new Date(dateString);
-        
+
         // 检查日期是否有效
         if (isNaN(date.getTime())) {
             return <span className="text-gray-400 italic">无效日期</span>;
         }
-        
+
         // 格式化日期部分 (YYYY-MM-DD)
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         const dateFormatted = `${year}-${month}-${day}`;
-        
+
         return <span>{dateFormatted}</span>;
     } catch (error) {
         console.error('日期格式化错误', error);
@@ -368,25 +328,25 @@ export const DatetimePropertyCell: PropertyCellComponent = ({
 };
 
 // 用户类型的单元格组件
-export const UserPropertyCell: PropertyCellComponent = ({ 
-    value 
+export const UserPropertyCell: PropertyCellComponent = ({
+    value
 }) => {
     // 使用上下文中的用户数据
     const { userData, isLoading: isContextLoading } = useContext(UserDataContext);
-    
+
     // 本地状态，用于兜底和回退机制
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    
+
     // 转换userId
-    const userId = value !== null && value !== undefined && value !== "" 
-        ? String(value) 
+    const userId = value !== null && value !== undefined && value !== ""
+        ? String(value)
         : "";
-    
+
     // 从上下文中获取用户数据
     const contextUser = userId ? userData[userId] : null;
-    
+
     // useEffect必须在组件顶层调用，不能放在条件判断后面
     useEffect(() => {
         // 只有在上下文中没有数据且上下文加载完成时才单独请求
@@ -404,16 +364,16 @@ export const UserPropertyCell: PropertyCellComponent = ({
                     setLoading(false);
                 }
             }
-            
+
             loadUser();
         }
     }, [userId, contextUser, isContextLoading]);
-    
+
     // 处理空值显示
     if (!userId) {
         return <span className="text-gray-400 italic"></span>;
     }
-    
+
     // 用户加载状态的骨架屏占位符
     const loadingPlaceholder = (
         <div className="flex items-center">
@@ -423,15 +383,15 @@ export const UserPropertyCell: PropertyCellComponent = ({
             <div className="h-4 bg-gray-100 rounded animate-pulse w-20"></div>
         </div>
     );
-    
+
     // 如果上下文中有数据，直接使用
     if (contextUser) {
         return (
             <div className="flex items-center">
                 {/* 用户头像 */}
                 <div className="w-6 h-6 rounded-full overflow-hidden mr-2 flex-shrink-0 border border-gray-200">
-                    <Image 
-                        src={contextUser.imageUrl} 
+                    <Image
+                        src={contextUser.imageUrl}
                         alt={contextUser.username}
                         width={24}
                         height={24}
@@ -444,17 +404,17 @@ export const UserPropertyCell: PropertyCellComponent = ({
             </div>
         );
     }
-    
+
     // 如果上下文正在加载，显示加载骨架屏
     if (isContextLoading) {
         return loadingPlaceholder;
     }
-    
+
     // 单独加载中显示骨架屏
     if (loading) {
         return loadingPlaceholder;
     }
-    
+
     // 错误显示
     if (error) {
         return (
@@ -467,15 +427,15 @@ export const UserPropertyCell: PropertyCellComponent = ({
             </div>
         );
     }
-    
+
     // 单独加载的用户数据
     if (user) {
         return (
             <div className="flex items-center">
                 {/* 用户头像 */}
                 <div className="w-6 h-6 rounded-full overflow-hidden mr-2 flex-shrink-0 border border-gray-200">
-                    <Image 
-                        src={user.imageUrl} 
+                    <Image
+                        src={user.imageUrl}
                         alt={user.username}
                         width={24}
                         height={24}
@@ -488,7 +448,7 @@ export const UserPropertyCell: PropertyCellComponent = ({
             </div>
         );
     }
-    
+
     // 用户不存在显示
     return (
         <div className="flex items-center">
@@ -499,19 +459,6 @@ export const UserPropertyCell: PropertyCellComponent = ({
             <span className="text-gray-400 italic text-sm">未知用户</span>
         </div>
     );
-};
-
-// 表头组件映射
-export const PROPERTY_HEADER_COMPONENTS: Record<string, PropertyHeaderCellComponent> = {
-    [PropertyType.ID]: TextPropertyHeaderCell,
-    [PropertyType.TEXT]: TextPropertyHeaderCell,
-    [PropertyType.SELECT]: TextPropertyHeaderCell,
-    [PropertyType.RICH_TEXT]: TextPropertyHeaderCell,
-    [PropertyType.MULTI_SELECT]: TextPropertyHeaderCell,
-    [PropertyType.MINERS]: TextPropertyHeaderCell,
-    [PropertyType.DATETIME]: TextPropertyHeaderCell,
-    [PropertyType.USER]: TextPropertyHeaderCell,
-    // 其他类型的表头组件可以在这里添加
 };
 
 // 单元格组件映射
