@@ -10,23 +10,18 @@ const ClientSidebar = () => {
   const { user, isLoaded } = useUser()
 
   const sidebarSections: SidebarItem[][] = [
+    [],
     [
-      { 
-        id: "issues", 
-        label: "Issues", 
+      {
+        id: "issues",
+        label: "Issues",
         icon: <CiViewTimeline size={18} />,
         onClick: () => router.push('/issue')
       },
-      // { 
-      //   id: "miners", 
-      //   label: "Miners", 
-      //   icon: <HiOutlineServer size={18} />, 
-      //   onClick: () => router.push('/miners')
-      // },
     ],
     [
-      { 
-        id: "user", 
+      {
+        id: "user",
         label: isLoaded ? user?.fullName || user?.emailAddresses[0].emailAddress || "" : " ",
         icon: <UserButton />,
         onClick: () => {

@@ -5,24 +5,12 @@ import { PropertyType } from '@/lib/property/constants';
 import { FilterCondition } from '@/lib/property/types';
 import { User, getUserList } from '@/lib/user/service';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
-import {
-    PROPERTY_CELL_COMPONENTS
-} from '../property/table';
 import { CreateIssuePanel } from './CreateIssuePanel';
 import { IssueDetailPanel } from './IssueDetailPanel';
-
-// 创建用户数据上下文
-export interface UserDataContextType {
-    userData: Record<string, User>;
-    isLoading: boolean;
-}
-
-export const UserDataContext = createContext<UserDataContextType>({
-    userData: {},
-    isLoading: true
-});
+import { getPropertyTableCellComponent } from '../property/registry-utils';
+import { UserDataContext } from './UserContext';
 
 // 数据类型
 export interface PropertyValue {
@@ -207,12 +195,6 @@ export function IssuePage({ issues, propertyDefinitions, pageCount = 1 }: IssueP
             }
         }
     }, [issues, currentIssueId, isDetailPanelOpen]);
-
-    // 表格列定义
-    // const columns: TableColumn[] = propertyDefinitions.map(prop => ({
-    //     id: prop.id,
-    //     title: prop.name,
-    // }));
     
     // 修改为使用 useMemo 记忆化 columns 数组
     const columns = useMemo<TableColumn[]>(() => 
@@ -232,7 +214,7 @@ export function IssuePage({ issues, propertyDefinitions, pageCount = 1 }: IssueP
         if (!propertyDef) return '';
 
         // 从映射中获取对应的单元格组件
-        const CellComponent = PROPERTY_CELL_COMPONENTS[propertyDef.type];
+        const CellComponent = getPropertyTableCellComponent(propertyDef.type);
         if (!CellComponent) {
             // 默认处理，如果没有找到对应组件
             return propertyValue.value !== null && propertyValue.value !== undefined

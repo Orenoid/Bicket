@@ -1,13 +1,35 @@
-import { Registry } from '@/lib/registry';
-import { AppliedFilterComponent, FilterConstructorComponent } from '../type';
-import { DefaultAppliedFilter } from './applied-filter/DefaultAppliedFilter';
-import { DefaultFilterConstructorPanel } from './filter-constructor/DefaultFilterConstructorPanel';
+import { Registry } from "@/lib/registry";
+import { AppliedFilterComponent, FilterConstructorComponent, PropertyTableCellComponent } from "./type";
+import { DefaultPropertyCell } from "./issue-table-cell";
+import { DefaultAppliedFilter, DefaultFilterConstructorPanel } from "./filter";
 
 /**
- * 批量注册已应用筛选组件
+ * 批量注册单元格组件
  * 
  * @param components 属性类型与组件的映射对象
  */
+export function registerPropertyTableCellComponents(
+  components: Record<string, PropertyTableCellComponent>
+): void {
+  Registry.getRegistry<PropertyTableCellComponent>('propertyTableCell').registerAll(components);
+}
+
+/**
+ * 获取属性类型对应的 PropertyTableCellComponent
+ *
+ * @param propertyType 属性类型
+ * @returns 对应的组件
+ */
+export function getPropertyTableCellComponent(propertyType: string): PropertyTableCellComponent {
+  return Registry.getRegistry<PropertyTableCellComponent>('propertyTableCell').get(propertyType, DefaultPropertyCell);
+}
+
+/**
+* 批量注册已应用筛选组件
+*
+* @param components 属性类型与组件的映射对象
+*/
+
 export function registerAppliedFilterComponents(
   components: Record<string, AppliedFilterComponent>
 ): void {
@@ -23,14 +45,14 @@ export function registerAppliedFilterComponents(
  * @param propertyType 属性类型
  * @returns 对应的组件
  */
+
 export function getAppliedFilterComponent(propertyType: string): AppliedFilterComponent {
   return Registry.getRegistry<AppliedFilterComponent>('appliedFilter').get(propertyType, DefaultAppliedFilter);
 }
 
-
 /**
  * 批量注册筛选构造器组件
- * 
+ *
  * @param components 属性类型与组件的映射对象
  */
 export function registerFilterConstructorComponents(
@@ -48,6 +70,7 @@ export function registerFilterConstructorComponents(
  * @param propertyType 属性类型
  * @returns 对应的组件
  */
+
 export function getFilterConstructorComponent(propertyType: string): FilterConstructorComponent {
   return Registry.getRegistry<FilterConstructorComponent>('filterConstructor').get(propertyType, DefaultFilterConstructorPanel);
 }

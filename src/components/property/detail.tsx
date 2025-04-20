@@ -33,7 +33,7 @@ import { getSimpleMinersList, getMinerStatusStyle, getMinerById } from '../../li
 import { useOrganization } from '@clerk/clerk-react';
 import Image from 'next/image';
 import { LoadingContainerOverlay } from '@/components/ui/overlay';
-import { UserDataContext } from '@/components/issue/IssuePage';
+import { UserDataContext } from '../issue/UserContext';
 import { getUser } from '@/lib/user/service';
 import './detail.css';
 

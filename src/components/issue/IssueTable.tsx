@@ -21,7 +21,7 @@ import { DataTableToolbar } from '@/components/shadcn/data-table/data-table-tool
 import { MdFilterList, MdClose } from 'react-icons/md';
 import './IssueTable.css';
 import { DataTableSortList } from '@/components/shadcn/data-table/data-table-sort-list';
-import { getAppliedFilterComponent, getFilterConstructorComponent } from '@/components/property/filter';
+import { getAppliedFilterComponent, getFilterConstructorComponent } from '@/components/property/registry-utils';
 
 export interface TableColumn {
     id: string;

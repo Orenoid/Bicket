@@ -8,9 +8,6 @@ export { SelectAppliedFilter } from './applied-filter/SelectAppliedFilter';
 export { TextAppliedFilter } from './applied-filter/TextAppliedFilter';
 export { UserAppliedFilter } from './applied-filter/UserAppliedFilter';
 
-export { registerAppliedFilterComponents } from './registry';
-export { getAppliedFilterComponent } from './registry';
-
 export { DefaultFilterConstructorPanel } from './filter-constructor/DefaultFilterConstructorPanel';
 export { IDFilterConstructorPanel } from './filter-constructor/IDFilterConstructorPanel';
 export { MinersFilterConstructorPanel } from './filter-constructor/MinersFilterConstructorPanel';
@@ -18,6 +15,3 @@ export { MultiSelectFilterConstructorPanel } from './filter-constructor/MultiSel
 export { SelectFilterConstructorPanel } from './filter-constructor/SelectFilterConstructorPanel';
 export { TextFilterConstructorPanel } from './filter-constructor/TextFilterConstructorPanel';
 export { UserFilterConstructorPanel } from './filter-constructor/UserFilterConstructorPanel';
-
-export { registerFilterConstructorComponents } from './registry';
-export { getFilterConstructorComponent } from './registry';

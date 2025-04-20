@@ -32,3 +32,21 @@ export interface FilterConstructorPanelProps {
  * 属性自定义筛选条件设置面板组件，可根据属性类型自定义筛选条件的设置方式和交互效果
  */
 export type FilterConstructorComponent = React.FC<FilterConstructorPanelProps>;
+
+
+export interface PropertyCellProps {
+    // 基础属性信息
+    propertyID: string; // 属性ID
+    propertyType: string; // 属性类型
+    propertyConfig?: Record<string, unknown>; // 属性配置信息
+
+
+    // 数据相关
+    value: unknown; // 属性值
+    issueId: string; // 所属issue的ID
+    rowData?: Record<string, unknown>; // 整行数据(可选，有些复杂单元格可能需要访问其他字段)
+}
+/**
+ * 表格单元格组件，用于自定义各个属性类型在表格中的展示效果
+ */
+export type PropertyTableCellComponent = React.FC<PropertyCellProps>;
