@@ -1,9 +1,12 @@
 import { ClerkProvider } from "@clerk/nextjs";
-import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import ClientSidebar from "./components/ClientSidebar";
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import ClientSidebar from "../components/ClientSidebar";
 import "./globals.css";
+import inittializeApp from "./init";
+
+inittializeApp();
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,19 +36,9 @@ export default function RootLayout({
             className={`${geistSans.variable} ${geistMono.variable} antialiased`}
           >
             <ClientSidebar />
-            {/* <header className="flex justify-end items-center p-4 gap-4 h-16">
-            <SignedOut>
-              <SignInButton />
-              <SignUpButton />
-            </SignedOut>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-          </header> */}
             <main className="transition-all duration-300 sidebar-margin h-screen">
               {children}
             </main>
-
           </body>
         </html>
       </ClerkProvider>

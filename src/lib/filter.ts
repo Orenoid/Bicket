@@ -1,4 +1,4 @@
-import { FilterCondition } from '@/app/property/types';
+import { FilterCondition } from '@/lib/property/types';
 
 
 // TODO tech dept AI 生成的一些代码不太合理，需要优化

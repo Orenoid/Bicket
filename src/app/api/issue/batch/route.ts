@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { batchCreateIssues, CreateIssueInput } from '@/app/issue/services/create';
+import { batchCreateIssues, CreateIssueInput } from '@/lib/issue/services/create';
 import { auth } from '@clerk/nextjs/server';
 
 export async function POST(req: NextRequest) {

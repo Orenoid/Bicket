@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { createIssue, CreateIssueInput } from '@/app/issue/services/create';
+import { createIssue, CreateIssueInput } from '@/lib/issue/services/create';
 import { auth } from '@clerk/nextjs/server';
 
 export async function POST(req: NextRequest) {

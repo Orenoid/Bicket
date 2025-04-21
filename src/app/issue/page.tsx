@@ -1,9 +1,9 @@
-import { prisma } from '@/app/lib/prisma';
-import { IssuePage, Issue, PropertyValue, PropertyDefinition } from './components/IssuePage';
-import { FilterCondition } from '@/app/property/types';
+import { prisma } from '@/lib/prisma';
+import { IssuePage, Issue, PropertyValue, PropertyDefinition } from '../../components/issue/IssuePage';
+import { FilterCondition } from '@/lib/property/types';
 import { Prisma } from '@prisma/client';
 import { auth } from '@clerk/nextjs/server';
-import { SystemPropertyId } from '@/app/property/constants';
+import { SystemPropertyId } from '@/lib/property/constants';
 import { deserializeSort, SortConfig } from '@/lib/sort-utils';
 import { deserializeFilters } from '@/lib/filter';
 
@@ -342,8 +342,6 @@ async function getIssues(
                         ORDER BY ${orderBy}
                         LIMIT ${pageSize}
                     `;
-
-                    console.log('执行查询SQL:', query); // 添加日志帮助调试
 
                     issues = await prisma.$queryRawUnsafe<{ id: string }[]>(query);
                 } else {
