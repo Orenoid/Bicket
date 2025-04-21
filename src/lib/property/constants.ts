@@ -54,6 +54,35 @@ export const PROPERTY_ID_TYPE_MAP = {
     [SystemPropertyId.REPORTER]: PropertyType.USER,
 };
 
+export const CAN_DISPLAY_IN_TABLE_PROPERTY_IDS: SystemPropertyId[] = [
+    SystemPropertyId.ID,
+    SystemPropertyId.TITLE,
+    SystemPropertyId.STATUS,
+    SystemPropertyId.PRIORITY,
+    SystemPropertyId.CATEGORY,
+    SystemPropertyId.DIAGNOSIS,
+    SystemPropertyId.MINERS,
+    SystemPropertyId.ASIGNEE,
+    SystemPropertyId.REPORTER,
+    SystemPropertyId.CREATED_AT,
+    SystemPropertyId.UPDATED_AT,
+];
+
+
+export const SORTABLE_PROPERTY_IDS: SystemPropertyId[] = [
+    SystemPropertyId.ID,
+    SystemPropertyId.TITLE,
+];
+
+export const FILTERABLE_PROPERTY_TYPES: PropertyType[] = [
+    PropertyType.ID,
+    PropertyType.TEXT,
+    PropertyType.SELECT,
+    PropertyType.MINERS,
+    PropertyType.USER,
+];
+
+
 /**
  * 属性操作类型常量
  */

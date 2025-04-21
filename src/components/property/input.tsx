@@ -1,6 +1,6 @@
 'use client';
 
-import { PropertyDefinition } from '@/components/issue/IssuePage';
+import { PropertyDefinition } from "@/lib/property/types";
 import { BlockTypeSelect, BoldItalicUnderlineToggles, CodeToggle, CreateLink, headingsPlugin, imagePlugin, InsertImage, linkDialogPlugin, linkPlugin, listsPlugin, ListsToggle, markdownShortcutPlugin, MDXEditor, quotePlugin, thematicBreakPlugin, toolbarPlugin } from '@mdxeditor/editor';
 import '@mdxeditor/editor/style.css';
 import React, { useEffect, useImperativeHandle, useState } from 'react';
@@ -127,8 +127,6 @@ export const TextareaPropertyInput = React.forwardRef<
     PropertyInputProps
 >((props, ref) => {
     const { propertyDefinition } = props;
-
-    // TODO BUG https://github.com/mdx-editor/editor/issues/305
 
     // 存储组件内部状态
     const [internalValue, setInternalValue] = useState(``);

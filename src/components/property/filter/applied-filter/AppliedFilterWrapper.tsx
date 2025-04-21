@@ -1,6 +1,6 @@
 'use client';
 
-import { PropertyDefinition } from '@/components/issue/IssuePage';
+import { PropertyDefinition } from "@/lib/property/types";
 import { FilterCondition } from '@/lib/property/types';
 import React from 'react';
 import { FiX } from 'react-icons/fi';

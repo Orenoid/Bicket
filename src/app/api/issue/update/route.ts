@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
 import { updateIssue } from '@/lib/issue/services/update';
 
-// 定义操作负载接口（纯 Map 结构）
 export type OperationPayload = Record<string, unknown>;
 
 // 定义请求参数接口

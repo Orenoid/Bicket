@@ -44,7 +44,7 @@ export async function DELETE(
 
     // 获取组织成员列表
     const { data: memberships } = await clerkClient.organizations.getOrganizationMembershipList({
-      organizationId, limit: 100 // TODO deal with pagination
+      organizationId, limit: 100
     });
     // 检查当前用户是否在组织成员列表中
     const isMember = memberships.some((membership: OrganizationMembership) => 
