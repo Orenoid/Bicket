@@ -5,7 +5,6 @@ import { SecondaryButton, ButtonGroup, LoadingButton } from '@/components/ui/but
 import { PropertyValue as InputPropertyValue, SelectPropertyInput, TextareaPropertyInput, TextPropertyInput, MinersPropertyInput, UserPropertyInput } from '@/components/property/input';
 import { SystemPropertyId } from '@/lib/property/constants';
 
-// 从IssuePage.tsx导入需要的接口
 export interface PropertyDefinition {
     id: string;
     name: string;
@@ -14,7 +13,7 @@ export interface PropertyDefinition {
 }
 
 /**
- * 新建issue面板组件
+ * 新建 issue 面板组件
  */
 export const CreateIssuePanel = ({ onClose, propertyDefinitions, onCreateSuccess }: {
     onClose: () => void;
@@ -23,7 +22,7 @@ export const CreateIssuePanel = ({ onClose, propertyDefinitions, onCreateSuccess
 }) => {
     // 添加 loading 状态
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
+
     // 存储属性组件引用，用于调用onSubmit方法
     const propertyInputRefs = useRef<Record<string, {
         onSubmit: () => { isValid: boolean; propertyValue: InputPropertyValue | null }
@@ -161,10 +160,6 @@ export const CreateIssuePanel = ({ onClose, propertyDefinitions, onCreateSuccess
                             propertyDefinition={propertyDefinitions.find(p => p.id === SystemPropertyId.DIAGNOSIS) as PropertyDefinition}
                             ref={(ref) => registerPropertyRef(SystemPropertyId.DIAGNOSIS, ref)}
                         />
-                        {/* <MultiSelectPropertyInput
-                            propertyDefinition={propertyDefinitions.find(p => p.id === SystemPropertyId.LABEL) as PropertyDefinition}
-                            ref={(ref) => registerPropertyRef(SystemPropertyId.LABEL, ref)}
-                        /> */}
                         <UserPropertyInput
                             propertyDefinition={propertyDefinitions.find(p => p.id === SystemPropertyId.ASIGNEE) as PropertyDefinition}
                             ref={(ref) => registerPropertyRef(SystemPropertyId.ASIGNEE, ref)}
