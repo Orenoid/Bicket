@@ -56,8 +56,3 @@ export function LoadingContainerOverlay() {
     </ContainerOverlay>
   );
 }
-
-
-/*
-  TODO tech dept 目前当屏幕中出现多个 overlay 时，z-index 的管理混乱，需要一个全局的管理器来分配 z-index
-*/

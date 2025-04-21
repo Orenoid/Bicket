@@ -1,6 +1,5 @@
 'use client';
 
-import { FilterOperator } from '@/lib/property/types';
 import { useState } from 'react';
 import { FilterConstructorComponent } from '../../type';
 
@@ -15,7 +14,7 @@ export const IDFilterConstructorPanel: FilterConstructorComponent = ({
     propertyDefinition, currentFilter, onApply, onCancel,
 }) => {
     // 初始化操作符和值
-    const [operator, setOperator] = useState<FilterOperator>(
+    const [operator, setOperator] = useState<string>(
         currentFilter?.operator || 'eq'
     );
     const [value, setValue] = useState<string>(
@@ -87,7 +86,7 @@ export const IDFilterConstructorPanel: FilterConstructorComponent = ({
             <div className="mb-3">
                 <select
                     value={operator}
-                    onChange={(e) => setOperator(e.target.value as FilterOperator)}
+                    onChange={(e) => setOperator(e.target.value as string)}
                     className="w-full px-2 py-1 text-sm border border-gray-200 rounded bg-white"
                 >
                     {operatorOptions.map(op => (

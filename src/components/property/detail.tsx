@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { PropertyDefinition } from '@/components/issue/IssuePage';
+import { PropertyDefinition } from "@/lib/property/types";
 import { createSetOperation, createRemoveOperation, createUpdateOperation } from '../../lib/property/update-operations';
 import { MdCancel, MdCheckBox, MdDateRange, MdLink, MdNumbers, MdPerson, MdSubject, MdTextFields } from 'react-icons/md';
 import { BiSelectMultiple } from 'react-icons/bi';
@@ -9,22 +9,22 @@ import { HiOutlineServer } from 'react-icons/hi';
 import { TbCheckbox } from 'react-icons/tb';
 import { PropertyType } from '../../lib/property/constants';
 import {
-    MDXEditor,
-    headingsPlugin,
-    listsPlugin,
-    quotePlugin,
-    thematicBreakPlugin,
-    markdownShortcutPlugin,
-    toolbarPlugin,
-    BoldItalicUnderlineToggles,
-    linkPlugin,
-    linkDialogPlugin,
-    CreateLink,
-    CodeToggle,
-    ListsToggle,
-    BlockTypeSelect,
-    imagePlugin,
-    InsertImage
+  MDXEditor,
+  headingsPlugin,
+  listsPlugin,
+  quotePlugin,
+  thematicBreakPlugin,
+  markdownShortcutPlugin,
+  toolbarPlugin,
+  BoldItalicUnderlineToggles,
+  linkPlugin,
+  linkDialogPlugin,
+  CreateLink,
+  CodeToggle,
+  ListsToggle,
+  BlockTypeSelect,
+  imagePlugin,
+  InsertImage
 } from '@mdxeditor/editor';
 import '@mdxeditor/editor/style.css';
 import { PrimaryButton, SecondaryButton, ButtonGroup } from '@/components/ui/buttons';

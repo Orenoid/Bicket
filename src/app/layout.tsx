@@ -29,19 +29,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <NuqsAdapter>
-      <ClerkProvider>
-        <html lang="en">
-          <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-          >
+    <ClerkProvider>
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          <NuqsAdapter>
             <ClientSidebar />
             <main className="transition-all duration-300 sidebar-margin h-screen">
               {children}
             </main>
-          </body>
-        </html>
-      </ClerkProvider>
-    </NuqsAdapter>
+          </NuqsAdapter>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

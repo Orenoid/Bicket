@@ -1,6 +1,6 @@
 import { FilterCondition } from '@/lib/property/types';
 import React from 'react';
-import { PropertyDefinition } from '../issue/IssuePage';
+import { PropertyDefinition } from "@/lib/property/types";
 
 
 export interface AppliedFilterProps {

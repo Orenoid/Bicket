@@ -2,8 +2,6 @@ import { Prisma } from '@prisma/client';
 import { property } from '@prisma/client';
 import { PropertyType } from './constants';
 
-// TODO tech dept 现在很多属性在为空时，会产生 null value 的数据库记录，不合理
-
 /**
  * 验证结果接口
  */

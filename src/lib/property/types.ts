@@ -1,28 +1,49 @@
-export type FilterOperator =
+export enum CommonFilterOperator {
     // 文本操作符
-    'eq' | 'contains' | 'startsWith' | 'endsWith' | 'regex' |
+    Eq = 'eq',
+    Contains = 'contains',
+    StartsWith = 'startsWith',
+    EndsWith = 'endsWith',
+    Regex = 'regex',
     // 数字操作符
-    'gt' | 'gte' | 'lt' | 'lte' | 'between' |
+    Gt = 'gt',
+    Gte = 'gte',
+    Lt = 'lt',
+    Lte = 'lte',
+    Between = 'between',
     // 通用操作符
-    'in' | 'notIn' | 'isNull' | 'isNotNull';/**
- * 基础筛选条件接口
- */
+    In = 'in',
+    NotIn = 'notIn',
+    IsNull = 'isNull',
+    IsNotNull = 'isNotNull'
+}
+
 
 export interface FilterCondition {
     propertyId: string; // 要筛选的属性ID
     propertyType: string; // 属性类型
-    operator: FilterOperator; // 筛选操作符
-    value: unknown; // 筛选值
+    operator: string; // 筛选操作符
+    value: unknown | undefined; // 筛选值
 
     // 附加配置，如大小写敏感等
     config?: Record<string, unknown>;
 }
-/**
- * 复合筛选条件接口，用于组合多个条件
- */
 
-export interface CompositeFilterCondition {
-    logicOperator: 'and' | 'or'; // 逻辑操作符
-    conditions: (FilterCondition | CompositeFilterCondition)[]; // 子条件列表
+
+export interface PropertyValue {
+    property_id: string;
+    value: unknown;
+}
+
+export interface Issue {
+    issue_id: string;
+    property_values: PropertyValue[];
+}
+
+export interface PropertyDefinition {
+    id: string;
+    name: string;
+    type: string;
+    config?: Record<string, unknown>;
 }
 
