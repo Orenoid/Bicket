@@ -1,13 +1,10 @@
 import { Prisma, property } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { PropertyProcessorFactory } from '@/lib/property/add-property-value';
+import { PropertyProcessorFactory } from '@/lib/property/create-issue-processor/add-property-value';
 import { SystemPropertyId } from '@/lib/property/constants';
 import { CounterService } from '@/lib/counter';
 import { PropertyType } from '@/lib/property/constants';
 
-/**
- * 创建 issue 的请求参数接口
- */
 export interface CreateIssueInput {
   // 所属工作区ID
   workspaceId: string;
@@ -18,9 +15,6 @@ export interface CreateIssueInput {
   }[];
 }
 
-/**
- * 创建 issue 的处理结果
- */
 export interface CreateIssueResult {
   issueId: string;
   success: boolean;

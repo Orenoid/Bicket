@@ -9,22 +9,22 @@ import { HiOutlineServer } from 'react-icons/hi';
 import { TbCheckbox } from 'react-icons/tb';
 import { PropertyType } from '../../lib/property/constants';
 import {
-  MDXEditor,
-  headingsPlugin,
-  listsPlugin,
-  quotePlugin,
-  thematicBreakPlugin,
-  markdownShortcutPlugin,
-  toolbarPlugin,
-  BoldItalicUnderlineToggles,
-  linkPlugin,
-  linkDialogPlugin,
-  CreateLink,
-  CodeToggle,
-  ListsToggle,
-  BlockTypeSelect,
-  imagePlugin,
-  InsertImage
+    MDXEditor,
+    headingsPlugin,
+    listsPlugin,
+    quotePlugin,
+    thematicBreakPlugin,
+    markdownShortcutPlugin,
+    toolbarPlugin,
+    BoldItalicUnderlineToggles,
+    linkPlugin,
+    linkDialogPlugin,
+    CreateLink,
+    CodeToggle,
+    ListsToggle,
+    BlockTypeSelect,
+    imagePlugin,
+    InsertImage
 } from '@mdxeditor/editor';
 import '@mdxeditor/editor/style.css';
 import { PrimaryButton, SecondaryButton, ButtonGroup } from '@/components/ui/buttons';
@@ -1434,6 +1434,5 @@ export const PROPERTY_DETAIL_COMPONENTS: Record<string, React.FC<PropertyDetailP
     [PropertyType.MINERS]: MinersPropertyDetail,
     [PropertyType.DATETIME]: DatetimePropertyDetail,
     [PropertyType.USER]: UserPropertyDetail,
-    // 可以扩展更多属性类型...
 };
 

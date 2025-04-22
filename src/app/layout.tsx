@@ -4,9 +4,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import ClientSidebar from "../components/ClientSidebar";
 import "./globals.css";
-import inittializeApp from "./init";
+import { Toaster } from "sonner";
 
-inittializeApp();
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,6 +38,7 @@ export default function RootLayout({
             <main className="transition-all duration-300 sidebar-margin h-screen">
               {children}
             </main>
+            <Toaster />
           </NuqsAdapter>
         </body>
       </html>
