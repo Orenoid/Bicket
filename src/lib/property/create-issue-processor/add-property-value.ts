@@ -1,18 +1,12 @@
 import { Prisma } from '@prisma/client';
 import { property } from '@prisma/client';
-import { PropertyType } from './constants';
+import { PropertyType } from '../constants';
 
-/**
- * 验证结果接口
- */
 export interface ValidationResult {
   valid: boolean;
   errors?: string[];
 }
 
-/**
- * 转换为数据库插入格式的结果
- */
 export interface DbInsertData {
   singleValues?: Omit<Prisma.property_single_valueCreateManyInput, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>[];
   multiValues?: Omit<Prisma.property_multi_valueCreateManyInput, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>[];
@@ -658,9 +652,6 @@ export class UserPropertyProcessor extends BasePropertyProcessor {
       return { valid: true };
     }
 
-    // TODO: 实现用户存在性校验，验证用户ID是否存在于系统中
-    // 这通常需要调用 Clerk API 或检查数据库中的用户记录
-    
     return { valid: true };
   }
 

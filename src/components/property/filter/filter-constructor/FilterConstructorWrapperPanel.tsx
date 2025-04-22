@@ -14,8 +14,7 @@ export function FilterConstructorWrapperPanel(
     const { onCancel } = props;
 
     return (
-        // 阻止冒泡，防止触发 applied-filter 的点击事件（在编辑状态下， panel 会作为 applied-filter 的子组件）
-        <div className={`${props.className}`} onClick={(e) => { e.stopPropagation(); }}>
+        <div className={`${props.className}`} onClick={ (e) => { console.log('click'); e.stopPropagation(); }}>
             <TransparentOverlay onClick={onCancel} />
             <ConstructorComponent {...props} />
         </div>

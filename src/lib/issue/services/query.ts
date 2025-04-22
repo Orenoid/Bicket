@@ -1,129 +1,8 @@
 import { Prisma } from '@prisma/client';
-import prisma from '../prisma';
-import { SystemPropertyId } from '../property/constants';
-import { FilterCondition, Issue, PropertyDefinition, PropertyValue } from '../property/types';
+import prisma from '../../prisma';
+import { SystemPropertyId } from '../../property/constants';
+import { FilterCondition, Issue, PropertyDefinition, PropertyValue } from '../../property/types';
 
-
-
-export async function getPropertyDefinitions(): Promise<PropertyDefinition[]> {
-    try {
-        // 查询所有属性定义
-        const properties = await prisma.property.findMany({
-            where: {
-                deletedAt: null
-            },
-            select: {
-                id: true,
-                name: true,
-                type: true,
-                config: true
-            }
-        });
-
-        // 转换为前端需要的格式
-        const result = properties.map(prop => ({
-            id: prop.id,
-            name: prop.name,
-            type: prop.type,
-            config: prop.config as Record<string, unknown> | undefined
-        }));
-
-        // 定义属性的优先级顺序
-        // TODO tech dept shadcn table 暂不支持配置 column 顺序，手动指定顺序
-        const priorityOrder: Record<string, number> = {
-            [SystemPropertyId.ID]: 1, // 工单 ID
-            [SystemPropertyId.TITLE]: 2, // 工单标题
-            [SystemPropertyId.STATUS]: 3, // 工单状态
-            [SystemPropertyId.PRIORITY]: 4, // 工单优先级
-            [SystemPropertyId.CATEGORY]: 5, // 工单类别
-            [SystemPropertyId.DIAGNOSIS]: 6, // 工单诊断
-            [SystemPropertyId.MINERS]: 7, // 矿机列表
-            [SystemPropertyId.ASIGNEE]: 8, // 负责人
-            [SystemPropertyId.REPORTER]: 9, // 报告人
-            [SystemPropertyId.CREATED_AT]: 10, // 创建时间
-            [SystemPropertyId.UPDATED_AT]: 11, // 更新时间
-        };
-
-        // 根据优先级顺序排序
-        result.sort((a, b) => {
-            const priorityA = priorityOrder[a.id] || 999; // 没有指定优先级的放到最后
-            const priorityB = priorityOrder[b.id] || 999;
-            return priorityA - priorityB;
-        });
-
-        return result;
-    } catch (error) {
-        console.error('获取属性定义失败:', error);
-        throw new Error('获取属性定义失败');
-    }
-}
-// 不带筛选条件的工单查询
-
-export async function getIssuesWithoutFilter(
-    baseWhere: Prisma.issueWhereInput,
-    page: number,
-    pageSize: number,
-    orderBy?: string | undefined
-): Promise<{ issues: Issue[]; total: number; }> {
-    // 查询符合条件的工单总数
-    const total = await prisma.issue.count({
-        where: baseWhere
-    });
-
-    // 计算分页偏移量
-    const skip = (page - 1) * pageSize;
-
-    // 查询所有工单
-    let issues: { id: string; }[];
-
-    if (orderBy) {
-        // 使用原始SQL查询进行复杂排序
-        // 先生成基本条件
-        const whereConditions = [];
-
-        if (baseWhere.deletedAt === null) {
-            whereConditions.push(`issue."deletedAt" IS NULL`);
-        }
-
-        if (baseWhere.workspace_id) {
-            whereConditions.push(`issue."workspace_id" = '${baseWhere.workspace_id}'`);
-        }
-
-        const whereClause = whereConditions.length > 0
-            ? `WHERE ${whereConditions.join(' AND ')}`
-            : '';
-
-        // 执行原始SQL查询
-        const query = `
-            SELECT issue.id 
-            FROM issue 
-            ${whereClause}
-            ORDER BY ${orderBy}
-            LIMIT ${pageSize} OFFSET ${skip}
-        `;
-
-        issues = await prisma.$queryRawUnsafe<{ id: string; }[]>(query);
-    } else {
-        // 使用默认排序
-        issues = await prisma.issue.findMany({
-            where: baseWhere,
-            select: {
-                id: true
-            },
-            orderBy: [{ createdAt: 'desc' }], // 默认按创建时间倒序排序
-            skip,
-            take: pageSize
-        });
-    }
-
-    if (issues.length === 0) {
-        return { issues: [], total };
-    }
-
-    // 查询属性值和构建返回数据
-    return await getIssuesWithValues(issues, total);
-}
-// 从数据库中获取工单数据
 
 export async function getIssues(
     filters: FilterCondition[] | undefined,
@@ -306,6 +185,123 @@ export async function getIssues(
     }
 }
 
+export async function getPropertyDefinitions(): Promise<PropertyDefinition[]> {
+    try {
+        // 查询所有属性定义
+        const properties = await prisma.property.findMany({
+            where: {
+                deletedAt: null
+            },
+            select: {
+                id: true,
+                name: true,
+                type: true,
+                config: true
+            }
+        });
+
+        // 转换为前端需要的格式
+        const result = properties.map(prop => ({
+            id: prop.id,
+            name: prop.name,
+            type: prop.type,
+            config: prop.config as Record<string, unknown> | undefined
+        }));
+
+        // 定义属性的优先级顺序
+        // TODO tech dept shadcn table 暂不支持配置 column 顺序，手动指定顺序
+        const priorityOrder: Record<string, number> = {
+            [SystemPropertyId.ID]: 1, // 工单 ID
+            [SystemPropertyId.TITLE]: 2, // 工单标题
+            [SystemPropertyId.STATUS]: 3, // 工单状态
+            [SystemPropertyId.PRIORITY]: 4, // 工单优先级
+            [SystemPropertyId.CATEGORY]: 5, // 工单类别
+            [SystemPropertyId.DIAGNOSIS]: 6, // 工单诊断
+            [SystemPropertyId.MINERS]: 7, // 矿机列表
+            [SystemPropertyId.ASIGNEE]: 8, // 负责人
+            [SystemPropertyId.REPORTER]: 9, // 报告人
+            [SystemPropertyId.CREATED_AT]: 10, // 创建时间
+            [SystemPropertyId.UPDATED_AT]: 11, // 更新时间
+        };
+
+        // 根据优先级顺序排序
+        result.sort((a, b) => {
+            const priorityA = priorityOrder[a.id] || 999; // 没有指定优先级的放到最后
+            const priorityB = priorityOrder[b.id] || 999;
+            return priorityA - priorityB;
+        });
+
+        return result;
+    } catch (error) {
+        console.error('获取属性定义失败:', error);
+        throw new Error('获取属性定义失败');
+    }
+}
+
+export async function getIssuesWithoutFilter(
+    baseWhere: Prisma.issueWhereInput,
+    page: number,
+    pageSize: number,
+    orderBy?: string | undefined
+): Promise<{ issues: Issue[]; total: number; }> {
+    // 查询符合条件的工单总数
+    const total = await prisma.issue.count({
+        where: baseWhere
+    });
+
+    // 计算分页偏移量
+    const skip = (page - 1) * pageSize;
+
+    // 查询所有工单
+    let issues: { id: string; }[];
+
+    if (orderBy) {
+        // 使用原始SQL查询进行复杂排序
+        // 先生成基本条件
+        const whereConditions = [];
+
+        if (baseWhere.deletedAt === null) {
+            whereConditions.push(`issue."deletedAt" IS NULL`);
+        }
+
+        if (baseWhere.workspace_id) {
+            whereConditions.push(`issue."workspace_id" = '${baseWhere.workspace_id}'`);
+        }
+
+        const whereClause = whereConditions.length > 0
+            ? `WHERE ${whereConditions.join(' AND ')}`
+            : '';
+
+        // 执行原始SQL查询
+        const query = `
+            SELECT issue.id 
+            FROM issue 
+            ${whereClause}
+            ORDER BY ${orderBy}
+            LIMIT ${pageSize} OFFSET ${skip}
+        `;
+
+        issues = await prisma.$queryRawUnsafe<{ id: string; }[]>(query);
+    } else {
+        // 使用默认排序
+        issues = await prisma.issue.findMany({
+            where: baseWhere,
+            select: {
+                id: true
+            },
+            orderBy: [{ createdAt: 'desc' }], // 默认按创建时间倒序排序
+            skip,
+            take: pageSize
+        });
+    }
+
+    if (issues.length === 0) {
+        return { issues: [], total };
+    }
+
+    // 查询属性值和构建返回数据
+    return await getIssuesWithValues(issues, total);
+}
 
 export async function getIssuesWithValues(issues: { id: string; }[], total: number): Promise<{ issues: Issue[]; total: number; }> {
     // 批量查询所有工单的单值属性
@@ -406,11 +402,10 @@ export async function getIssuesWithValues(issues: { id: string; }[], total: numb
     return { issues: issueData, total };
 }
 
-export interface SortConfig {
+interface SortConfig {
     id: string;    // 排序的属性ID
     desc: boolean; // 是否降序排序
 }
-
 
 /**
  * 将排序配置转换为Prisma原始SQL

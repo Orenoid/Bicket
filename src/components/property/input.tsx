@@ -900,24 +900,6 @@ export const UserPropertyInput = React.forwardRef<
 
 UserPropertyInput.displayName = 'UserPropertyInput';
 
-// 属性输入组件映射表
-export const PROPERTY_INPUT_COMPONENTS: Record<
-    string,
-    React.ForwardRefExoticComponent<
-        PropertyInputProps & React.RefAttributes<{
-            onSubmit: () => { isValid: boolean; propertyValue: PropertyValue | null }
-        }>
-    >
-> = {
-    [PropertyType.TEXT]: TextPropertyInput,
-    [PropertyType.RICH_TEXT]: TextareaPropertyInput,
-    [PropertyType.SELECT]: SelectPropertyInput,
-    [PropertyType.MULTI_SELECT]: MultiSelectPropertyInput,
-    [PropertyType.MINERS]: MinersPropertyInput,
-    [PropertyType.USER]: UserPropertyInput,
-    // 可以扩展更多属性类型...
-}; 
-
 // 属性类型图标映射表
 export const PROPERTY_TYPE_ICONS: Record<string, React.ReactNode> = {
     [PropertyType.ID]: <MdNumbers size={16} className="mr-1 text-gray-500" />,

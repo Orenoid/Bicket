@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { IssueTable } from '@/components/issue/IssueTable';
 import { loadSearchParams } from '@/lib/issue/validation';
-import { buildOrderByParams, getPropertyDefinitions, getIssues } from '@/lib/issue/query';
+import { buildOrderByParams, getPropertyDefinitions, getIssues } from '@/lib/issue/services/query';
 
 export default async function Page({ searchParams }: {
     searchParams: Promise<{ filters?: string, page?: string, perPage?: string, sort?: string }>
