@@ -82,6 +82,16 @@ export const FILTERABLE_PROPERTY_TYPES: PropertyType[] = [
     PropertyType.USER,
 ];
 
+export const NUMBER_VALUE_TYPES = [
+    PropertyType.ID,
+    PropertyType.NUMBER,
+];
+
+export const TEXT_VALUE_TYPES = [
+    PropertyType.TEXT,
+    PropertyType.RICH_TEXT,
+    PropertyType.SELECT,
+];
 
 /**
  * 属性操作类型常量

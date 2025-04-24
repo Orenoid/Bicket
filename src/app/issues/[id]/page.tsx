@@ -10,8 +10,6 @@ import { SystemPropertyId } from "@/lib/property/constants";
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
 
-    // TODO 校验用户权限
-
     const { id } = await params;
     const propertyDefinitions = await getPropertyDefinitions();
     const issue = await getIssueByID(id);

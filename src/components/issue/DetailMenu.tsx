@@ -16,21 +16,15 @@ import {
     DropdownMenuTrigger
 } from "@/components/shadcn/ui/dropdown-menu";
 import { Loader2 } from "lucide-react";
-import { useActionState, useEffect } from "react";
+import { useActionState } from "react";
 import { MdMoreHoriz } from "react-icons/md";
 import { RiDeleteBinLine } from "react-icons/ri";
-import { toast } from "sonner";
 import { deleteIssueAction } from "./actions";
 
 export default function DetailMoreMenu({ issueID }: { issueID: string }) {
 
     const deleteIssueWithID = deleteIssueAction.bind(null, issueID);
-    const [actionResult, formAction, pending] = useActionState(deleteIssueWithID, { success: true, message: '' });
-    useEffect(() => {
-        if (!actionResult.success) {
-            toast(actionResult.message)
-        }
-    }, [actionResult]);
+    const [{}, formAction, pending] = useActionState(deleteIssueWithID, { success: true, message: '' });
 
     return <>
         <Dialog modal={false}> {/* 必须设置为 false，否则弹窗关闭后会导致页面无法交互 https://github.com/shadcn-ui/ui/issues/468 */}

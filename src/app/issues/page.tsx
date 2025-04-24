@@ -1,7 +1,7 @@
-import { auth } from '@clerk/nextjs/server';
 import { IssueTable } from '@/components/issue/IssueTable';
+import { getIssues, getPropertyDefinitions } from '@/lib/issue/services/query';
 import { loadSearchParams } from '@/lib/issue/validation';
-import { buildOrderByParams, getPropertyDefinitions, getIssues } from '@/lib/issue/services/query';
+import { auth } from '@clerk/nextjs/server';
 
 export default async function Page({ searchParams }: {
     searchParams: Promise<{ filters?: string, page?: string, perPage?: string, sort?: string }>
@@ -14,10 +14,9 @@ export default async function Page({ searchParams }: {
         throw new Error('You are not in any workspace, please select a workspace or create one first.');
     }
 
-    const orderBy = buildOrderByParams(sort || []);
     const [propertyDefinitions, issuesResult] = await Promise.all([
         getPropertyDefinitions(),
-        getIssues(filters, orgId.toString(), page, perPage, orderBy)
+        getIssues(filters, orgId.toString(), page, perPage, sort || [])
     ]);
     const totalPages = Math.ceil(issuesResult.total / perPage);
 

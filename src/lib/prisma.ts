@@ -17,8 +17,7 @@ const prismaClientSingleton = () => {
         url: process.env.DATABASE_URL,
       },
     },
-    // 可选: 配置连接池设置
-    log: ['query', 'error', 'warn'],
+    log: ['error', 'warn'],
   });
 };
 
