@@ -1,5 +1,6 @@
-import React from 'react';
-import { AiOutlineLoading3Quarters } from 'react-icons/ai';
+import { cn } from "@/lib/shadcn/utils";
+import React from "react";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 interface OverlayProps {
   children: React.ReactNode;
@@ -18,30 +19,34 @@ export const Overlay: React.FC<OverlayProps> = ({ children, onClose }) => {
 };
 
 export function SemiTransparentOverlay({ onClick }: { onClick: () => void }) {
-  return <div className="fixed inset-0 bg-black opacity-50 z-40" onClick={onClick}></div>
+  return (
+    <div
+      className="fixed inset-0 bg-black opacity-50 z-40"
+      onClick={onClick}
+    ></div>
+  );
 }
 
 export function TransparentOverlay({ onClick }: { onClick: () => void }) {
-  return <div className="fixed inset-0 bg-transparent z-40" onClick={() => { onClick() }}></div>
+  return (
+    <div
+      className="fixed inset-0 bg-transparent z-40 cursor-default"
+      onClick={onClick}
+    ></div>
+  );
 }
 
-/**
- * 容器 Overlay，只覆盖父元素的范围（父元素需要设置为 relative）
- */
 export function ContainerOverlay({
   onClick,
   className = "bg-black opacity-50",
-  children
+  children,
 }: {
-  onClick?: () => void,
-  className?: string,
-  children?: React.ReactNode
+  onClick?: () => void;
+  className?: string;
+  children?: React.ReactNode;
 }) {
   return (
-    <div
-      className={`absolute inset-0 z-50 ${className}`}
-      onClick={onClick}
-    >
+    <div className={cn("absolute inset-0 z-50", className)} onClick={onClick}>
       {children}
     </div>
   );
@@ -56,8 +61,3 @@ export function LoadingContainerOverlay() {
     </ContainerOverlay>
   );
 }
-
-
-/*
-  TODO tech dept 目前当屏幕中出现多个 overlay 时，z-index 的管理混乱，需要一个全局的管理器来分配 z-index
-*/

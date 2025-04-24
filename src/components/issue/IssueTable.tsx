@@ -1,396 +1,179 @@
-'use client';
+"use client";
 
-import { useMemo, useState, useEffect } from 'react';
-import React from 'react';
+import { useDataTable } from "@/hooks/use-data-table";
+import { useUserData } from "@/hooks/use-user-data";
 import {
-    Column,
-    ColumnDef,
-    Row
-} from '@tanstack/react-table';
-import { SystemPropertyId } from '@/lib/property/constants';
-import { useDataTable } from '@/hooks/use-data-table';
-import { DataTable } from '@/components/shadcn/data-table/data-table';
-import { DataTableColumnHeader } from '@/components/shadcn/data-table/data-table-column-header';
-import { DropDownMenuV2 } from '@/components/ui/dropdownMenu';
-import { FilterConstructorWrapperPanel } from '../property/filter/filter-constructor/FilterConstructorWrapperPanel';
-import { AppliedFilterWrapper } from '../property/filter/applied-filter/AppliedFilterWrapper';
-import { FilterCondition } from '@/lib/property/types';
-import { PropertyType } from '@/lib/property/constants';
+  CAN_DISPLAY_IN_TABLE_PROPERTY_IDS,
+  SORTABLE_PROPERTY_IDS,
+  SystemPropertyId,
+} from "@/lib/property/constants";
+import { Issue, PropertyDefinition } from "@/lib/property/types";
+import { Column, ColumnDef, Row, Table } from "@tanstack/react-table";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { MdAdd } from "react-icons/md";
+import { getPropertyTableCellComponent } from "../property/registry-utils";
+import { DataTableColumnHeader } from "../shadcn/data-table/data-table-column-header";
+import { DataTableSortList } from "../shadcn/data-table/data-table-sort-list";
+import { DataTableToolbar } from "../shadcn/data-table/data-table-toolbar";
+import { Button } from "../shadcn/ui/button";
+import { CreateIssueModal } from "./CreateIssueModal";
+import "./IssueTable.css";
+import { UserDataContext } from "./UserContext";
+import FiltersToolBar from "./FiltersToolBar";
 
-import { DataTableToolbar } from '@/components/shadcn/data-table/data-table-toolbar';
-import { MdFilterList, MdClose } from 'react-icons/md';
-import './IssueTable.css';
-import { DataTableSortList } from '@/components/shadcn/data-table/data-table-sort-list';
-import { getAppliedFilterComponent, getFilterConstructorComponent } from '@/components/property/registry-utils';
+// 如果启用了 ssr，DataTable 在 hydration 之前会显示原始的数据库数据，观感反而不好，
+// 所以改成动态导入，若追求响应速度，再考虑启用 ssr
+const DataTable = dynamic(
+  () => import("../shadcn/data-table/data-table").then((mod) => mod.DataTable),
+  { ssr: false },
+);
 
-export interface TableColumn {
-    id: string;
-    title: string;
-    width?: number;
-}
-
-// 属性定义接口
-export interface PropertyDefinition {
-    id: string;
-    name: string;
-    type: string;
-    config?: Record<string, unknown>;
+interface TableColumn {
+  id: string;
+  title: string;
+  width?: number;
 }
 
 export interface IssueTableProps {
-    columns: TableColumn[];
-    data: Record<string, unknown>[];
-    renderHeader?: (column: TableColumn) => React.ReactNode;
-    renderCell?: (column: TableColumn, rowData: Record<string, unknown>, rowIndex: number) => React.ReactNode;
-    onRowClick?: (rowData: Record<string, unknown>) => void;
-    // 新增：筛选器相关属性
-    propertyDefinitions: PropertyDefinition[];
-    activeFilters?: FilterCondition[];
-    onFilterChange?: (filters: FilterCondition[]) => void;
-    pageCount?: number; // 总页数
+  issues: Issue[]; // 符合筛选条件的 issue 列表，表格数据
+  propertyDefinitions: PropertyDefinition[]; // 属性定义列表，用于表头
+  pageCount: number; // 符合筛选条件的 issue 的总页数，供分页组件使用
 }
 
-// 表格框架组件
-export const IssueTable: React.FC<IssueTableProps> = ({
-    columns,
-    data,
-    renderCell = () => <span></span>,
-    onRowClick,
-    propertyDefinitions = [],
-    activeFilters = [],
-    onFilterChange,
-    pageCount = 1, // 默认为1页
-}) => {
-    // 过滤掉描述属性和 label 属性属性
-    const filteredColumns = useMemo(() => {
-        return columns.filter(column => column.id !== SystemPropertyId.DESCRIPTION && column.id !== SystemPropertyId.LABEL);
-    }, [columns]);
+export function IssueTable({
+  issues,
+  propertyDefinitions,
+  pageCount,
+}: IssueTableProps) {
+  const [showCreateIssueModal, setShowCreateIssueModal] = useState(false);
 
-    // 筛选器相关状态
-    const [selectedProperty, setSelectedProperty] = useState<PropertyDefinition | null>(null);
-    const [localActiveFilters, setLocalActiveFilters] = useState<FilterCondition[]>(activeFilters);
-    // 添加状态跟踪哪个过滤器正在被编辑
-    const [editingFilter, setEditingFilter] = useState<string | null>(null);
+  const columns = useMemo<TableColumn[]>(
+    () =>
+      propertyDefinitions
+        .map((prop) => ({ id: prop.id, title: prop.name }))
+        .filter((column) =>
+          CAN_DISPLAY_IN_TABLE_PROPERTY_IDS.includes(
+            column.id as SystemPropertyId,
+          ),
+        ),
+    [propertyDefinitions],
+  );
 
-    // 当父组件的 activeFilters 变化时，更新本地状态
-    useEffect(() => {
-        setLocalActiveFilters(activeFilters);
-    }, [activeFilters]);
+  // 提取 issue 列表中涉及的用户，批量预加载
+  const userDataContextValue = useUserData(issues, propertyDefinitions);
 
-    // 当本地筛选条件变化并且有回调函数时，通知父组件
-    useEffect(() => {
-        if (onFilterChange) {
-            onFilterChange(localActiveFilters);
-        }
-    }, [localActiveFilters, onFilterChange]);
+  // 把业务定义的 columns 转换为 TanStack Table 的 ColumnDef
+  const tanstackColumns = useMemo<ColumnDef<Issue>[]>(() => {
+    const renderCell = (column: TableColumn, issue: Issue) => {
+      const propertyValue = issue.property_values.find(
+        (p) => p.property_id === column.id,
+      );
+      if (!propertyValue) return "";
+      const propertyDef = propertyDefinitions.find((p) => p.id === column.id);
+      if (!propertyDef) return "";
 
-
-    // 筛选条件应用回调
-    const handleFilterApply = (filter: FilterCondition | null) => {
-        if (filter) {
-            // 如果已有同一属性的筛选条件，则替换它
-            const existingFilterIndex = localActiveFilters.findIndex(f => f.propertyId === filter.propertyId);
-            if (existingFilterIndex >= 0) {
-                const newFilters = [...localActiveFilters];
-                newFilters[existingFilterIndex] = filter;
-                setLocalActiveFilters(newFilters);
-            } else {
-                // 否则添加新的筛选条件
-                setLocalActiveFilters([...localActiveFilters, filter]);
-            }
-        }
-        setSelectedProperty(null); // 关闭筛选面板
-        setEditingFilter(null); // 关闭编辑面板
+      // 从工厂方法中获取对应的单元格组件
+      const CellComponent = getPropertyTableCellComponent(propertyDef.type);
+      return (
+        <UserDataContext.Provider value={userDataContextValue}>
+          <CellComponent
+            propertyID={propertyValue.property_id}
+            propertyType={propertyDef.type}
+            value={propertyValue.value}
+            issueId={String(issue.issue_id)}
+            propertyConfig={propertyDef.config}
+            rowData={issue as unknown as Record<string, unknown>}
+          />
+        </UserDataContext.Provider>
+      );
     };
 
-    // 筛选条件取消回调
-    const handleFilterCancel = () => {
-        setSelectedProperty(null); // 关闭筛选面板
-        setEditingFilter(null); // 关闭编辑面板
-    };
-
-    // 移除筛选条件
-    const handleRemoveFilter = (filterId: string) => {
-        setLocalActiveFilters(localActiveFilters.filter(f => f.propertyId !== filterId));
-    };
-
-    // 清除所有筛选条件
-    const handleResetAllFilters = () => {
-        setLocalActiveFilters([]);
-        setSelectedProperty(null);
-        setEditingFilter(null);
-    };
-
-    // 获取当前属性的筛选条件
-    const getCurrentFilter = (propertyId: string): FilterCondition | null => {
-        return localActiveFilters.find(f => f.propertyId === propertyId) || null;
-    };
-
-    // 获取属性定义
-    const getPropertyDefinition = (propertyId: string): PropertyDefinition | null => {
-        return propertyDefinitions.find(p => p.id === propertyId) || null;
-    };
-
-    // 筛选属性菜单项
-    const filterMenuItems = propertyDefinitions
-        // TODO: 暂不支持时间类型和富文本类型的筛选
-        .filter(prop => prop.type !== PropertyType.DATETIME && prop.type !== PropertyType.RICH_TEXT)
-        // 过滤掉已经应用过滤条件的属性
-        .filter(prop => !localActiveFilters.some(filter => filter.propertyId === prop.id))
-        .map(prop => ({
-            label: (
-                <div className="flex items-center">
-                    <span>{prop.name}</span>
-                </div>
-            ),
-            onClick: () => {
-                setSelectedProperty(prop);
-            }
-        }));
-
-    // 自定义筛选按钮
-    const FilterButton = (
-        <div
-            className="flex items-center text-sm text-gray-700"
-        >
-            <MdFilterList size={16} className={`${localActiveFilters.length === 0 ? "mr-2" : ""} text-gray-500`} />
-            {localActiveFilters.length === 0 && <span>Filter</span>}
-        </div>
-    );
-
-    // 渲染已应用的筛选条件
-    const renderAppliedFilters = () => {
-        return localActiveFilters.map(filter => {
-            const propertyDef = getPropertyDefinition(filter.propertyId);
-            if (!propertyDef) return null;
-
-            // 使用新的工厂方法获取对应类型的筛选组件
-            const FilterComponent = getAppliedFilterComponent(propertyDef.type);
-            if (!FilterComponent) return null;
-
-            // 判断当前过滤器是否处于编辑状态
-            const isEditing = editingFilter === filter.propertyId;
-
-            return (
-                <AppliedFilterWrapper
-                    key={filter.propertyId}
-                    filter={filter}
-                    propertyDefinition={propertyDef}
-                    onRemove={handleRemoveFilter}
-                    FilterComponent={FilterComponent}
-                    onClick={() => {
-                        // 如果已经在编辑，则关闭编辑面板；否则，打开编辑面板
-                        setEditingFilter(isEditing ? null : filter.propertyId);
-                    }}
-                >
-                    {isEditing && (
-                        <FilterConstructorWrapperPanel
-                            ConstructorComponent={getFilterConstructorComponent(propertyDef.type)}
-                            props={{
-                                propertyDefinition: propertyDef,
-                                currentFilter: filter,
-                                onApply: handleFilterApply,
-                                onCancel: handleFilterCancel,
-                                className: "absolute left-0 top-[100%]"
-                            }}
-                        />
-                    )}
-                </AppliedFilterWrapper>
-            );
-        });
-    };
-
-    // 把 props 的 columns 转换为 TanStack Table 的 ColumnDef
-    const tanstackColumns = useMemo<ColumnDef<Record<string, unknown>>[]>(
-        () => [
-            ...filteredColumns.map(
-                (column_) => ({
-                    id: column_.id,
-                    accessorKey: column_.id,
-                    enableSorting: [
-                        SystemPropertyId.ID, SystemPropertyId.TITLE,
-                    ].includes(column_.id as SystemPropertyId),
-                    header: ({ column }: { column: Column<Record<string, unknown>, unknown> }) => (
-                        <DataTableColumnHeader className="cursor-pointer" column={column} title={column_.title} />
-                    ),
-                    cell: ({ row }: { row: Row<Record<string, unknown>> }) => (
-                        <CellWrapper onClick={() => {
-                            if (onRowClick) onRowClick(row.original);
-                        }}>
-                            {renderCell(column_, row.original, row.index)}
-                        </CellWrapper>
-                    ),
-                    meta: {
-                        label: column_.title,
-                    },
-                })
-            ),
-            // {
-            //     id: 'actions',
-            //     cell: ({ row }: { row: Row<Record<string, unknown>> }) => (
-            //         <div className="hover:cursor-pointer hover:bg-gray-200 rounded-md p-1 bg-white" onClick={(e) => {
-            //             e.stopPropagation(); // 阻止事件冒泡到行级别
-            //             if (onRowClick) onRowClick(row.original);
-            //         }}>
-            //             <FiEdit className="text-gray-500 hover:text-gray-700" />
-            //         </div>
-            //     ),
-            // }
-        ], [filteredColumns, renderCell, onRowClick]
-    )
-
-    const { table } = useDataTable({
-        data: data,
-        columns: tanstackColumns,
-        pageCount: pageCount,
-        initialState: {
-            sorting: [{ id: SystemPropertyId.ID, desc: true }],
+    return [
+      ...columns.map((column_) => ({
+        id: column_.id,
+        accessorKey: column_.id,
+        enableSorting: SORTABLE_PROPERTY_IDS.includes(
+          column_.id as SystemPropertyId,
+        ),
+        header: ({ column }: { column: Column<Issue, unknown> }) => (
+          <DataTableColumnHeader
+            className="cursor-pointer"
+            column={column}
+            title={column_.title}
+          />
+        ),
+        cell: ({ row }: { row: Row<Issue> }) => (
+          <CellWrapper issueID={String(row.original.issue_id)}>
+            {renderCell(column_, row.original)}
+          </CellWrapper>
+        ),
+        meta: {
+          label: column_.title,
         },
-        getRowId: (row) => row[SystemPropertyId.ID] as string,
-    });
+      })),
+    ];
+  }, [columns, propertyDefinitions, userDataContextValue]);
 
-    return (
-        <div className="data-table-container h-full">
-            <DataTable table={table} className="h-full">
-                <div className="flex flex-row justify-between">
-                    {/* 筛选器相关UI */}
-                    <div className="flex flex-row items-center">
-                        <div className="flex flex-row items-center mr-2">
-                            {/* 显示已应用的筛选条件 */}
-                            {renderAppliedFilters()}
-                            {/* clear 按钮，当筛选条件数量大于等于 2 时显示 */}
-                            {localActiveFilters.length >= 2 && (
-                                <button
-                                    onClick={handleResetAllFilters}
-                                    className="flex items-center px-2 py-1 ml-1 mb-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-                                >
-                                    <span className="mr-1">Clear</span>
-                                    <MdClose size={16} />
-                                </button>
-                            )}
-                        </div>
-                        <div className="mr-2 mb-2 relative">
-                            <DropDownMenuV2
-                                entryLabel={FilterButton}
-                                menuItems={filterMenuItems}
-                                entryClassName="border border-gray-200 rounded"
-                                menuClassName="w-64 bg-white border border-gray-200 rounded-md shadow-lg"
-                            />
-                            {/* 设置筛选条件的面板 */}
-                            {selectedProperty && (
-                                <FilterConstructorWrapperPanel
-                                    ConstructorComponent={getFilterConstructorComponent(selectedProperty.type)}
-                                    props={{
-                                        propertyDefinition: selectedProperty,
-                                        currentFilter: getCurrentFilter(selectedProperty.id),
-                                        onApply: handleFilterApply,
-                                        onCancel: handleFilterCancel,
-                                        className: "absolute top-[100%] left-0"
-                                    }}
-                                />
-                            )}
-                        </div>
+  const { table } = useDataTable({
+    data: issues,
+    columns: tanstackColumns as ColumnDef<Issue>[],
+    pageCount: pageCount,
+    getRowId: (row) => row.issue_id as string,
+    shallow: false,
+  });
 
-                    </div>
-                    <DataTableToolbar table={table}>
-                        <DataTableSortList table={table} align="end" />
-                    </DataTableToolbar>
-                </div>
-
-            </DataTable>
+  return (
+    <div className="data-table-container h-full">
+      <DataTable table={table as Table<unknown>} className="h-full">
+        {/* 表格工具栏 左端 */}
+        <div className="flex flex-row justify-between">
+          <div className="flex flex-row items-center">
+            <Button
+              variant="outline"
+              size="icon"
+              className="mr-2"
+              onClick={() => setShowCreateIssueModal(true)}
+            >
+              <MdAdd />
+            </Button>
+            {/* 筛选器相关UI - 使用提取的组件 */}
+            <FiltersToolBar propertyDefinitions={propertyDefinitions} />
+          </div>
+          {/* 表格工具栏 右端 */}
+          <DataTableToolbar table={table}>
+            <DataTableSortList table={table} align="end" />
+          </DataTableToolbar>
         </div>
-    );
-};
-
-// 添加这个自定义的比较函数来决定何时重新渲染
-function areEqual(prevProps: IssueTableProps, nextProps: IssueTableProps) {
-    // 检查基本属性是否相等
-    const renderCellEqual = prevProps.renderCell === nextProps.renderCell;
-    const onRowClickEqual = prevProps.onRowClick === nextProps.onRowClick;
-    const propertyDefinitionsEqual = prevProps.propertyDefinitions === nextProps.propertyDefinitions;
-    const pageCountEqual = prevProps.pageCount === nextProps.pageCount;
-    
-    // 比较 columns 数组
-    let columnsEqual = prevProps.columns.length === nextProps.columns.length;
-    if (columnsEqual) {
-        for (let i = 0; i < prevProps.columns.length; i++) {
-            const prevColumn = prevProps.columns[i];
-            const nextColumn = nextProps.columns[i];
-            if (prevColumn.id !== nextColumn.id || prevColumn.title !== nextColumn.title) {
-                columnsEqual = false;
-                break;
-            }
-        }
-    }
-    
-    // 比较 data 数组
-    let dataEqual = prevProps.data.length === nextProps.data.length;
-    if (dataEqual) {
-        for (let i = 0; i < prevProps.data.length; i++) {
-            const prevItem = prevProps.data[i];
-            const nextItem = nextProps.data[i];
-            
-            // 首先检查对象引用是否相同
-            if (prevItem !== nextItem) {
-                // 如果对象引用不同，尝试比较 ID (用 SystemPropertyId.ID 或 'issue_id')
-                const prevId = prevItem[SystemPropertyId.ID] || prevItem['issue_id'];
-                const nextId = nextItem[SystemPropertyId.ID] || nextItem['issue_id'];
-                
-                if (prevId !== nextId) {
-                    dataEqual = false;
-                    break;
-                }
-            }
-        }
-    }
-    
-    const basicPropsEqual = 
-        dataEqual &&
-        columnsEqual &&
-        renderCellEqual &&
-        onRowClickEqual &&
-        propertyDefinitionsEqual &&
-        pageCountEqual;
-    
-    // 如果基本属性不相等，返回 false（需要重新渲染）
-    if (!basicPropsEqual) {
-        return false;
-    }
-    
-    // 检查 activeFilters 是否相等
-    if (prevProps.activeFilters?.length !== nextProps.activeFilters?.length) {
-        return false;
-    }
-    
-    // 详细比较 activeFilters 中的每个元素
-    if (prevProps.activeFilters && nextProps.activeFilters) {
-        for (let i = 0; i < prevProps.activeFilters.length; i++) {
-            const prevFilter = prevProps.activeFilters[i];
-            const nextFilter = nextProps.activeFilters[i];
-            
-            if (
-                prevFilter.propertyId !== nextFilter.propertyId ||
-                prevFilter.propertyType !== nextFilter.propertyType ||
-                prevFilter.operator !== nextFilter.operator ||
-                JSON.stringify(prevFilter.value) !== JSON.stringify(nextFilter.value)
-            ) {
-                return false;
-            }
-        }
-    }
-    
-    // 如果所有检查都通过，返回 true（不需要重新渲染）
-    return true;
+      </DataTable>
+      {showCreateIssueModal && (
+        <CreateIssueModal
+          onClose={() => setShowCreateIssueModal(false)}
+          propertyDefinitions={propertyDefinitions}
+          onCreateSuccess={() => {
+            setShowCreateIssueModal(false);
+          }}
+        />
+      )}
+    </div>
+  );
 }
 
-// 使用 React.memo 包装组件以避免不必要的重新渲染
-// 同时保留命名导出
-const MemoizedIssueTable = React.memo(IssueTable, areEqual);
-export default MemoizedIssueTable;
-const CellWrapper = ({ children, onClick }: { children: React.ReactNode, onClick: () => void }) => {
-    return (
-        <div className="hover:cursor-pointer w-full h-full" onClick={onClick}>
-            {children}
-        </div>
-    );
+const CellWrapper = ({
+  issueID,
+  children,
+}: {
+  issueID: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+}) => {
+  return (
+    <div className="w-full h-full">
+      {/* 设置为 block 后，空白单元格也能点击 */}
+      <Link className="block w-full h-full" href={`/issues/${issueID}`}>
+        {children}
+      </Link>
+    </div>
+  );
 };

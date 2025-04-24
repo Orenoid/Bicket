@@ -1,17 +1,23 @@
-import { Registry } from "@/lib/registry";
-import { AppliedFilterComponent, FilterConstructorComponent, PropertyTableCellComponent } from "./type";
+import { Registry, REGISTRY_NAMES } from "@/lib/registry";
+import {
+  AppliedFilterComponent,
+  FilterConstructorComponent,
+  PropertyTableCellComponent,
+} from "./type";
 import { DefaultPropertyCell } from "./issue-table-cell";
 import { DefaultAppliedFilter, DefaultFilterConstructorPanel } from "./filter";
 
 /**
  * 批量注册单元格组件
- * 
+ *
  * @param components 属性类型与组件的映射对象
  */
 export function registerPropertyTableCellComponents(
-  components: Record<string, PropertyTableCellComponent>
+  components: Record<string, PropertyTableCellComponent>,
 ): void {
-  Registry.getRegistry<PropertyTableCellComponent>('propertyTableCell').registerAll(components);
+  Registry.getRegistry<PropertyTableCellComponent>(
+    REGISTRY_NAMES.PROPERTY_TABLE_CELL,
+  ).registerAll(components);
 }
 
 /**
@@ -20,20 +26,26 @@ export function registerPropertyTableCellComponents(
  * @param propertyType 属性类型
  * @returns 对应的组件
  */
-export function getPropertyTableCellComponent(propertyType: string): PropertyTableCellComponent {
-  return Registry.getRegistry<PropertyTableCellComponent>('propertyTableCell').get(propertyType, DefaultPropertyCell);
+export function getPropertyTableCellComponent(
+  propertyType: string,
+): PropertyTableCellComponent {
+  return Registry.getRegistry<PropertyTableCellComponent>(
+    REGISTRY_NAMES.PROPERTY_TABLE_CELL,
+  ).get(propertyType, DefaultPropertyCell);
 }
 
 /**
-* 批量注册已应用筛选组件
-*
-* @param components 属性类型与组件的映射对象
-*/
+ * 批量注册已应用筛选组件
+ *
+ * @param components 属性类型与组件的映射对象
+ */
 
 export function registerAppliedFilterComponents(
-  components: Record<string, AppliedFilterComponent>
+  components: Record<string, AppliedFilterComponent>,
 ): void {
-  Registry.getRegistry<AppliedFilterComponent>('appliedFilter').registerAll(components);
+  Registry.getRegistry<AppliedFilterComponent>(
+    REGISTRY_NAMES.APPLIED_FILTER,
+  ).registerAll(components);
 }
 
 /**
@@ -46,8 +58,12 @@ export function registerAppliedFilterComponents(
  * @returns 对应的组件
  */
 
-export function getAppliedFilterComponent(propertyType: string): AppliedFilterComponent {
-  return Registry.getRegistry<AppliedFilterComponent>('appliedFilter').get(propertyType, DefaultAppliedFilter);
+export function getAppliedFilterComponent(
+  propertyType: string,
+): AppliedFilterComponent {
+  return Registry.getRegistry<AppliedFilterComponent>(
+    REGISTRY_NAMES.APPLIED_FILTER,
+  ).get(propertyType, DefaultAppliedFilter);
 }
 
 /**
@@ -56,9 +72,11 @@ export function getAppliedFilterComponent(propertyType: string): AppliedFilterCo
  * @param components 属性类型与组件的映射对象
  */
 export function registerFilterConstructorComponents(
-  components: Record<string, FilterConstructorComponent>
+  components: Record<string, FilterConstructorComponent>,
 ): void {
-  Registry.getRegistry<FilterConstructorComponent>('filterConstructor').registerAll(components);
+  Registry.getRegistry<FilterConstructorComponent>(
+    REGISTRY_NAMES.FILTER_CONSTRUCTOR,
+  ).registerAll(components);
 }
 
 /**
@@ -71,6 +89,10 @@ export function registerFilterConstructorComponents(
  * @returns 对应的组件
  */
 
-export function getFilterConstructorComponent(propertyType: string): FilterConstructorComponent {
-  return Registry.getRegistry<FilterConstructorComponent>('filterConstructor').get(propertyType, DefaultFilterConstructorPanel);
+export function getFilterConstructorComponent(
+  propertyType: string,
+): FilterConstructorComponent {
+  return Registry.getRegistry<FilterConstructorComponent>(
+    REGISTRY_NAMES.FILTER_CONSTRUCTOR,
+  ).get(propertyType, DefaultFilterConstructorPanel);
 }
