@@ -1,34 +1,45 @@
-import { property } from '@prisma/client';
-import { PropertyOperationType } from '../constants';
-import { ValidationResult, DbOperationResult } from '../types';
-import { BasePropertyUpdateProcessor } from './base';
-
+import { property } from "@prisma/client";
+import { PropertyOperationType } from "../constants";
+import { ValidationResult, DbOperationResult } from "../types";
+import { BasePropertyUpdateProcessor } from "./base";
 
 export class MinersPropertyUpdateProcessor extends BasePropertyUpdateProcessor {
-  validateFormat(property: property, operationType: string, payload: Record<string, unknown>): ValidationResult {
+  validateFormat(
+    property: property,
+    operationType: string,
+    payload: Record<string, unknown>,
+  ): ValidationResult {
     // 检查操作类型是否支持
-    if (![PropertyOperationType.UPDATE, PropertyOperationType.ADD, PropertyOperationType.REMOVE].includes(operationType as PropertyOperationType)) {
+    if (
+      ![
+        PropertyOperationType.UPDATE,
+        PropertyOperationType.ADD,
+        PropertyOperationType.REMOVE,
+      ].includes(operationType as PropertyOperationType)
+    ) {
       return {
         valid: false,
-        errors: [`矿机列表属性不支持操作类型: ${operationType}，支持的操作类型为 ${PropertyOperationType.ADD}、${PropertyOperationType.UPDATE} 和 ${PropertyOperationType.REMOVE}`]
+        errors: [
+          `矿机列表属性不支持操作类型: ${operationType}，支持的操作类型为 ${PropertyOperationType.ADD}、${PropertyOperationType.UPDATE} 和 ${PropertyOperationType.REMOVE}`,
+        ],
       };
     }
 
     // ADD操作需要校验payload
     if (operationType === PropertyOperationType.ADD) {
       // 检查payload中是否包含value字段
-      if (!('value' in payload)) {
+      if (!("value" in payload)) {
         return {
           valid: false,
-          errors: ['ADD操作的payload必须包含value字段']
+          errors: ["ADD操作的payload必须包含value字段"],
         };
       }
 
       // value必须是字符串
-      if (typeof payload.value !== 'string') {
+      if (typeof payload.value !== "string") {
         return {
           valid: false,
-          errors: ['ADD操作的value字段必须为字符串类型']
+          errors: ["ADD操作的value字段必须为字符串类型"],
         };
       }
     }
@@ -36,10 +47,10 @@ export class MinersPropertyUpdateProcessor extends BasePropertyUpdateProcessor {
     // UPDATE操作需要校验payload
     if (operationType === PropertyOperationType.UPDATE) {
       // 检查payload中是否包含values字段
-      if (!('values' in payload)) {
+      if (!("values" in payload)) {
         return {
           valid: false,
-          errors: ['UPDATE操作的payload必须包含values字段']
+          errors: ["UPDATE操作的payload必须包含values字段"],
         };
       }
 
@@ -47,16 +58,16 @@ export class MinersPropertyUpdateProcessor extends BasePropertyUpdateProcessor {
       if (!Array.isArray(payload.values)) {
         return {
           valid: false,
-          errors: ['UPDATE操作的values字段必须为数组类型']
+          errors: ["UPDATE操作的values字段必须为数组类型"],
         };
       }
 
       // 数组中每个元素必须是字符串
       for (const value of payload.values as unknown[]) {
-        if (typeof value !== 'string') {
+        if (typeof value !== "string") {
           return {
             valid: false,
-            errors: ['UPDATE操作的values数组中每个元素必须为字符串类型']
+            errors: ["UPDATE操作的values数组中每个元素必须为字符串类型"],
           };
         }
       }
@@ -66,11 +77,15 @@ export class MinersPropertyUpdateProcessor extends BasePropertyUpdateProcessor {
     return { valid: true };
   }
 
-  validateBusinessRules(property: property, operationType: string, payload: Record<string, unknown>): ValidationResult {
+  validateBusinessRules(
+    property: property,
+    operationType: string,
+    payload: Record<string, unknown>,
+  ): ValidationResult {
     const config = property.config as Record<string, unknown> | null;
 
     // 检查是否存在最大选择数限制
-    if (config && typeof config.maxSelect === 'number') {
+    if (config && typeof config.maxSelect === "number") {
       const maxSelect = config.maxSelect as number;
 
       // UPDATE操作：检查是否超过最大选择数
@@ -82,7 +97,7 @@ export class MinersPropertyUpdateProcessor extends BasePropertyUpdateProcessor {
         if (uniqueValues.size !== values.length) {
           return {
             valid: false,
-            errors: ['values数组中存在重复的矿机ID']
+            errors: ["values数组中存在重复的矿机ID"],
           };
         }
 
@@ -90,7 +105,7 @@ export class MinersPropertyUpdateProcessor extends BasePropertyUpdateProcessor {
         if (values.length > maxSelect) {
           return {
             valid: false,
-            errors: [`属性 ${property.name} 最多只能选择 ${maxSelect} 个矿机`]
+            errors: [`属性 ${property.name} 最多只能选择 ${maxSelect} 个矿机`],
           };
         }
       }
@@ -103,14 +118,22 @@ export class MinersPropertyUpdateProcessor extends BasePropertyUpdateProcessor {
     return { valid: true };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  transformToDbOperations(property: property, operationType: string, payload: Record<string, unknown>, issueId: string): DbOperationResult {
+  transformToDbOperations(
+    property: property,
+    operationType: string,
+    payload: Record<string, unknown>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    issueId: string,
+  ): DbOperationResult {
     const result: DbOperationResult = {};
 
     switch (operationType) {
       case PropertyOperationType.REMOVE:
         // 删除所有多值数据
-        result.multiValueRemovePositions = Array.from({ length: 1000 }, (_, i) => i); // 使用足够大的范围确保删除所有
+        result.multiValueRemovePositions = Array.from(
+          { length: 1000 },
+          (_, i) => i,
+        ); // 使用足够大的范围确保删除所有
         break;
 
       case PropertyOperationType.ADD:
@@ -118,11 +141,13 @@ export class MinersPropertyUpdateProcessor extends BasePropertyUpdateProcessor {
         const minerId = payload.value as string;
 
         // 实际实现应该先查询已有的多值数据，然后使用最大position + 1
-        result.multiValueCreates = [{
-          value: minerId,
-          position: 0, // 实际实现应使用查询结果
-          number_value: null
-        }];
+        result.multiValueCreates = [
+          {
+            value: minerId,
+            position: 0, // 实际实现应使用查询结果
+            number_value: null,
+          },
+        ];
         break;
 
       case PropertyOperationType.UPDATE:
@@ -130,13 +155,16 @@ export class MinersPropertyUpdateProcessor extends BasePropertyUpdateProcessor {
         const minerIds = payload.values as string[];
 
         // 删除所有旧值
-        result.multiValueRemovePositions = Array.from({ length: 1000 }, (_, i) => i);
+        result.multiValueRemovePositions = Array.from(
+          { length: 1000 },
+          (_, i) => i,
+        );
 
         // 添加新矿机ID数组
         result.multiValueCreates = minerIds.map((minerId, index) => ({
           value: minerId,
           position: index,
-          number_value: null
+          number_value: null,
         }));
         break;
     }

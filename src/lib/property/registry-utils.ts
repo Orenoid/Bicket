@@ -3,13 +3,15 @@ import { PropertyUpdateProcessor, PropertyValueProcessor } from "./types";
 
 /**
  * 批量注册属性更新处理器
- * 
+ *
  * @param processors 属性类型与处理器的映射对象
  */
 export function registerPropertyUpdateProcessors(
-  processors: Record<string, PropertyUpdateProcessor>
+  processors: Record<string, PropertyUpdateProcessor>,
 ): void {
-  Registry.getRegistry<PropertyUpdateProcessor>(REGISTRY_NAMES.PROPERTY_UPDATE_PROCESSOR).registerAll(processors);
+  Registry.getRegistry<PropertyUpdateProcessor>(
+    REGISTRY_NAMES.PROPERTY_UPDATE_PROCESSOR,
+  ).registerAll(processors);
 }
 
 /**
@@ -18,19 +20,25 @@ export function registerPropertyUpdateProcessors(
  * @param propertyType 属性类型
  * @returns 对应的 PropertyUpdateProcessor
  */
-export function getPropertyUpdateProcessor(propertyType: string): PropertyUpdateProcessor {
-  return Registry.getRegistry<PropertyUpdateProcessor>(REGISTRY_NAMES.PROPERTY_UPDATE_PROCESSOR).mustGet(propertyType);
+export function getPropertyUpdateProcessor(
+  propertyType: string,
+): PropertyUpdateProcessor {
+  return Registry.getRegistry<PropertyUpdateProcessor>(
+    REGISTRY_NAMES.PROPERTY_UPDATE_PROCESSOR,
+  ).mustGet(propertyType);
 }
 
 /**
  * 批量注册属性创建处理器
- * 
+ *
  * @param processors 属性类型与处理器的映射对象
  */
 export function registerIssueCreationPropertyProcessors(
-  processors: Record<string, PropertyValueProcessor>
+  processors: Record<string, PropertyValueProcessor>,
 ): void {
-  Registry.getRegistry<PropertyValueProcessor>(REGISTRY_NAMES.PROPERTY_VALUE_PROCESSOR).registerAll(processors);
+  Registry.getRegistry<PropertyValueProcessor>(
+    REGISTRY_NAMES.PROPERTY_VALUE_PROCESSOR,
+  ).registerAll(processors);
 }
 
 /**
@@ -39,6 +47,10 @@ export function registerIssueCreationPropertyProcessors(
  * @param propertyType 属性类型
  * @returns 对应的 PropertyValueProcessor
  */
-export function getIssueCreationPropertyProcessor(propertyType: string): PropertyValueProcessor {
-  return Registry.getRegistry<PropertyValueProcessor>(REGISTRY_NAMES.PROPERTY_VALUE_PROCESSOR).mustGet(propertyType);
+export function getIssueCreationPropertyProcessor(
+  propertyType: string,
+): PropertyValueProcessor {
+  return Registry.getRegistry<PropertyValueProcessor>(
+    REGISTRY_NAMES.PROPERTY_VALUE_PROCESSOR,
+  ).mustGet(propertyType);
 }

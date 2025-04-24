@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 // 声明PrismaClient接口，允许添加额外属性
 interface CustomNodeJsGlobal extends Global {
@@ -17,7 +17,7 @@ const prismaClientSingleton = () => {
         url: process.env.DATABASE_URL,
       },
     },
-    log: ['error', 'warn'],
+    log: ["error", "warn"],
   });
 };
 
@@ -26,7 +26,7 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient };
 export const prisma = globalForPrisma.prisma || prismaClientSingleton();
 
 // 在开发环境和Vercel Fluid Compute环境下保持连接池
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 } else {
   // 在生产环境中，Vercel的Fluid Compute会复用函数实例
@@ -34,4 +34,4 @@ if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
 
-export default prisma; 
+export default prisma;

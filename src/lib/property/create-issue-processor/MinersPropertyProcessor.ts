@@ -1,8 +1,7 @@
-import { property } from '@prisma/client';
-import { PropertyType } from '../constants';
-import { ValidationResult, DbInsertData } from '../types';
-import { BasePropertyProcessor } from './base';
-
+import { property } from "@prisma/client";
+import { PropertyType } from "../constants";
+import { ValidationResult, DbInsertData } from "../types";
+import { BasePropertyProcessor } from "./base";
 
 export class MinersPropertyProcessor extends BasePropertyProcessor {
   validateFormat(property: property, value: unknown): ValidationResult {
@@ -16,17 +15,19 @@ export class MinersPropertyProcessor extends BasePropertyProcessor {
     if (!Array.isArray(value)) {
       return {
         valid: false,
-        errors: [`属性 ${property.name} 必须是数组类型`]
+        errors: [`属性 ${property.name} 必须是数组类型`],
       };
     }
 
     // 数组中的每个值应该是字符串或数字（矿机ID）
     for (let i = 0; i < value.length; i++) {
       const item = value[i];
-      if (typeof item !== 'string' && typeof item !== 'number') {
+      if (typeof item !== "string" && typeof item !== "number") {
         return {
           valid: false,
-          errors: [`属性 ${property.name} 的第 ${i + 1} 个矿机ID必须是字符串或数字类型`]
+          errors: [
+            `属性 ${property.name} 的第 ${i + 1} 个矿机ID必须是字符串或数字类型`,
+          ],
         };
       }
     }
@@ -49,11 +50,11 @@ export class MinersPropertyProcessor extends BasePropertyProcessor {
     const valueArray = Array.isArray(value) ? value : [value];
 
     // 检查是否有重复选项
-    const uniqueValues = new Set(valueArray.map(item => String(item)));
+    const uniqueValues = new Set(valueArray.map((item) => String(item)));
     if (uniqueValues.size !== valueArray.length) {
       return {
         valid: false,
-        errors: [`属性 ${property.name} 包含重复矿机ID`]
+        errors: [`属性 ${property.name} 包含重复矿机ID`],
       };
     }
 
@@ -61,10 +62,16 @@ export class MinersPropertyProcessor extends BasePropertyProcessor {
     const config = property.config as Record<string, unknown> | undefined;
 
     // 检查是否超过最大选择数
-    if (config && typeof config.maxSelect === 'number' && valueArray.length > config.maxSelect) {
+    if (
+      config &&
+      typeof config.maxSelect === "number" &&
+      valueArray.length > config.maxSelect
+    ) {
       return {
         valid: false,
-        errors: [`属性 ${property.name} 最多只能选择 ${config.maxSelect} 个矿机`]
+        errors: [
+          `属性 ${property.name} 最多只能选择 ${config.maxSelect} 个矿机`,
+        ],
       };
     }
 
@@ -74,7 +81,11 @@ export class MinersPropertyProcessor extends BasePropertyProcessor {
     return { valid: true };
   }
 
-  transformToDbFormat(property: property, value: unknown, issueId: string): DbInsertData {
+  transformToDbFormat(
+    property: property,
+    value: unknown,
+    issueId: string,
+  ): DbInsertData {
     // 如果值为 null，返回空数组
     if (value === null || value === undefined) {
       return { multiValues: [] };
@@ -96,7 +107,7 @@ export class MinersPropertyProcessor extends BasePropertyProcessor {
         PropertyType.MINERS,
         String(item),
         index,
-        null
+        null,
       );
     });
 

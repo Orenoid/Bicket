@@ -1,8 +1,7 @@
-import { property } from '@prisma/client';
-import { PropertyType } from '../constants';
-import { ValidationResult, DbInsertData } from '../types';
-import { BasePropertyProcessor } from './base';
-
+import { property } from "@prisma/client";
+import { PropertyType } from "../constants";
+import { ValidationResult, DbInsertData } from "../types";
+import { BasePropertyProcessor } from "./base";
 
 export class TextPropertyProcessor extends BasePropertyProcessor {
   validateFormat(property: property, value: unknown): ValidationResult {
@@ -12,7 +11,7 @@ export class TextPropertyProcessor extends BasePropertyProcessor {
       if (!property.nullable) {
         return {
           valid: false,
-          errors: [`属性 ${property.name} 不能为空`]
+          errors: [`属性 ${property.name} 不能为空`],
         };
       }
       return { valid: true };
@@ -26,7 +25,7 @@ export class TextPropertyProcessor extends BasePropertyProcessor {
     } catch {
       return {
         valid: false,
-        errors: [`属性 ${property.name} 必须是字符串类型`]
+        errors: [`属性 ${property.name} 必须是字符串类型`],
       };
     }
   }
@@ -43,29 +42,42 @@ export class TextPropertyProcessor extends BasePropertyProcessor {
     // 检查字符串长度限制
     if (config) {
       // 最小长度检查
-      if (typeof config.minLength === 'number' && stringValue.length < config.minLength) {
+      if (
+        typeof config.minLength === "number" &&
+        stringValue.length < config.minLength
+      ) {
         return {
           valid: false,
-          errors: [`属性 ${property.name} 长度不能小于 ${config.minLength} 个字符`]
+          errors: [
+            `属性 ${property.name} 长度不能小于 ${config.minLength} 个字符`,
+          ],
         };
       }
 
       // 最大长度检查
-      if (typeof config.maxLength === 'number' && stringValue.length > config.maxLength) {
+      if (
+        typeof config.maxLength === "number" &&
+        stringValue.length > config.maxLength
+      ) {
         return {
           valid: false,
-          errors: [`属性 ${property.name} 长度不能超过 ${config.maxLength} 个字符`]
+          errors: [
+            `属性 ${property.name} 长度不能超过 ${config.maxLength} 个字符`,
+          ],
         };
       }
 
       // 正则表达式格式检查
-      if (typeof config.pattern === 'string') {
+      if (typeof config.pattern === "string") {
         try {
           const regex = new RegExp(config.pattern);
           if (!regex.test(stringValue)) {
             return {
               valid: false,
-              errors: [config.patternErrorMessage as string || `属性 ${property.name} 格式不正确`]
+              errors: [
+                (config.patternErrorMessage as string) ||
+                  `属性 ${property.name} 格式不正确`,
+              ],
             };
           }
         } catch (error) {
@@ -78,7 +90,11 @@ export class TextPropertyProcessor extends BasePropertyProcessor {
     return { valid: true };
   }
 
-  transformToDbFormat(property: property, value: unknown, issueId: string): DbInsertData {
+  transformToDbFormat(
+    property: property,
+    value: unknown,
+    issueId: string,
+  ): DbInsertData {
     // 如果值为 null 而且允许为 null，存储 null
     if ((value === null || value === undefined) && property.nullable) {
       return {
@@ -88,9 +104,9 @@ export class TextPropertyProcessor extends BasePropertyProcessor {
             property.id,
             PropertyType.TEXT,
             null,
-            null
-          )
-        ]
+            null,
+          ),
+        ],
       };
     }
 
@@ -104,9 +120,9 @@ export class TextPropertyProcessor extends BasePropertyProcessor {
           property.id,
           PropertyType.TEXT,
           stringValue,
-          null
-        )
-      ]
+          null,
+        ),
+      ],
     };
   }
 }

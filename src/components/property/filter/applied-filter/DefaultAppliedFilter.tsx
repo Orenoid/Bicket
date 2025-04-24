@@ -1,7 +1,6 @@
-'use client';
+"use client";
 
-import { AppliedFilterComponent } from '../../type';
-
+import { AppliedFilterComponent } from "../../type";
 
 /**
  * 默认已应用筛选组件
@@ -9,6 +8,6 @@ import { AppliedFilterComponent } from '../../type';
  */
 
 export const DefaultAppliedFilter: AppliedFilterComponent = ({ filter }) => {
-    const value = filter.value ? String(filter.value) : '';
-    return <span>{value}</span>;
+  const value = filter.value ? String(filter.value) : "";
+  return <span>{value}</span>;
 };

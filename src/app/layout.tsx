@@ -1,12 +1,11 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Toaster } from "sonner";
 import { SidebarProvider, SidebarInset } from "@/components/shadcn/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import "./globals.css";
-
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,9 +36,7 @@ export default function RootLayout({
           <NuqsAdapter>
             <SidebarProvider>
               <AppSidebar />
-              <SidebarInset className="pt-0">
-                {children}
-              </SidebarInset>
+              <SidebarInset className="pt-0">{children}</SidebarInset>
               <Toaster />
             </SidebarProvider>
           </NuqsAdapter>

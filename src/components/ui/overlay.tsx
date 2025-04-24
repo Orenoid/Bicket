@@ -1,6 +1,6 @@
-import { cn } from '@/lib/shadcn/utils';
-import React from 'react';
-import { AiOutlineLoading3Quarters } from 'react-icons/ai';
+import { cn } from "@/lib/shadcn/utils";
+import React from "react";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 interface OverlayProps {
   children: React.ReactNode;
@@ -19,27 +19,34 @@ export const Overlay: React.FC<OverlayProps> = ({ children, onClose }) => {
 };
 
 export function SemiTransparentOverlay({ onClick }: { onClick: () => void }) {
-  return <div className="fixed inset-0 bg-black opacity-50 z-40" onClick={onClick}></div>
+  return (
+    <div
+      className="fixed inset-0 bg-black opacity-50 z-40"
+      onClick={onClick}
+    ></div>
+  );
 }
 
 export function TransparentOverlay({ onClick }: { onClick: () => void }) {
-  return <div className="fixed inset-0 bg-transparent z-40 cursor-default" onClick={onClick}></div>
+  return (
+    <div
+      className="fixed inset-0 bg-transparent z-40 cursor-default"
+      onClick={onClick}
+    ></div>
+  );
 }
 
 export function ContainerOverlay({
   onClick,
   className = "bg-black opacity-50",
-  children
+  children,
 }: {
-  onClick?: () => void,
-  className?: string,
-  children?: React.ReactNode
+  onClick?: () => void;
+  className?: string;
+  children?: React.ReactNode;
 }) {
   return (
-    <div
-      className={cn("absolute inset-0 z-50", className)}
-      onClick={onClick}
-    >
+    <div className={cn("absolute inset-0 z-50", className)} onClick={onClick}>
       {children}
     </div>
   );

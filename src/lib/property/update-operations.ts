@@ -1,4 +1,4 @@
-import { PropertyOperationType } from './constants';
+import { PropertyOperationType } from "./constants";
 
 /**
  * 简单值属性的SET操作负载
@@ -26,12 +26,12 @@ export function createSetValuePayload(value: string | null): SetValuePayload {
 export function createPropertyOperation(
   propertyId: string,
   operationType: string,
-  operationPayload: Record<string, unknown>
+  operationPayload: Record<string, unknown>,
 ) {
   return {
     property_id: propertyId,
     operation_type: operationType,
-    operation_payload: operationPayload
+    operation_payload: operationPayload,
   };
 }
 
@@ -45,7 +45,7 @@ export function createSetOperation(propertyId: string, value: string | null) {
   return createPropertyOperation(
     propertyId,
     PropertyOperationType.SET,
-    createSetValuePayload(value)
+    createSetValuePayload(value),
   );
 }
 
@@ -55,11 +55,7 @@ export function createSetOperation(propertyId: string, value: string | null) {
  * @returns 属性REMOVE操作对象
  */
 export function createRemoveOperation(propertyId: string) {
-  return createPropertyOperation(
-    propertyId,
-    PropertyOperationType.REMOVE,
-    {}
-  );
+  return createPropertyOperation(propertyId, PropertyOperationType.REMOVE, {});
 }
 
 /**
@@ -88,7 +84,7 @@ export function createAddOperation(propertyId: string, value: string) {
   return createPropertyOperation(
     propertyId,
     PropertyOperationType.ADD,
-    createAddValuePayload(value)
+    createAddValuePayload(value),
   );
 }
 
@@ -99,9 +95,7 @@ export function createAddOperation(propertyId: string, value: string) {
  * @returns 属性UPDATE操作对象
  */
 export function createUpdateOperation(propertyId: string, values: string[]) {
-  return createPropertyOperation(
-    propertyId,
-    PropertyOperationType.UPDATE,
-    { values }
-  );
+  return createPropertyOperation(propertyId, PropertyOperationType.UPDATE, {
+    values,
+  });
 }
