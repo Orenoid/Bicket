@@ -61,7 +61,7 @@ export async function getIssues(
     sort: SortConfig[]
 ): Promise<{ issues: Issue[]; total: number; }> {
 
-    // 为了方便属性的垂直扩展，数据库表结构采用了很彻底的 EAV 模型，
+    // 为了方便属性的垂直扩展，issue 相关表结构采用了很彻底的 EAV 模型，
     // 相应的代价是排序和筛选逻辑实现起来会比较复杂
     // 目前纯 sql 实现没什么问题，如果后期项目规模增长，可以通过添加倒排索引或 ES 等现成方案来优化解决
 
@@ -77,6 +77,7 @@ export async function getIssues(
     const hasFilters = filters && filters.length > 0;
     if (hasFilters) {
         let hasSearched = false;
+        // 这里是可以并行执行的，全部查出来后再取交集，之后可以优化下
         for (const filter of filters) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             let valueCondition: any = {};
