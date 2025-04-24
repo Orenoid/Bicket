@@ -56,15 +56,16 @@ export const CreateIssueModal = ({ onClose, propertyDefinitions }: {
                     <form
                         ref={formRef}
                         onSubmit={form.handleSubmit((data) => { startTransition(() => formAction(data)); })}
+                        className='h-full w-full'
                     >
                         <div className='flex flex-row h-full'>
                             {/* 左侧面板内容 */}
                             <div className="flex flex-col h-full w-2/3 border-r border-gray-200">
-                                <div className="pt-6 flex-grow overflow-auto p-4">
-                                    <div className="flex">
+                                <div className="flex pt-6 flex-grow overflow-auto p-4">
+                                    <div className="flex flex-grow">
                                         {/* 标题和描述 */}
-                                        <div className="flex-grow pr-4 flex-col">
-                                            <TitleField control={form.control} />
+                                        <div className="flex flex-grow pr-4 flex-col">
+                                            <TitleField control={form.control} className='mb-8'/>
                                             <DescriptionField
                                                 control={form.control}
                                                 propertyDefinition={mustFindPropertyDefinition(SystemPropertyId.DESCRIPTION)}

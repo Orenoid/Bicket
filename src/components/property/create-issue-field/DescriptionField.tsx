@@ -50,11 +50,12 @@ export const DescriptionField = <TFieldValues extends FieldValues>({
 
     return (
         <Fragment>
-            <div className="mb-4">
+            <div className="mb-4 description-editor-container flex-grow">
                 <MDXEditor
                     onChange={handleChange}
                     markdown={internalValue}
                     placeholder={<span className="text-gray-400 text-md">Issue description, markdown supported</span>}
+                    contentEditableClassName='h-full'
                     plugins={[
                         // 功能插件
                         headingsPlugin(),

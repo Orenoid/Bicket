@@ -7,13 +7,15 @@ import {
 } from "@/components/shadcn/ui/form";
 import { Input } from '@/components/shadcn/ui/input';
 import { SystemPropertyId } from '@/lib/property/constants';
+import { cn } from "@/lib/shadcn/utils";
 import { Control, FieldValues, Path } from 'react-hook-form';
 
 
 export const TitleField = <TFieldValues extends FieldValues>({
-    control
+    control, className
 }: {
-    control: Control<TFieldValues>
+    control: Control<TFieldValues>,
+    className?: string
 }) => {
     return (
         <FormField
@@ -25,7 +27,7 @@ export const TitleField = <TFieldValues extends FieldValues>({
                         <Input
                             placeholder="Issue title"
                             {...field}
-                            className='border-0 border-b rounded-none focus-visible:ring-0'
+                            className={cn('border-0 rounded-none focus-visible:ring-0 placeholder:text-gray-400', className)}
                         />
                     </FormControl>
                 </FormItem>

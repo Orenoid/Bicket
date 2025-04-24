@@ -7,15 +7,16 @@ import { DetailFieldComponent } from '../type';
 import './DescriptionField.css';
 import { Button } from '@/components/shadcn/ui/button';
 import { handlePropertyUpdate } from '@/components/property/issue-detail/update';
+import clsx from 'clsx';
 
 
 export const DescriptionField: DetailFieldComponent = ({
     propertyDefinition, value, issueID
 }) => {
     // 组件状态
-    const [internalValue, setInternalValue] = useState<string>(String(value));
+    const [internalValue, setInternalValue] = useState<string>(typeof value === 'string' ? value : '');
     const [hasChanges, setHasChanges] = useState(false);
-    const [originalValue, setOriginalValue] = useState<string>(String(value));
+    const [originalValue, setOriginalValue] = useState<string>(typeof value === 'string' ? value : '');
 
     // 初始化和同步内部值
     useEffect(() => {
@@ -55,7 +56,7 @@ export const DescriptionField: DetailFieldComponent = ({
 
     // 渲染编辑模式
     return (
-        <div id="description-editor-container" className="border-gray-200 pt-4 mt-4 pb-4 flex-grow">
+        <div className="border-gray-200 pt-4 mt-4 pb-4 flex flex-col flex-grow description-editor-container">
             <MDXEditor
                 onChange={handleChange}
                 markdown={internalValue}
@@ -83,18 +84,19 @@ export const DescriptionField: DetailFieldComponent = ({
                         )
                     })
                 ]} />
-
             {/* 操作按钮 - 只有在有变化时才显示 */}
-            {hasChanges && (
-                <div className="mt-2 z-50 flex justify-end">
-                    <Button variant="ghost" onClick={handleCancel} className="mr-2">
-                        Cancel
-                    </Button>
-                    <Button onClick={handleSave}>
-                        Save
-                    </Button>
-                </div>
-            )}
+            <div className={clsx(
+                "mt-2 z-50 flex justify-end",
+                { "opacity-0 pointer-events-none": !hasChanges }
+            )}>
+                <Button variant="ghost" onClick={handleCancel} className="mr-2">
+                    Cancel
+                </Button>
+                <Button onClick={handleSave}>
+                    Save
+                </Button>
+            </div>
+
         </div>
     );
 };

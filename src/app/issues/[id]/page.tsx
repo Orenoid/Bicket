@@ -30,7 +30,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
     }
 
     return (
-        <div className='flex flex-row h-full'>
+        <div className='flex flex-auto'>
             {/* 左侧面板内容 */}
             <div className="flex flex-col h-full w-3/4 border-r border-gray-200 pt-4 px-8">
                 <div className="flex flex-col flex-grow">
