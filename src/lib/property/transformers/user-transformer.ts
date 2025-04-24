@@ -1,5 +1,5 @@
 import { FilterCondition } from '../types';
-import { FilterTransformer, PrismaFilterCondition } from '../filter-transformer';
+import { FilterTransformer, PrismaFilterCondition } from './filter-transformer';
 import { PropertyType } from '../constants';
 
 /**

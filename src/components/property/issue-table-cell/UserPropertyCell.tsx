@@ -83,21 +83,16 @@ export const UserPropertyCell: PropertyTableCellComponent = ({
         );
     }
 
-    // 如果上下文正在加载，显示加载骨架屏
     if (isContextLoading) {
         return loadingPlaceholder;
     }
-
-    // 单独加载中显示骨架屏
     if (loading) {
         return loadingPlaceholder;
     }
 
-    // 错误显示
     if (error) {
         return (
             <div className="flex items-center">
-                {/* 错误状态的头像占位符 */}
                 <div className="w-6 h-6 rounded-full overflow-hidden mr-2 flex-shrink-0 border border-gray-200 bg-red-50 flex items-center justify-center">
                     <span className="text-red-500 text-xs">!</span>
                 </div>

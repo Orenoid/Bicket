@@ -1,5 +1,5 @@
 import { FilterCondition } from '../types';
-import { FilterTransformer, FilterTransformerContext } from '../filter-transformer';
+import { FilterTransformer, FilterTransformerContext } from './filter-transformer';
 
 /**
  * 多选类型的筛选转换器

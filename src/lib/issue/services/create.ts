@@ -1,9 +1,8 @@
-import { Prisma, property } from '@prisma/client';
-import { prisma } from '@/lib/prisma';
-import { PropertyProcessorFactory } from '@/lib/property/create-issue-processor/add-property-value';
-import { SystemPropertyId } from '@/lib/property/constants';
 import { CounterService } from '@/lib/counter';
-import { PropertyType } from '@/lib/property/constants';
+import { prisma } from '@/lib/prisma';
+import { PropertyType, SystemPropertyId } from '@/lib/property/constants';
+import { getIssueCreationPropertyProcessor } from '@/lib/property/registry-utils';
+import { Prisma, property } from '@prisma/client';
 
 export interface CreateIssueInput {
   // 所属工作区ID
@@ -127,9 +126,9 @@ export async function batchCreateIssues(
           const property = properties.find(p => p.id === pv.property_id)!;
           
           // 获取处理器并转换为数据库格式
-          const processor = PropertyProcessorFactory.getProcessor(property.type);
+          const processor = getIssueCreationPropertyProcessor(property.type);
           const dbData = processor.transformToDbFormat(property, pv.value, issueId);
-          
+
           // 收集单值和多值数据
           if (dbData.singleValues && dbData.singleValues.length > 0) {
             allSingleValues.push(...dbData.singleValues);
@@ -219,18 +218,15 @@ function preprocessIssueInput(
 
   // 验证所有属性值
   for (const pv of input.propertyValues) {
-    // 查找属性定义
-    const property = properties.find(p => p.id === pv.property_id);
 
+    const property = properties.find(p => p.id === pv.property_id);
     if (!property) {
       validationErrors.push(`属性 ${pv.property_id} 不存在`);
       continue;
     }
 
-    // 获取对应类型的处理器
     try {
-      const processor = PropertyProcessorFactory.getProcessor(property.type);
-
+      const processor = getIssueCreationPropertyProcessor(property.type);
       // 验证格式
       const formatResult = processor.validateFormat(property, pv.value);
       if (!formatResult.valid) {

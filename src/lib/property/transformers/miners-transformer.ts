@@ -1,6 +1,6 @@
 import { FilterCondition } from '../types';
 import { PropertyType } from '../constants';
-import { FilterTransformer, PrismaFilterCondition } from '../filter-transformer';
+import { FilterTransformer, PrismaFilterCondition } from './filter-transformer';
 
 /**
  * 矿机列表筛选转换器

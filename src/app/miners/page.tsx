@@ -1,9 +1,11 @@
 'use client';
 
+import clsx from 'clsx';
 import { useState, useEffect } from 'react';
 import { MdViewList, MdGridView } from 'react-icons/md';
 
-// 日期时间格式化组件
+// 展示 mock 数据用的页面，因为是临时使用，用 AI 快速生成的
+
 const FormattedDate = ({ date }: { date: Date }) => {
   const [formattedDate, setFormattedDate] = useState<string>('');
   
@@ -31,14 +33,26 @@ export default function MinersPage() {
         <div className="flex space-x-2">
           <button
             onClick={() => setViewMode('table')}
-            className={`p-2 rounded-md cursor-pointer ${viewMode === 'table' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            className={clsx(
+                "p-2 rounded-md cursor-pointer",
+                {
+                    "bg-blue-100 text-blue-600": viewMode === 'table',
+                    "bg-gray-100 text-gray-600 hover:bg-gray-200": viewMode !== 'table'
+                }
+            )}
             title="表格视图"
           >
             <MdViewList size={20} />
           </button>
           <button
             onClick={() => setViewMode('card')}
-            className={`p-2 rounded-md cursor-pointer ${viewMode === 'card' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            className={clsx(
+                "p-2 rounded-md cursor-pointer",
+                {
+                    "bg-blue-100 text-blue-600": viewMode === 'card',
+                    "bg-gray-100 text-gray-600 hover:bg-gray-200": viewMode !== 'card'
+                }
+            )}
             title="卡片视图"
           >
             <MdGridView size={20} />
@@ -67,11 +81,14 @@ export default function MinersPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{miner.model}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{miner.manufacturer}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      miner.status === '在线' ? 'bg-green-100 text-green-800' : 
-                      miner.status === '离线' ? 'bg-red-100 text-red-800' : 
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
+                    <span className={clsx(
+                        "px-2 inline-flex text-xs leading-5 font-semibold rounded-full",
+                        {
+                            "bg-green-100 text-green-800": miner.status === '在线',
+                            "bg-red-100 text-red-800": miner.status === '离线',
+                            "bg-yellow-100 text-yellow-800": miner.status !== '在线' && miner.status !== '离线'
+                        }
+                    )}>
                       {miner.status}
                     </span>
                   </td>
@@ -89,11 +106,14 @@ export default function MinersPage() {
             <div key={miner.id} className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-2">
                 <span className="text-lg font-medium">{miner.id}</span>
-                <span className={`px-2 text-xs leading-5 font-semibold rounded-full ${
-                  miner.status === '在线' ? 'bg-green-100 text-green-800' : 
-                  miner.status === '离线' ? 'bg-red-100 text-red-800' : 
-                  'bg-yellow-100 text-yellow-800'
-                }`}>
+                <span className={clsx(
+                    "px-2 text-xs leading-5 font-semibold rounded-full",
+                    {
+                        "bg-green-100 text-green-800": miner.status === '在线',
+                        "bg-red-100 text-red-800": miner.status === '离线',
+                        "bg-yellow-100 text-yellow-800": miner.status !== '在线' && miner.status !== '离线'
+                    }
+                )}>
                   {miner.status}
                 </span>
               </div>

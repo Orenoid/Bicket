@@ -28,9 +28,6 @@ export interface PropertyDefinition {
     config?: Record<string, unknown>;
 }
 
-/**
- * 新建 issue 面板组件
- */
 export const CreateIssueModal = ({ onClose, propertyDefinitions, onCreateSuccess }: {
     onClose: () => void;
     propertyDefinitions: PropertyDefinition[];
@@ -42,8 +39,12 @@ export const CreateIssueModal = ({ onClose, propertyDefinitions, onCreateSuccess
         resolver: zodResolver(createIssueFormSchema),
     })
 
-    const [state, formAction, pending] = useActionState(createIssueAction, { code: 0, message: '' });
-    useEffect(() => { if (state.code !== 200) toast(state.message) }, [state])
+    const [state, formAction, pending] = useActionState(createIssueAction, { success: false, message: '' });
+    useEffect(() => { 
+        if (!state.success) {
+            toast(state.message || 'Failed to create issue');
+        }
+    }, [state, onCreateSuccess]);
 
     function mustFindPropertyDefinition(id: string) {
         const propertyDefinition = propertyDefinitions.find(p => p.id === id);
@@ -59,7 +60,7 @@ export const CreateIssueModal = ({ onClose, propertyDefinitions, onCreateSuccess
                 <Form {...form}>
                     <form
                         ref={formRef}
-                        onSubmit={form.handleSubmit((data) => { startTransition(() => formAction(data)); onCreateSuccess?.() })}
+                        onSubmit={form.handleSubmit((data) => { startTransition(() => formAction(data)); })}
                     >
                         <div className='flex flex-row h-full'>
                             {/* 左侧面板内容 */}

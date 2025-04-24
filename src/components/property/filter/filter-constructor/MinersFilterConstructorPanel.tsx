@@ -3,6 +3,7 @@
 import { getSimpleMinersList, getMinerStatusStyle } from '@/lib/miner/service';
 import { useState } from 'react';
 import { FilterConstructorComponent } from '../../type';
+import { cn } from '@/lib/shadcn/utils';
 
 
 /**
@@ -78,7 +79,7 @@ export const MinersFilterConstructorPanel: FilterConstructorComponent = ({
                                     className="mr-2" />
                                 <div className="flex items-center">
                                     <span
-                                        className={`inline-block w-3 h-3 rounded-full mr-2 ${getMinerStatusStyle(miner.status)}`} />
+                                        className={cn("inline-block w-3 h-3 rounded-full mr-2", getMinerStatusStyle(miner.status))} />
                                     <span className="text-sm">{miner.id}</span>
                                     <span className="text-xs text-gray-500 ml-2">({miner.model})</span>
                                 </div>

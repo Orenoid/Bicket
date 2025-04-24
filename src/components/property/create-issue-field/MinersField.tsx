@@ -7,12 +7,11 @@ import {
     FormItem,
     FormLabel
 } from "@/components/shadcn/ui/form";
-import MultipleSelector, { Option } from "@/components/shadcn/ui/multi-select";
+import MultipleSelector from "@/components/shadcn/ui/multi-select";
 import { getSimpleMinersList } from "@/lib/miner/service";
 import { cn } from "@/lib/shadcn/utils";
-import { useEffect, useState } from "react";
 import { Control, FieldValues, Path } from 'react-hook-form';
-import { getPropertyTypeIcon } from "./common";
+import { getPropertyTypeIcon } from "../common";
 
 
 export const MinersField = <TFieldValues extends FieldValues>({
@@ -24,32 +23,11 @@ export const MinersField = <TFieldValues extends FieldValues>({
     propertyDefinition: PropertyDefinition;
     className?: string;
 }) => {
-    const [isLoading, setIsLoading] = useState(false);
-    const [miners, setMiners] = useState<Option[]>([]);
-
-    // 加载矿机数据
-    useEffect(() => {
-        const fetchMiners = () => {
-            setIsLoading(true);
-            try {
-                const minersList = getSimpleMinersList();
-
-                const options = minersList.map(miner => ({
-                    value: miner.id,
-                    label: `${miner.id}`,
-                    status: miner.status
-                }));
-
-                setMiners(options);
-            } catch (error) {
-                console.error("加载矿机数据失败:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchMiners();
-    }, []);
+    const miners = getSimpleMinersList().map(miner => ({
+        value: miner.id,
+        label: `${miner.id}`,
+        status: miner.status
+    }));
 
     return (
         <FormField
@@ -72,10 +50,8 @@ export const MinersField = <TFieldValues extends FieldValues>({
                             options={miners}
                             placeholder={`Select ${propertyDefinition.name}`}
                             onChange={(selected) => {
-                                // 将选中的选项值数组传递给表单
                                 field.onChange(selected.map(option => option.value));
                             }}
-                            loadingIndicator={isLoading ? <div className="p-2 text-center text-sm text-gray-500">Loading miners data...</div> : undefined}
                             emptyIndicator={<div className="p-2 text-center text-sm text-gray-500">No miners available</div>}
                         />
                     </FormControl>

@@ -4,10 +4,6 @@ import { useState } from 'react';
 import { FilterConstructorComponent } from '../../type';
 
 
-// TODO move this interface to a type.ts file
-/**
- * 单选类型选项接口
- */
 export interface SelectOption {
     id: string;
     name: string;

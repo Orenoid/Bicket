@@ -2,8 +2,11 @@
 
 import { clerkClient } from '@/lib/clerk/client';
 
+// TODO 原则上数据查询应该用 route handler 来实现，时间关系暂不改动
+
 // 用户信息接口
 export interface User {
+    id: string;
     imageUrl: string;
     hasImage: boolean;
     username: string;
@@ -31,6 +34,7 @@ export async function getUser(userId: string): Promise<User> {
               '未命名用户';
         
         return {
+            id: user.id,
             imageUrl: user.imageUrl,
             hasImage: !!user.imageUrl,
             username
@@ -82,6 +86,7 @@ export async function getUserList(params?: UserListParams): Promise<PaginatedUse
                   'Unnamed User';
             
             return {
+                id: user.id,
                 imageUrl: user.imageUrl,
                 hasImage: !!user.imageUrl,
                 username
