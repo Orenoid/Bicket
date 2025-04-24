@@ -1,26 +1,16 @@
 'use client';
 
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger
-} from "@/components/shadcn/ui/dropdown-menu";
 import { useDataTable } from "@/hooks/use-data-table";
-import { getFiltersStateParser } from "@/lib/parser";
-import { CAN_DISPLAY_IN_TABLE_PROPERTY_IDS, FILTERABLE_PROPERTY_TYPES, PropertyType, SORTABLE_PROPERTY_IDS, SystemPropertyId } from "@/lib/property/constants";
-import { FilterCondition, Issue, PropertyDefinition } from "@/lib/property/types";
+import { CAN_DISPLAY_IN_TABLE_PROPERTY_IDS, PropertyType, SORTABLE_PROPERTY_IDS, SystemPropertyId } from "@/lib/property/constants";
+import { Issue, PropertyDefinition } from "@/lib/property/types";
 import { getUserList, User } from "@/lib/user/service";
 import { Column, ColumnDef, Row, Table } from "@tanstack/react-table";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useQueryState } from "nuqs";
 import { useEffect, useMemo, useState } from "react";
-import { MdAdd, MdClose, MdFilterList } from "react-icons/md";
-import { AppliedFilterWrapper } from "../property/filter/applied-filter/AppliedFilterWrapper";
-import { FilterConstructorWrapperPanel } from "../property/filter/filter-constructor/FilterConstructorWrapperPanel";
-import { getAppliedFilterComponent, getFilterConstructorComponent, getPropertyTableCellComponent } from "../property/registry-utils";
+import { MdAdd } from "react-icons/md";
+import { getPropertyTableCellComponent } from "../property/registry-utils";
 import { DataTableColumnHeader } from "../shadcn/data-table/data-table-column-header";
 import { DataTableSortList } from "../shadcn/data-table/data-table-sort-list";
 import { DataTableToolbar } from "../shadcn/data-table/data-table-toolbar";
@@ -28,14 +18,11 @@ import { Button } from "../shadcn/ui/button";
 import { CreateIssueModal } from "./CreateIssueModal";
 import './IssueTable.css';
 import { UserDataContext } from "./UserContext";
-import Link from "next/link";
-import clsx from "clsx";
+import FiltersToolBar from "./FiltersToolBar";
 
 // 如果启用了 ssr，DataTable 在 hydration 之前会显示原始的数据库数据，观感反而不好，
 // 所以改成动态导入，若追求响应速度，再考虑启用 ssr
 const DataTable = dynamic(() => import("../shadcn/data-table/data-table").then(mod => mod.DataTable), { ssr: false });
-
-const FILTERS_QUERY_KEY = 'filters';
 
 interface TableColumn {
     id: string;
@@ -48,17 +35,13 @@ export interface IssueTableProps {
     propertyDefinitions: PropertyDefinition[]; // 属性定义列表，用于表头
     pageCount: number; // 符合筛选条件的 issue 的总页数，供分页组件使用
 }
+
 export function IssueTable({ issues, propertyDefinitions, pageCount }: IssueTableProps) {
 
     const [showCreateIssueModal, setShowCreateIssueModal] = useState(false);
-
-    const [selectedPropertyFilter, setSelectedPropertyFilter] = useState<PropertyDefinition | null>(null);
-    const [editingFilter, setEditingFilter] = useState<string | null>(null);
-    const [appliedFilters_, setAppliedFilters] = useQueryState(FILTERS_QUERY_KEY, getFiltersStateParser());
-    const appliedFilters = appliedFilters_ ?? [];
-
-    const searchParams = useSearchParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
+
     useEffect(() => {
         router.refresh()
     }, [router, searchParams]);
@@ -68,61 +51,6 @@ export function IssueTable({ issues, propertyDefinitions, pageCount }: IssueTabl
             .map(prop => ({ id: prop.id, title: prop.name }))
             .filter(column => CAN_DISPLAY_IN_TABLE_PROPERTY_IDS.includes(column.id as SystemPropertyId))
         , [propertyDefinitions]);
-
-    const handleFilterApply = (filter: FilterCondition | null) => {
-        if (filter) {
-            if (editingFilter) {
-                // 修改现有筛选条件
-                setAppliedFilters(
-                    appliedFilters.map(existingFilter => 
-                        existingFilter.propertyId === filter.propertyId 
-                            ? filter // 替换现有的筛选条件
-                            : existingFilter
-                    )
-                );
-            } else {
-                // 新增筛选条件
-                setAppliedFilters([...appliedFilters, filter]);
-            }
-        }
-        setSelectedPropertyFilter(null); // 关闭筛选面板
-        setEditingFilter(null); // 关闭编辑面板
-    };
-    // 取消设置 filter
-    const handleFilterCancel = () => {
-        setSelectedPropertyFilter(null); // 关闭筛选面板
-        setEditingFilter(null); // 关闭编辑面板
-    };
-    // 移除筛选条件
-    const handleRemoveFilter = (propertyID: string) => {
-        setAppliedFilters(appliedFilters.filter(filter => filter.propertyId !== propertyID));
-    };
-    // 清除所有筛选条件
-    const handleClearAllFilters = () => {
-        setAppliedFilters([]);
-        setSelectedPropertyFilter(null);
-        setEditingFilter(null);
-    };
-    // 获取某个属性的当前 filter
-    const getCurrentFilter = (propertyId: string): FilterCondition | null => {
-        return appliedFilters.find(f => f.propertyId === propertyId) || null;
-    };
-
-    const getPropertyDefinition = (propertyId: string): PropertyDefinition | null => {
-        return propertyDefinitions.find(p => p.id === propertyId) || null;
-    };
-
-    // 可筛选属性下拉菜单
-    const filterMenuItems = propertyDefinitions
-        .filter(prop => FILTERABLE_PROPERTY_TYPES.includes(prop.type as PropertyType))
-        // 过滤掉已经设置了过滤条件的属性
-        .filter(prop => !appliedFilters.some(filter => filter.propertyId === prop.id))
-        .map(prop => ({
-            label: prop.name,
-            onClick: () => {
-                setSelectedPropertyFilter(prop);
-            }
-        }));
 
     const [userData, setUserData] = useState<Record<string, User>>({});
     const [isLoadingUsers, setIsLoadingUsers] = useState(true);
@@ -183,45 +111,6 @@ export function IssueTable({ issues, propertyDefinitions, pageCount }: IssueTabl
         }
         loadUsersData();
     }, [issues, propertyDefinitions]);
-
-    // 渲染已应用的筛选条件
-    const renderAppliedFilters = () => {
-        return appliedFilters.map(filter => {
-            const propertyDef = getPropertyDefinition(filter.propertyId);
-            if (!propertyDef) return null;
-
-            // 使用工厂方法动态获取对应类型的筛选组件
-            const FilterComponent = getAppliedFilterComponent(propertyDef.type);
-            const isEditing = editingFilter === filter.propertyId;
-
-            return (
-                <AppliedFilterWrapper
-                    key={filter.propertyId}
-                    filter={filter}
-                    propertyDefinition={propertyDef}
-                    onRemove={handleRemoveFilter}
-                    FilterComponent={FilterComponent}
-                    onClick={() => {
-                        setEditingFilter(isEditing ? null : filter.propertyId);
-                    }}
-                >
-                    {/* 点击 applied filter 时，打开编辑面板 */}
-                    {isEditing && (
-                        <FilterConstructorWrapperPanel
-                            ConstructorComponent={getFilterConstructorComponent(propertyDef.type)}
-                            props={{
-                                propertyDefinition: propertyDef,
-                                currentFilter: filter,
-                                onApply: handleFilterApply,
-                                onCancel: handleFilterCancel,
-                                className: "absolute left-0 top-[100%]"
-                            }}
-                        />
-                    )}
-                </AppliedFilterWrapper>
-            );
-        });
-    };
 
     // 把业务定义的 columns 转换为 TanStack Table 的 ColumnDef
     const tanstackColumns = useMemo<ColumnDef<Issue>[]>(
@@ -288,59 +177,8 @@ export function IssueTable({ issues, propertyDefinitions, pageCount }: IssueTabl
                         <Button variant="outline" size="icon" className="mr-2" onClick={() => setShowCreateIssueModal(true)}>
                             <MdAdd />
                         </Button>
-                        {/* 筛选器相关UI */}
-                        <div className="flex flex-row items-center">
-                            <div className="flex flex-row items-center mr-2">
-                                {/* 横向展示当前已设置的筛选条件列表 */}
-                                {renderAppliedFilters()}
-                                {/* clear 按钮，当筛选条件数量大于等于 2 时显示 */}
-                                {appliedFilters.length >= 2 && (
-                                    <Button onClick={handleClearAllFilters} variant="outline">
-                                        <span className="mr-1">Clear</span>
-                                        <MdClose size={16} />
-                                    </Button>
-                                )}
-                            </div>
-                            {/* 筛选器下拉菜单 */}
-                            <DropdownMenu>
-                                <div className="relative">
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline">
-                                            <MdFilterList size={16} className={clsx("text-gray-500", { "mr-2": appliedFilters.length === 0 })} />
-                                            {appliedFilters.length === 0 && <span>Filter</span>}
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    {/* 设置筛选条件的面板，选择某个属性后显示 */}
-                                    {selectedPropertyFilter && (
-                                        <FilterConstructorWrapperPanel
-                                            ConstructorComponent={getFilterConstructorComponent(selectedPropertyFilter.type)}
-                                            props={{
-                                                propertyDefinition: selectedPropertyFilter,
-                                                currentFilter: getCurrentFilter(selectedPropertyFilter.id),
-                                                onApply: handleFilterApply,
-                                                onCancel: handleFilterCancel,
-                                                className: "absolute top-[100%] left-0"
-                                            }}
-                                        />
-                                    )}
-                                </div>
-                                <DropdownMenuContent align="start" className="w-56">
-                                    <DropdownMenuLabel>Properties</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuGroup>
-                                        {filterMenuItems.map(item => (
-                                            <DropdownMenuItem key={item.label} onClick={item.onClick}>
-                                                {item.label}
-                                            </DropdownMenuItem>
-
-                                        ))}
-                                    </DropdownMenuGroup>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-
-
-                        </div>
-
+                        {/* 筛选器相关UI - 使用提取的组件 */}
+                        <FiltersToolBar propertyDefinitions={propertyDefinitions} />
                     </div>
                     {/* 表格工具栏 右端 */}
                     <DataTableToolbar table={table}>
