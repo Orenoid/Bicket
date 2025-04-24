@@ -16,18 +16,18 @@ export const MinersAppliedFilter: AppliedFilterComponent = ({ filter }) => {
             const selectedIds = filter.value as string[];
 
             if (selectedIds.length === 0) {
-                return <span>未选择矿机</span>;
+                return <div className="whitespace-nowrap">no miners selected</div>;
             } else if (selectedIds.length === 1) {
                 // 单个矿机情况
                 const minerId = selectedIds[0];
                 const miner = getMinerById(minerId);
-                const statusStyle = miner ? getMinerStatusStyle(miner.status) : getMinerStatusStyle('未知');
+                const statusStyle = miner ? getMinerStatusStyle(miner.status) : getMinerStatusStyle('unknown');
                 return (
-                    <span className="flex items-center">
+                    <div className="flex items-center whitespace-nowrap">
                         <span
                             className={cn("inline-block w-2 h-2 rounded-full mr-1", statusStyle)} />
                         {minerId}
-                    </span>
+                    </div>
                 );
             } else if (selectedIds.length <= 3) {
                 // 显示所有选中的矿机ID（最多3个）

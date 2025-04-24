@@ -123,12 +123,6 @@ export const UserFilterConstructorPanel: FilterConstructorComponent = ({
         }
     };
 
-    // 清除筛选条件
-    const handleClear = () => {
-        setSelectedUserIds([]);
-        onApply(null);
-    };
-
     // 筛选用户列表
     const filteredUsers = searchQuery.trim() !== ''
         ? users.filter(user =>
@@ -142,7 +136,6 @@ export const UserFilterConstructorPanel: FilterConstructorComponent = ({
             <div className="text-xs font-medium text-gray-500 border-b border-gray-100 pb-2 mb-3">
                 {propertyDefinition.name}
             </div>
-
             {/* 搜索输入框 */}
             <div className="mb-3">
                 <input
@@ -193,19 +186,8 @@ export const UserFilterConstructorPanel: FilterConstructorComponent = ({
                     Selected {selectedUserIds.length} users
                 </div>
             )}
-
             {/* 操作按钮 */}
-            <div className="flex justify-between mt-3 pt-2 border-t border-gray-100">
-                <div>
-                    {currentFilter && (
-                        <button
-                            onClick={handleClear}
-                            className="px-2 py-1 text-xs text-gray-500 hover:text-gray-700"
-                        >
-                            Clear
-                        </button>
-                    )}
-                </div>
+            <div className="flex justify-end mt-3 pt-2 border-t border-gray-100">
                 <div className="flex space-x-2">
                     <button
                         onClick={onCancel}

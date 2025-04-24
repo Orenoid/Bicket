@@ -5,6 +5,7 @@ import { FilterCondition } from '@/lib/property/types';
 import React from 'react';
 import { FiX } from 'react-icons/fi';
 import { AppliedFilterComponent } from '../../type';
+import { Button } from "@/components/shadcn/ui/button";
 
 
 export interface AppliedFilterWrapperProps {
@@ -28,30 +29,30 @@ export const AppliedFilterWrapper: React.FC<AppliedFilterWrapperProps> = ({
     filter, propertyDefinition, onRemove, FilterComponent, onClick, children,
 }) => {
     return (
-        <div
-            className="flex items-center bg-gray-100 rounded-full px-3 py-1 text-sm mr-2 mb-2 hover:cursor-pointer relative"
+        <Button
+            variant="outline"
+            className="flex items-center px-3 py-1 mr-2 relative"
             onClick={(e) => {
                 e.stopPropagation();
-                if (onClick) onClick();
-            } }
+                onClick?.();
+            }}
         >
-            <span className="font-medium text-gray-700 mr-1">{propertyDefinition.name}:</span>
-            <div className="mr-2">
+            <span className="font-medium text-gray-700 mr-1">{propertyDefinition.name}</span>
+            <div className="mr-1 border-l border-r border-gray-300 px-2">
                 <FilterComponent
                     filter={filter}
                     propertyDefinition={propertyDefinition} />
             </div>
-            <button
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onRemove(filter.propertyId);
-                } }
-                className="text-gray-500 hover:text-gray-700 focus:outline-none p-1 rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
-                aria-label={`移除${propertyDefinition.name}筛选`}
+            <button onClick={(e) => {
+                e.stopPropagation();
+                onRemove(filter.propertyId);
+            }}
+                className="text-gray-500 hover:text-gray-700 focus:outline-none rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
+                aria-label={`Remove ${propertyDefinition.name} filter`}
             >
                 <FiX size={14} />
             </button>
             {children}
-        </div>
+        </Button >
     );
 };

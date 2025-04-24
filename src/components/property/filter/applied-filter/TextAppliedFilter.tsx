@@ -16,13 +16,6 @@ export const TextAppliedFilter: AppliedFilterComponent = ({ filter }) => {
     switch (filter.operator) {
         case 'contains':
             return <div className="flex items-center whitespace-nowrap">contains &ldquo;{value}&rdquo;</div>;
-        // 以下操作符当前筛选构造器未实现，但为未来扩展做准备
-        case 'eq':
-            return <span>eq &ldquo;{value}&rdquo;</span>;
-        case 'startsWith':
-            return <span>以 &ldquo;{value}&rdquo; 开头</span>;
-        case 'endsWith':
-            return <span>以 &ldquo;{value}&rdquo; 结尾</span>;
         default:
             return <div className="flex items-center whitespace-nowrap">{value}</div>;
     }
