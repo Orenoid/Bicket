@@ -1,57 +1,43 @@
 'use client';
 
+import { handlePropertyUpdate } from '@/components/property/issue-detail/update';
+import { Button } from '@/components/shadcn/ui/button';
 import { createSetOperation } from '@/lib/property/update-operations';
 import { BlockTypeSelect, BoldItalicUnderlineToggles, CodeToggle, CreateLink, InsertImage, ListsToggle, MDXEditor, headingsPlugin, imagePlugin, linkDialogPlugin, linkPlugin, listsPlugin, markdownShortcutPlugin, quotePlugin, thematicBreakPlugin, toolbarPlugin } from '@mdxeditor/editor';
-import { useEffect, useState } from 'react';
+import clsx from 'clsx';
+import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
 import { DetailFieldComponent } from '../type';
 import './DescriptionField.css';
-import { Button } from '@/components/shadcn/ui/button';
-import { handlePropertyUpdate } from '@/components/property/issue-detail/update';
-import clsx from 'clsx';
-
 
 export const DescriptionField: DetailFieldComponent = ({
     propertyDefinition, value, issueID
 }) => {
     // 组件状态
     const [internalValue, setInternalValue] = useState<string>(typeof value === 'string' ? value : '');
-    const [hasChanges, setHasChanges] = useState(false);
     const [originalValue, setOriginalValue] = useState<string>(typeof value === 'string' ? value : '');
-
-    // 初始化和同步内部值
-    useEffect(() => {
-        if (value !== undefined && value !== null) {
-            setInternalValue(String(value));
-            setOriginalValue(String(value));
-        } else {
-            setInternalValue('');
-            setOriginalValue('');
-        }
-    }, [value]);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const hasChanges = internalValue !== originalValue;
 
     // 更新编辑器内容的处理函数
     const handleChange = (markdown: string) => {
         setInternalValue(markdown);
-        // 检查是否有变化
-        setHasChanges(markdown !== originalValue);
     };
 
     // 处理取消操作
     const handleCancel = () => {
         setInternalValue(originalValue);
-        setHasChanges(false);
     };
 
     // 处理保存操作
     const handleSave = async () => {
         const operation = createSetOperation(propertyDefinition.id, internalValue);
-
-        // 调用回调函数更新值
+        setIsUpdating(true);
         const success = await handlePropertyUpdate(issueID, operation);
         if (success) {
-            setHasChanges(false);
             setOriginalValue(internalValue);
         }
+        setIsUpdating(false);
     };
 
     // 渲染编辑模式
@@ -93,6 +79,7 @@ export const DescriptionField: DetailFieldComponent = ({
                     Cancel
                 </Button>
                 <Button onClick={handleSave}>
+                    {isUpdating && <Loader2 className="animate-spin" />}
                     Save
                 </Button>
             </div>
