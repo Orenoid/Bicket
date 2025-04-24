@@ -28,9 +28,7 @@ cd bicket
 2. **Install dependencies**
 
 ```bash
-npm install
-# or
-yarn install
+npm install --legacy-peer-deps
 ```
 
 3. **Generate Prisma client**
@@ -45,7 +43,7 @@ npx prisma generate
 cp .env.example .env
 ```
 
-Then modify the `.env` file as needed.
+Then modify the `.env` file as needed. You might need to create a new Clerk project and add the `CLERK_SECRET_KEY` and `CLERK_PUBLISHABLE_KEY` to the `.env` file.
 
 5. **Start PostgreSQL with Docker Compose**
 
@@ -55,12 +53,16 @@ docker compose up -d
 
 This will launch a PostgreSQL database container.
 
-6. **Start the development server**
+6. **Run Prisma migrations**
+
+```bash
+npx prisma migrate dev
+```
+
+7. **Start the development server**
 
 ```bash
 npm run dev
-# or
-yarn dev
 ```
 
 The application will be available at [http://localhost:3000](http://localhost:3000).
@@ -74,3 +76,4 @@ The application will be available at [http://localhost:3000](http://localhost:30
 - PostgreSQL
 - Tailwind CSS
 - React Icons
+- shadcn/ui
