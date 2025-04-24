@@ -9,17 +9,16 @@ import { SystemPropertyId } from '@/lib/property/constants';
 import { zodResolver } from '@hookform/resolvers/zod';
 import clsx from 'clsx';
 import { Loader2 } from 'lucide-react';
-import { Fragment, startTransition, useActionState, useEffect, useRef } from 'react';
+import { Fragment, startTransition, useActionState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { SelectField } from '../property/create-issue-field/SelectField';
-import { createIssueAction } from './actions';
-import TitleField from '../property/create-issue-field/TitleField';
-import { createIssueFormSchema } from './schema';
 import DescriptionField from '../property/create-issue-field/DescriptionField';
 import MinersField from '../property/create-issue-field/MinersField';
+import { SelectField } from '../property/create-issue-field/SelectField';
+import TitleField from '../property/create-issue-field/TitleField';
 import UserField from '../property/create-issue-field/UserField';
-import { toast } from 'sonner';
+import { createIssueAction } from './actions';
+import { createIssueFormSchema } from './schema';
 
 export interface PropertyDefinition {
     id: string;
@@ -28,7 +27,7 @@ export interface PropertyDefinition {
     config?: Record<string, unknown>;
 }
 
-export const CreateIssueModal = ({ onClose, propertyDefinitions, onCreateSuccess }: {
+export const CreateIssueModal = ({ onClose, propertyDefinitions }: {
     onClose: () => void;
     propertyDefinitions: PropertyDefinition[];
     onCreateSuccess?: () => void;
@@ -39,12 +38,8 @@ export const CreateIssueModal = ({ onClose, propertyDefinitions, onCreateSuccess
         resolver: zodResolver(createIssueFormSchema),
     })
 
-    const [state, formAction, pending] = useActionState(createIssueAction, { success: false, message: '' });
-    useEffect(() => { 
-        if (!state.success) {
-            toast(state.message || 'Failed to create issue');
-        }
-    }, [state, onCreateSuccess]);
+    const [{}, formAction, pending] = useActionState(createIssueAction, { success: false, message: '' });
+
 
     function mustFindPropertyDefinition(id: string) {
         const propertyDefinition = propertyDefinitions.find(p => p.id === id);
