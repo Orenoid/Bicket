@@ -89,6 +89,7 @@ export const CreateIssueModal = ({ onClose, propertyDefinitions }: {
                             <div className="flex flex-col w-1/3 h-full pl-5 pt-5 pr-8">
                                 <span className='text-sm text-gray-400 whitespace-nowrap font-sans mb-2'>Properties</span>
                                 <div className='flex flex-col gap-3 pl-3 mb-8'>
+                                    {/* 这里的布局是手动规划的，只是碰巧几个属性类型都一样，不适合用 map 合并处理 */}
                                     <SelectField
                                         propertyDefinition={mustFindPropertyDefinition(SystemPropertyId.STATUS)}
                                         control={form.control}

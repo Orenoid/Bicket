@@ -1,14 +1,13 @@
 'use client';
 
 import { useDataTable } from "@/hooks/use-data-table";
-import { CAN_DISPLAY_IN_TABLE_PROPERTY_IDS, PropertyType, SORTABLE_PROPERTY_IDS, SystemPropertyId } from "@/lib/property/constants";
+import { useUserData } from "@/hooks/use-user-data";
+import { CAN_DISPLAY_IN_TABLE_PROPERTY_IDS, SORTABLE_PROPERTY_IDS, SystemPropertyId } from "@/lib/property/constants";
 import { Issue, PropertyDefinition } from "@/lib/property/types";
-import { getUserList, User } from "@/lib/user/service";
 import { Column, ColumnDef, Row, Table } from "@tanstack/react-table";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { MdAdd } from "react-icons/md";
 import { getPropertyTableCellComponent } from "../property/registry-utils";
 import { DataTableColumnHeader } from "../shadcn/data-table/data-table-column-header";
@@ -39,12 +38,6 @@ export interface IssueTableProps {
 export function IssueTable({ issues, propertyDefinitions, pageCount }: IssueTableProps) {
 
     const [showCreateIssueModal, setShowCreateIssueModal] = useState(false);
-    const router = useRouter();
-    const searchParams = useSearchParams();
-
-    useEffect(() => {
-        router.refresh()
-    }, [router, searchParams]);
 
     const columns = useMemo<TableColumn[]>(() =>
         propertyDefinitions
@@ -52,65 +45,8 @@ export function IssueTable({ issues, propertyDefinitions, pageCount }: IssueTabl
             .filter(column => CAN_DISPLAY_IN_TABLE_PROPERTY_IDS.includes(column.id as SystemPropertyId))
         , [propertyDefinitions]);
 
-    const [userData, setUserData] = useState<Record<string, User>>({});
-    const [isLoadingUsers, setIsLoadingUsers] = useState(true);
-    // 创建用户数据上下文值
-    const userDataContextValue = useMemo(() => ({
-        userData,
-        isLoading: isLoadingUsers
-    }), [userData, isLoadingUsers]);
-    // 收集所有用户类型的属性值并批量加载用户信息
-    useEffect(() => {
-        async function loadUsersData() {
-            try {
-                // 找出所有用户类型的属性定义
-                const userPropertyIds = propertyDefinitions
-                    .filter(prop => prop.type === PropertyType.USER)
-                    .map(prop => prop.id);
-
-                if (userPropertyIds.length === 0) {
-                    setIsLoadingUsers(false);
-                    return;
-                }
-
-                // 从所有issue中收集用户ID
-                const userIds = new Set<string>();
-                issues.forEach(issue => {
-                    issue.property_values.forEach(propValue => {
-                        if (
-                            userPropertyIds.includes(propValue.property_id) &&
-                            propValue.value !== null &&
-                            propValue.value !== undefined &&
-                            propValue.value !== ""
-                        ) {
-                            userIds.add(String(propValue.value));
-                        }
-                    });
-                });
-
-                if (userIds.size === 0) {
-                    setIsLoadingUsers(false);
-                    return;
-                }
-
-                const userIdsArray = Array.from(userIds);
-                const usersResponse = await getUserList({
-                    userId: userIdsArray
-                });
-                const userDataMap: Record<string, User> = {};
-                usersResponse.data.forEach(user => {
-                    userDataMap[user.id] = user;
-                });
-
-                setUserData(userDataMap);
-            } catch (error) {
-                console.error('批量加载用户数据失败:', error);
-            } finally {
-                setIsLoadingUsers(false);
-            }
-        }
-        loadUsersData();
-    }, [issues, propertyDefinitions]);
+    // 提取 issue 列表中涉及的用户，批量预加载
+    const userDataContextValue = useUserData(issues, propertyDefinitions);
 
     // 把业务定义的 columns 转换为 TanStack Table 的 ColumnDef
     const tanstackColumns = useMemo<ColumnDef<Issue>[]>(
@@ -192,7 +128,6 @@ export function IssueTable({ issues, propertyDefinitions, pageCount }: IssueTabl
                     propertyDefinitions={propertyDefinitions}
                     onCreateSuccess={() => {
                         setShowCreateIssueModal(false);
-                        router.refresh();
                     }}
                 />
             )}
