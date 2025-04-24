@@ -1,4 +1,4 @@
-import { Registry } from "@/lib/registry";
+import { Registry, REGISTRY_NAMES } from "@/lib/registry";
 import { AppliedFilterComponent, FilterConstructorComponent, PropertyTableCellComponent } from "./type";
 import { DefaultPropertyCell } from "./issue-table-cell";
 import { DefaultAppliedFilter, DefaultFilterConstructorPanel } from "./filter";
@@ -11,7 +11,7 @@ import { DefaultAppliedFilter, DefaultFilterConstructorPanel } from "./filter";
 export function registerPropertyTableCellComponents(
   components: Record<string, PropertyTableCellComponent>
 ): void {
-  Registry.getRegistry<PropertyTableCellComponent>('propertyTableCell').registerAll(components);
+  Registry.getRegistry<PropertyTableCellComponent>(REGISTRY_NAMES.PROPERTY_TABLE_CELL).registerAll(components);
 }
 
 /**
@@ -21,7 +21,7 @@ export function registerPropertyTableCellComponents(
  * @returns 对应的组件
  */
 export function getPropertyTableCellComponent(propertyType: string): PropertyTableCellComponent {
-  return Registry.getRegistry<PropertyTableCellComponent>('propertyTableCell').get(propertyType, DefaultPropertyCell);
+  return Registry.getRegistry<PropertyTableCellComponent>(REGISTRY_NAMES.PROPERTY_TABLE_CELL).get(propertyType, DefaultPropertyCell);
 }
 
 /**
@@ -33,7 +33,7 @@ export function getPropertyTableCellComponent(propertyType: string): PropertyTab
 export function registerAppliedFilterComponents(
   components: Record<string, AppliedFilterComponent>
 ): void {
-  Registry.getRegistry<AppliedFilterComponent>('appliedFilter').registerAll(components);
+  Registry.getRegistry<AppliedFilterComponent>(REGISTRY_NAMES.APPLIED_FILTER).registerAll(components);
 }
 
 /**
@@ -47,7 +47,7 @@ export function registerAppliedFilterComponents(
  */
 
 export function getAppliedFilterComponent(propertyType: string): AppliedFilterComponent {
-  return Registry.getRegistry<AppliedFilterComponent>('appliedFilter').get(propertyType, DefaultAppliedFilter);
+  return Registry.getRegistry<AppliedFilterComponent>(REGISTRY_NAMES.APPLIED_FILTER).get(propertyType, DefaultAppliedFilter);
 }
 
 /**
@@ -58,7 +58,7 @@ export function getAppliedFilterComponent(propertyType: string): AppliedFilterCo
 export function registerFilterConstructorComponents(
   components: Record<string, FilterConstructorComponent>
 ): void {
-  Registry.getRegistry<FilterConstructorComponent>('filterConstructor').registerAll(components);
+  Registry.getRegistry<FilterConstructorComponent>(REGISTRY_NAMES.FILTER_CONSTRUCTOR).registerAll(components);
 }
 
 /**
@@ -72,5 +72,5 @@ export function registerFilterConstructorComponents(
  */
 
 export function getFilterConstructorComponent(propertyType: string): FilterConstructorComponent {
-  return Registry.getRegistry<FilterConstructorComponent>('filterConstructor').get(propertyType, DefaultFilterConstructorPanel);
+  return Registry.getRegistry<FilterConstructorComponent>(REGISTRY_NAMES.FILTER_CONSTRUCTOR).get(propertyType, DefaultFilterConstructorPanel);
 }

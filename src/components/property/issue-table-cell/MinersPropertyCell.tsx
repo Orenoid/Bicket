@@ -2,6 +2,7 @@
 
 import { getMinerById, getMinerStatusStyle } from '@/lib/miner/service';
 import { PropertyTableCellComponent } from '../type';
+import { cn } from '@/lib/shadcn/utils';
 
 
 export const MinersPropertyCell: PropertyTableCellComponent = ({
@@ -41,7 +42,7 @@ export const MinersPropertyCell: PropertyTableCellComponent = ({
                             title={miner ? `${miner.model} (${miner.ipAddress})` : '未知矿机'}
                         >
                             <span
-                                className={`inline-block w-2 h-2 rounded-full mr-1 flex-shrink-0 ${statusStyle}`}
+                                className={cn("inline-block w-2 h-2 rounded-full mr-1 flex-shrink-0", statusStyle)}
                             ></span>
                             {minerId}
                         </span>

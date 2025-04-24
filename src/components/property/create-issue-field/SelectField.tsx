@@ -16,7 +16,7 @@ import {
 } from "@/components/shadcn/ui/select";
 import { cn } from "@/lib/shadcn/utils";
 import { Control, FieldValues, Path } from 'react-hook-form';
-import { getPropertyTypeIcon } from "./common";
+import { getPropertyTypeIcon } from "../common";
 
 interface Option {
     id: string;

@@ -19,7 +19,7 @@ import { useOrganization } from "@clerk/clerk-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Control, FieldValues, Path } from 'react-hook-form';
-import { getPropertyTypeIcon } from "./common";
+import { getPropertyTypeIcon } from "../common";
 
 
 interface UserData {

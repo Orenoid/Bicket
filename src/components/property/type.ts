@@ -50,3 +50,19 @@ export interface PropertyCellProps {
  * 表格单元格组件，用于自定义各个属性类型在表格中的展示效果
  */
 export type PropertyTableCellComponent = React.FC<PropertyCellProps>;
+
+export interface DetailFieldProps {
+    issueID: string;
+    propertyDefinition: PropertyDefinition;
+    value: unknown; // 属性值
+    onUpdate?: (operation: {
+        property_id: string;
+        operation_type: string;
+        operation_payload: Record<string, unknown>;
+    }) => Promise<boolean>;
+}
+
+/**
+ * issue 详情页属性组件，用于自定义各个属性类型在详情页中的展示和交互效果
+ */
+export type DetailFieldComponent = React.FC<DetailFieldProps>;

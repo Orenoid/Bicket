@@ -25,14 +25,18 @@ import { DataTableColumnHeader } from "../shadcn/data-table/data-table-column-he
 import { DataTableSortList } from "../shadcn/data-table/data-table-sort-list";
 import { DataTableToolbar } from "../shadcn/data-table/data-table-toolbar";
 import { Button } from "../shadcn/ui/button";
-import { UserDataContext } from "./UserContext";
 import { CreateIssueModal } from "./CreateIssueModal";
+import './IssueTable.css';
+import { UserDataContext } from "./UserContext";
+import Link from "next/link";
+import clsx from "clsx";
 
 // 如果启用了 ssr，DataTable 在 hydration 之前会显示原始的数据库数据，观感反而不好，
 // 所以改成动态导入，若追求响应速度，再考虑启用 ssr
 const DataTable = dynamic(() => import("../shadcn/data-table/data-table").then(mod => mod.DataTable), { ssr: false });
 
 const FILTERS_QUERY_KEY = 'filters';
+
 interface TableColumn {
     id: string;
     title: string;
@@ -65,17 +69,27 @@ export function IssueTable({ issues, propertyDefinitions, pageCount }: IssueTabl
             .filter(column => CAN_DISPLAY_IN_TABLE_PROPERTY_IDS.includes(column.id as SystemPropertyId))
         , [propertyDefinitions]);
 
-    // 设置新的 filter
     const handleFilterApply = (filter: FilterCondition | null) => {
         if (filter) {
-            setAppliedFilters([...appliedFilters, filter]);
+            if (editingFilter) {
+                // 修改现有筛选条件
+                setAppliedFilters(
+                    appliedFilters.map(existingFilter => 
+                        existingFilter.propertyId === filter.propertyId 
+                            ? filter // 替换现有的筛选条件
+                            : existingFilter
+                    )
+                );
+            } else {
+                // 新增筛选条件
+                setAppliedFilters([...appliedFilters, filter]);
+            }
         }
         setSelectedPropertyFilter(null); // 关闭筛选面板
         setEditingFilter(null); // 关闭编辑面板
     };
     // 取消设置 filter
     const handleFilterCancel = () => {
-        console.log('handleFilterCancel');
         setSelectedPropertyFilter(null); // 关闭筛选面板
         setEditingFilter(null); // 关闭编辑面板
     };
@@ -110,8 +124,6 @@ export function IssueTable({ issues, propertyDefinitions, pageCount }: IssueTabl
             }
         }));
 
-    // TODO tech dept 批量预加载 clerk 用户的临时解决方案，未来应该设计一套适用于所有属性类型的通用解决方案
-    // 新增：用户数据状态
     const [userData, setUserData] = useState<Record<string, User>>({});
     const [isLoadingUsers, setIsLoadingUsers] = useState(true);
     // 创建用户数据上下文值
@@ -135,7 +147,6 @@ export function IssueTable({ issues, propertyDefinitions, pageCount }: IssueTabl
 
                 // 从所有issue中收集用户ID
                 const userIds = new Set<string>();
-
                 issues.forEach(issue => {
                     issue.property_values.forEach(propValue => {
                         if (
@@ -154,19 +165,13 @@ export function IssueTable({ issues, propertyDefinitions, pageCount }: IssueTabl
                     return;
                 }
 
-                // 批量请求用户数据
                 const userIdsArray = Array.from(userIds);
                 const usersResponse = await getUserList({
                     userId: userIdsArray
                 });
-
-                // 将用户数据转换为 ID -> User 映射
                 const userDataMap: Record<string, User> = {};
                 usersResponse.data.forEach(user => {
-                    const userId = userIdsArray[usersResponse.data.indexOf(user)];
-                    if (userId) {
-                        userDataMap[userId] = user;
-                    }
+                    userDataMap[user.id] = user;
                 });
 
                 setUserData(userDataMap);
@@ -253,7 +258,7 @@ export function IssueTable({ issues, propertyDefinitions, pageCount }: IssueTabl
                             <DataTableColumnHeader className="cursor-pointer" column={column} title={column_.title} />
                         ),
                         cell: ({ row }: { row: Row<Issue> }) => (
-                            <CellWrapper onClick={() => { }}>
+                            <CellWrapper issueID={String(row.original.issue_id)}>
                                 {renderCell(column_, row.original)}
                             </CellWrapper>
                         ),
@@ -270,9 +275,6 @@ export function IssueTable({ issues, propertyDefinitions, pageCount }: IssueTabl
         data: issues,
         columns: tanstackColumns as ColumnDef<Issue>[],
         pageCount: pageCount,
-        // initialState: {
-        //     sorting: [{ id: SystemPropertyId.ID, desc: true }],
-        // },
         getRowId: (row) => row.issue_id as string,
         shallow: false,
     });
@@ -293,7 +295,7 @@ export function IssueTable({ issues, propertyDefinitions, pageCount }: IssueTabl
                                 {renderAppliedFilters()}
                                 {/* clear 按钮，当筛选条件数量大于等于 2 时显示 */}
                                 {appliedFilters.length >= 2 && (
-                                    <Button onClick={handleClearAllFilters} variant="outline" size="icon">
+                                    <Button onClick={handleClearAllFilters} variant="outline">
                                         <span className="mr-1">Clear</span>
                                         <MdClose size={16} />
                                     </Button>
@@ -304,7 +306,7 @@ export function IssueTable({ issues, propertyDefinitions, pageCount }: IssueTabl
                                 <div className="relative">
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="outline">
-                                            <MdFilterList size={16} className={`${appliedFilters.length === 0 ? "mr-2" : ""} text-gray-500`} />
+                                            <MdFilterList size={16} className={clsx("text-gray-500", { "mr-2": appliedFilters.length === 0 })} />
                                             {appliedFilters.length === 0 && <span>Filter</span>}
                                         </Button>
                                     </DropdownMenuTrigger>
@@ -361,10 +363,13 @@ export function IssueTable({ issues, propertyDefinitions, pageCount }: IssueTabl
 
 }
 
-const CellWrapper = ({ children, onClick }: { children: React.ReactNode, onClick: () => void }) => {
+const CellWrapper = ({ issueID, children }: { issueID: string, children: React.ReactNode, onClick?: () => void }) => {
     return (
-        <div className="hover:cursor-pointer w-full h-full" onClick={onClick}>
-            {children}
+        <div className="w-full h-full">
+            {/* 设置为 block 后，空白单元格也能点击 */}
+            <Link className="block w-full h-full" href={`/issues/${issueID}`}>
+                {children}
+            </Link>
         </div>
     );
 };

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 
-// a workaround from community to implement pending state of server action
+// 让 server action 支持 pending 状态的一个 workaround
 // https://github.com/vercel/next.js/discussions/51371
 
 export const useServerAction = <P, R>(

@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 import prisma from '../../prisma';
 import { SystemPropertyId } from '../../property/constants';
 import { FilterCondition, Issue, PropertyDefinition, PropertyValue } from '../../property/types';
+import { notFound } from 'next/navigation';
 
 
 export async function getIssues(
@@ -410,9 +411,6 @@ interface SortConfig {
 /**
  * 将排序配置转换为Prisma原始SQL
  *
- * 由于我们需要根据 property_single_value 或 property_multi_value 表中的字段进行排序，
- * 这里需要使用原始SQL查询来实现复杂的排序逻辑。
- *
  * @param sortConfigs 排序配置数组
  * @returns 包含原始SQL的对象或undefined
  */
@@ -420,6 +418,9 @@ export function buildOrderByParams(sortConfigs: SortConfig[]): string | undefine
     if (!sortConfigs || sortConfigs.length === 0) {
         return undefined; // 返回undefined表示使用默认排序
     }
+
+    // 出于业务的可扩展性考虑，数据库表结构采用了很彻底的 EAV 模型，相应的排序逻辑实现起来会比较复杂
+    // 若后期数据量增大，可以通过引入倒排索引或第三方中间件来优化解决
 
     // 构建排序SQL表达式
     const orderExpressions = sortConfigs.map(sort => {
@@ -459,4 +460,82 @@ export function buildOrderByParams(sortConfigs: SortConfig[]): string | undefine
     }
 
     return undefined;
+}
+
+export async function getIssueById(id: string): Promise<Issue> {
+
+    const issueExists = await prisma.issue.findFirst({
+        where: {
+            id: id,
+            deletedAt: null
+        }
+    });
+    if (!issueExists) {
+        notFound()
+    }
+
+    // 并行查询工单的单值属性和多值属性
+    const [singlePropertyValues, multiPropertyValues] = await Promise.all([
+        prisma.property_single_value.findMany({
+            where: {
+                issue_id: id,
+                deletedAt: null
+            },
+            select: {
+                property_id: true,
+                property_type: true,
+                value: true
+            }
+        }),
+        prisma.property_multi_value.findMany({
+            where: {
+                issue_id: id,
+                deletedAt: null
+            },
+            select: {
+                property_id: true,
+                property_type: true,
+                value: true,
+                position: true
+            },
+            orderBy: {
+                position: 'asc'
+            }
+        })
+    ]);
+
+    // 处理多值属性，将同一属性的多个值合并成数组
+    const multiValueMap = new Map<string, string[]>();
+
+    for (const mpv of multiPropertyValues) {
+        if (!multiValueMap.has(mpv.property_id)) {
+            multiValueMap.set(mpv.property_id, []);
+        }
+        if (mpv.value) {
+            multiValueMap.get(mpv.property_id)?.push(mpv.value);
+        }
+    }
+
+    // 转换为前端需要的格式，先处理单值属性
+    const values: PropertyValue[] = singlePropertyValues.map(pv => ({
+        property_id: pv.property_id,
+        value: pv.value
+    }));
+
+    // 添加多值属性
+    for (const [propertyId, valueArray] of multiValueMap.entries()) {
+        values.push({
+            property_id: propertyId,
+            value: valueArray
+        });
+    }
+
+    // 构建返回结果
+    const issueData: Issue = {
+        issue_id: id,
+        property_values: values
+    };
+
+    return issueData;
+
 }

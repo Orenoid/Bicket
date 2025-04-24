@@ -1,6 +1,17 @@
 // 目前自行封装一个简单的 Registry 实现已经可以满足项目需求，暂不引入依赖注入等外部库
 
 /**
+ * 注册表名称常量，集中管理
+ */
+export const REGISTRY_NAMES = {
+    PROPERTY_TABLE_CELL: 'propertyTableCell',
+    APPLIED_FILTER: 'appliedFilter',
+    FILTER_CONSTRUCTOR: 'filterConstructor',
+    PROPERTY_UPDATE_PROCESSOR: 'propertyUpdateProcessor',
+    PROPERTY_VALUE_PROCESSOR: 'propertyValueProcessor',
+} as const;
+
+/**
  * 通用注册表类
  * 
  * 用于管理各种类型与对应实现的映射关系
@@ -62,4 +73,17 @@ export class Registry<T> {
         return impl !== undefined ? impl : fallback;
     }
 
+    /**
+     * 获取类型对应的实现，如果未找到则抛出错误
+     * 
+     * @param type 类型标识
+     * @returns 对应的实现
+     */
+    public mustGet(type: string): T {
+        const impl = this.registry.get(type) as T | undefined;
+        if (!impl) {
+            throw new Error(`类型 ${type} 未找到对应的实现`);
+        }
+        return impl;
+    }
 }

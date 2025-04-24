@@ -1,3 +1,4 @@
+import { cn } from '@/lib/shadcn/utils';
 import React from 'react';
 import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 
@@ -25,9 +26,6 @@ export function TransparentOverlay({ onClick }: { onClick: () => void }) {
   return <div className="fixed inset-0 bg-transparent z-40" onClick={onClick}></div>
 }
 
-/**
- * 容器 Overlay，只覆盖父元素的范围（父元素需要设置为 relative）
- */
 export function ContainerOverlay({
   onClick,
   className = "bg-black opacity-50",
@@ -39,7 +37,7 @@ export function ContainerOverlay({
 }) {
   return (
     <div
-      className={`absolute inset-0 z-50 ${className}`}
+      className={cn("absolute inset-0 z-50", className)}
       onClick={onClick}
     >
       {children}

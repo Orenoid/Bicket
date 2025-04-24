@@ -2,6 +2,7 @@
 
 import { TransparentOverlay } from '@/components/ui/overlay';
 import { FilterConstructorComponent, FilterConstructorPanelProps } from '../../type';
+import { cn } from '@/lib/shadcn/utils';
 
 
 export function FilterConstructorWrapperPanel(
@@ -14,7 +15,7 @@ export function FilterConstructorWrapperPanel(
     const { onCancel } = props;
 
     return (
-        <div className={`${props.className}`} onClick={ (e) => { console.log('click'); e.stopPropagation(); }}>
+        <div className={cn(props.className)} onClick={ (e) => { e.stopPropagation(); }}>
             <TransparentOverlay onClick={onCancel} />
             <ConstructorComponent {...props} />
         </div>

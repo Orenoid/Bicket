@@ -2,6 +2,7 @@
 
 import { getMinerById, getMinerStatusStyle } from '@/lib/miner/service';
 import { AppliedFilterComponent } from '../../type';
+import { cn } from '@/lib/shadcn/utils';
 
 
 /**
@@ -24,7 +25,7 @@ export const MinersAppliedFilter: AppliedFilterComponent = ({ filter }) => {
                 return (
                     <span className="flex items-center">
                         <span
-                            className={`inline-block w-2 h-2 rounded-full mr-1 ${statusStyle}`} />
+                            className={cn("inline-block w-2 h-2 rounded-full mr-1", statusStyle)} />
                         {minerId}
                     </span>
                 );
@@ -38,7 +39,7 @@ export const MinersAppliedFilter: AppliedFilterComponent = ({ filter }) => {
                             return (
                                 <span key={minerId} className="flex items-center">
                                     <span
-                                        className={`inline-block w-2 h-2 rounded-full mr-1 ${statusStyle}`} />
+                                        className={cn("inline-block w-2 h-2 rounded-full mr-1", statusStyle)} />
                                     {minerId}
                                 </span>
                             );
@@ -55,7 +56,7 @@ export const MinersAppliedFilter: AppliedFilterComponent = ({ filter }) => {
                             return (
                                 <span key={minerId} className="flex items-center">
                                     <span
-                                        className={`inline-block w-2 h-2 rounded-full mr-1 ${statusStyle}`} />
+                                        className={cn("inline-block w-2 h-2 rounded-full mr-1", statusStyle)} />
                                     {minerId}
                                 </span>
                             );
