@@ -264,7 +264,6 @@ function preprocessIssueInput(
  * @returns 创建结果
  */
 export async function createIssue(input: CreateIssueInput): Promise<CreateIssueResult> {
-  // 开始计时 - 创建单个 issue
   const results = await batchCreateIssues([input]);
   return results[0];
 }

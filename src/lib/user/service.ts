@@ -2,7 +2,7 @@
 
 import { clerkClient } from '@/lib/clerk/client';
 
-// TODO 原则上数据查询应该用 route handler 来实现，时间关系暂不改动
+// TODO 原则上数据查询应该用 route handler 来实现，时间有限暂不改动
 
 // 用户信息接口
 export interface User {

@@ -3,23 +3,19 @@ import { MultiValueData } from '@/lib/property/types';
 import { SystemPropertyId, PropertyType } from '@/lib/property/constants';
 import { getPropertyUpdateProcessor } from '@/lib/property/registry-utils';
 
-// 定义操作负载接口
 type OperationPayload = Record<string, unknown>;
 
-// 定义操作接口
 interface Operation {
   property_id: string;
   operation_type: string;
   operation_payload: OperationPayload;
 }
 
-// 定义更新Issue的输入参数接口
 interface UpdateIssueInput {
   issueId: string;
   operations: Operation[];
 }
 
-// 定义更新结果接口
 export interface UpdateIssueResult {
   success: boolean;
   issueId?: string;

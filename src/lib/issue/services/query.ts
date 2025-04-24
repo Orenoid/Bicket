@@ -1,190 +1,8 @@
 import { Prisma } from '@prisma/client';
 import prisma from '../../prisma';
-import { SystemPropertyId } from '../../property/constants';
+import { NUMBER_VALUE_TYPES, PROPERTY_ID_TYPE_MAP, PropertyType, SystemPropertyId } from '../../property/constants';
 import { FilterCondition, Issue, PropertyDefinition, PropertyValue } from '../../property/types';
 import { notFound } from 'next/navigation';
-
-
-export async function getIssues(
-    filters: FilterCondition[] | undefined,
-    workspaceId: string,
-    page: number,
-    pageSize: number,
-    orderBy?: string | undefined
-): Promise<{ issues: Issue[]; total: number; }> {
-    try {
-        // 基本条件：未删除的工单并且必须指定 workspace_id
-        const baseWhere: Prisma.issueWhereInput = {
-            deletedAt: null,
-            workspace_id: workspaceId // 强制要求 workspace_id
-        };
-
-        // 如果有筛选条件，应用筛选
-        if (filters && filters.length > 0) {
-            // 由于 property_single_value 和 property_multi_value 不是 issue 的直接关系字段，
-            // 我们需要先获取符合条件的属性值记录，然后根据这些记录找到对应的 issue
-            // 对于每个筛选条件，构建查询
-            const issueIds = new Set<string>();
-
-            // 记录是否已经查询过
-            let hasSearched = false;
-
-            for (const filter of filters) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                let valueCondition: any = {};
-
-                // 根据操作符构建查询条件
-                switch (filter.operator) {
-                    case 'contains':
-                        valueCondition = { contains: String(filter.value) };
-                        break;
-                    case 'eq':
-                        valueCondition = String(filter.value);
-                        break;
-                    case 'startsWith':
-                        valueCondition = { startsWith: String(filter.value) };
-                        break;
-                    case 'endsWith':
-                        valueCondition = { endsWith: String(filter.value) };
-                        break;
-                    case 'in':
-                        const values = Array.isArray(filter.value)
-                            ? filter.value.map(v => String(v))
-                            : [String(filter.value)];
-                        valueCondition = { in: values };
-                        break;
-                    default:
-                        throw new Error(`不支持的筛选操作符: ${filter.operator}`);
-                }
-
-                // 构建基本查询条件
-                const baseCondition = {
-                    property_id: filter.propertyId,
-                    property_type: filter.propertyType,
-                    value: valueCondition,
-                    deletedAt: null
-                };
-
-                // 根据属性类型确定查询表
-                let propertyValues: { issue_id: string; }[] = [];
-
-                // TODO tech dept 这里做了个特殊判断，感觉是有问题的，回头排查
-                if (filter.propertyType === 'multi_select' || filter.propertyType === 'miners') {
-                    propertyValues = await prisma.property_multi_value.findMany({
-                        where: baseCondition,
-                        select: {
-                            issue_id: true
-                        },
-                        distinct: ['issue_id'] // 避免一个工单因为有多个匹配值而被重复计算
-                    });
-                } else {
-                    propertyValues = await prisma.property_single_value.findMany({
-                        where: baseCondition,
-                        select: {
-                            issue_id: true
-                        }
-                    });
-                }
-
-                // 如果是首个筛选条件，初始化结果集
-                if (!hasSearched) {
-                    propertyValues.forEach(pv => issueIds.add(pv.issue_id));
-                    hasSearched = true;
-                } else {
-                    // 如果已有结果集，取交集
-                    const currentIds = new Set<string>();
-                    propertyValues.forEach(pv => currentIds.add(pv.issue_id));
-
-                    // 保留在当前结果中也存在的ID
-                    for (const id of issueIds) {
-                        if (!currentIds.has(id)) {
-                            issueIds.delete(id);
-                        }
-                    }
-                }
-
-                // 如果已经没有符合条件的工单了，直接返回空结果
-                if (issueIds.size === 0 && hasSearched) {
-                    return { issues: [], total: 0 };
-                }
-            }
-
-            // 如果有筛选结果，查询这些工单
-            if (issueIds.size > 0) {
-                // 先获取符合筛选条件的总数量
-                const total = issueIds.size;
-
-                // 计算分页范围
-                const issueIdsArray = Array.from(issueIds);
-                const startIndex = (page - 1) * pageSize;
-                const endIndex = Math.min(startIndex + pageSize, issueIdsArray.length);
-                const paginatedIds = issueIdsArray.slice(startIndex, endIndex);
-
-                if (paginatedIds.length === 0) {
-                    return { issues: [], total };
-                }
-
-                // 构建 issue 查询条件
-                const whereCondition: Prisma.issueWhereInput = {
-                    ...baseWhere,
-                    id: { in: paginatedIds }
-                };
-
-                // 查询符合条件的工单
-                let issues: { id: string; }[];
-
-                if (orderBy) {
-                    // 使用原始SQL查询进行复杂排序
-                    // 执行原始SQL查询，加上ID筛选条件
-                    const paginatedIdsFormatted = paginatedIds.map(id => `'${id}'`).join(',');
-
-                    if (!paginatedIdsFormatted) {
-                        return { issues: [], total };
-                    }
-
-                    const query = `
-                        SELECT issue.id 
-                        FROM issue 
-                        WHERE issue.id IN (${paginatedIdsFormatted})
-                        AND issue."workspace_id" = '${workspaceId}'
-                        AND issue."deletedAt" IS NULL
-                        ORDER BY ${orderBy}
-                        LIMIT ${pageSize}
-                    `;
-
-                    issues = await prisma.$queryRawUnsafe<{ id: string; }[]>(query);
-                } else {
-                    // 使用默认排序
-                    issues = await prisma.issue.findMany({
-                        where: whereCondition,
-                        select: {
-                            id: true
-                        },
-                        orderBy: [{ createdAt: 'desc' }] // 默认按创建时间倒序排序
-                    });
-                }
-
-                if (issues.length === 0) {
-                    return { issues: [], total };
-                }
-
-                // 查询属性值和构建返回数据
-                return await getIssuesWithValues(issues, total);
-            } else {
-                // 没有筛选条件或没有找到符合条件的工单，查询所有工单
-                const result = await getIssuesWithoutFilter(baseWhere, page, pageSize, orderBy);
-                return result;
-            }
-        } else {
-            // 没有筛选条件，查询所有工单
-            const result = await getIssuesWithoutFilter(baseWhere, page, pageSize, orderBy);
-            return result;
-        }
-    } catch (error) {
-        console.error('获取工单数据失败:', error);
-        throw new Error('获取工单数据失败');
-    }
-}
 
 export async function getPropertyDefinitions(): Promise<PropertyDefinition[]> {
     try {
@@ -209,27 +27,23 @@ export async function getPropertyDefinitions(): Promise<PropertyDefinition[]> {
             config: prop.config as Record<string, unknown> | undefined
         }));
 
-        // 定义属性的优先级顺序
-        // TODO tech dept shadcn table 暂不支持配置 column 顺序，手动指定顺序
-        const priorityOrder: Record<string, number> = {
-            [SystemPropertyId.ID]: 1, // 工单 ID
-            [SystemPropertyId.TITLE]: 2, // 工单标题
-            [SystemPropertyId.STATUS]: 3, // 工单状态
-            [SystemPropertyId.PRIORITY]: 4, // 工单优先级
-            [SystemPropertyId.CATEGORY]: 5, // 工单类别
-            [SystemPropertyId.DIAGNOSIS]: 6, // 工单诊断
-            [SystemPropertyId.MINERS]: 7, // 矿机列表
-            [SystemPropertyId.ASIGNEE]: 8, // 负责人
-            [SystemPropertyId.REPORTER]: 9, // 报告人
-            [SystemPropertyId.CREATED_AT]: 10, // 创建时间
-            [SystemPropertyId.UPDATED_AT]: 11, // 更新时间
-        };
-
-        // 根据优先级顺序排序
+        const propertyPriorityOrder = [
+            SystemPropertyId.ID,
+            SystemPropertyId.TITLE,
+            SystemPropertyId.STATUS,
+            SystemPropertyId.PRIORITY,
+            SystemPropertyId.CATEGORY,
+            SystemPropertyId.DIAGNOSIS,
+            SystemPropertyId.MINERS,
+            SystemPropertyId.ASIGNEE,
+            SystemPropertyId.REPORTER,
+            SystemPropertyId.CREATED_AT,
+            SystemPropertyId.UPDATED_AT,
+        ];
         result.sort((a, b) => {
-            const priorityA = priorityOrder[a.id] || 999; // 没有指定优先级的放到最后
-            const priorityB = priorityOrder[b.id] || 999;
-            return priorityA - priorityB;
+            const indexA = propertyPriorityOrder.indexOf(a.id as SystemPropertyId);
+            const indexB = propertyPriorityOrder.indexOf(b.id as SystemPropertyId);
+            return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
         });
 
         return result;
@@ -239,103 +53,165 @@ export async function getPropertyDefinitions(): Promise<PropertyDefinition[]> {
     }
 }
 
-export async function getIssuesWithoutFilter(
-    baseWhere: Prisma.issueWhereInput,
+export async function getIssues(
+    filters: FilterCondition[] | undefined,
+    workspaceId: string,
     page: number,
     pageSize: number,
-    orderBy?: string | undefined
+    sort: SortConfig[]
 ): Promise<{ issues: Issue[]; total: number; }> {
-    // 查询符合条件的工单总数
-    const total = await prisma.issue.count({
-        where: baseWhere
-    });
 
-    // 计算分页偏移量
+    // 为了方便属性的垂直扩展，数据库表结构采用了很彻底的 EAV 模型，
+    // 相应的代价是排序和筛选逻辑实现起来会比较复杂
+    // 目前纯 sql 实现没什么问题，如果后期项目规模增长，可以通过添加倒排索引或 ES 等现成方案来优化解决
+
+    const baseWhere: Prisma.issueWhereInput = {
+        deletedAt: null,
+        workspace_id: workspaceId
+    };
+    let orderBy = buildOrderByParams(sort);
+
+    // 由于 property_single_value 和 property_multi_value 不是 issue 的直接关系字段，
+    // 我们需要先获取符合条件的 issue id，然后根据这些记录找到对应的 issue
+    const filteredIssueIDs = new Set<string>();
+    const hasFilters = filters && filters.length > 0;
+    if (hasFilters) {
+        let hasSearched = false;
+        for (const filter of filters) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            let valueCondition: any = {};
+            switch (filter.operator) {
+                case 'contains':
+                    valueCondition = { contains: String(filter.value) };
+                    break;
+                case 'eq':
+                    valueCondition = String(filter.value);
+                    break;
+                case 'startsWith':
+                    valueCondition = { startsWith: String(filter.value) };
+                    break;
+                case 'endsWith':
+                    valueCondition = { endsWith: String(filter.value) };
+                    break;
+                case 'in':
+                    const values = Array.isArray(filter.value)
+                        ? filter.value.map(v => String(v))
+                        : [String(filter.value)];
+                    valueCondition = { in: values };
+                    break;
+                default:
+                    throw new Error(`不支持的筛选操作符: ${filter.operator}`);
+            }
+
+            // 构建基本查询条件
+            const baseCondition = {
+                property_id: filter.propertyId,
+                value: valueCondition,
+                deletedAt: null
+            };
+            let propertyValues: { issue_id: string; }[] = [];
+            if (filter.propertyType === PropertyType.MULTI_SELECT || filter.propertyType === PropertyType.MINERS) {
+                propertyValues = await prisma.property_multi_value.findMany({
+                    where: baseCondition,
+                    select: {
+                        issue_id: true
+                    },
+                    distinct: ['issue_id']
+                });
+            } else {
+                propertyValues = await prisma.property_single_value.findMany({
+                    where: baseCondition,
+                    select: {
+                        issue_id: true
+                    }
+                });
+            }
+
+            // 如果是首个筛选条件，初始化结果集
+            if (!hasSearched) {
+                propertyValues.forEach(pv => filteredIssueIDs.add(pv.issue_id));
+                hasSearched = true;
+            } else {
+                // 如果已有结果集，取交集
+                const currentIds = new Set<string>();
+                propertyValues.forEach(pv => currentIds.add(pv.issue_id));
+                for (const id of filteredIssueIDs) {
+                    if (!currentIds.has(id)) {
+                        filteredIssueIDs.delete(id);
+                    }
+                }
+            }
+
+            // 如果已经没有符合条件的工单了，直接返回空结果
+            if (filteredIssueIDs.size === 0 && hasSearched) {
+                return { issues: [], total: 0 };
+            }
+        }
+    }
+
+    // TODO 处理 SQL 注入风险
+    if (!orderBy) {
+        orderBy = 'issue."createdAt" DESC';
+    }
     const skip = (page - 1) * pageSize;
+    const query = `
+                SELECT issue.id 
+                FROM issue 
+                WHERE 1=1 ${hasFilters ? `AND issue.id IN (${Array.from(filteredIssueIDs).map(id => `'${id}'`).join(',')})` : ''}
+                AND issue."workspace_id" = '${workspaceId}'
+                AND issue."deletedAt" IS NULL
+                ORDER BY ${orderBy}
+                LIMIT ${pageSize}
+                OFFSET ${skip}
+            `;
+    const issues: { id: string; }[] = await prisma.$queryRawUnsafe<{ id: string; }[]>(query);
 
-    // 查询所有工单
-    let issues: { id: string; }[];
-
-    if (orderBy) {
-        // 使用原始SQL查询进行复杂排序
-        // 先生成基本条件
-        const whereConditions = [];
-
-        if (baseWhere.deletedAt === null) {
-            whereConditions.push(`issue."deletedAt" IS NULL`);
-        }
-
-        if (baseWhere.workspace_id) {
-            whereConditions.push(`issue."workspace_id" = '${baseWhere.workspace_id}'`);
-        }
-
-        const whereClause = whereConditions.length > 0
-            ? `WHERE ${whereConditions.join(' AND ')}`
-            : '';
-
-        // 执行原始SQL查询
-        const query = `
-            SELECT issue.id 
-            FROM issue 
-            ${whereClause}
-            ORDER BY ${orderBy}
-            LIMIT ${pageSize} OFFSET ${skip}
-        `;
-
-        issues = await prisma.$queryRawUnsafe<{ id: string; }[]>(query);
-    } else {
-        // 使用默认排序
-        issues = await prisma.issue.findMany({
-            where: baseWhere,
-            select: {
-                id: true
-            },
-            orderBy: [{ createdAt: 'desc' }], // 默认按创建时间倒序排序
-            skip,
-            take: pageSize
+    let total = filteredIssueIDs.size;
+    if (!hasFilters) {
+        total = await prisma.issue.count({
+            where: baseWhere
         });
     }
 
-    if (issues.length === 0) {
-        return { issues: [], total };
-    }
-
     // 查询属性值和构建返回数据
-    return await getIssuesWithValues(issues, total);
+    const issuesWithValues = await getIssuesWithValues(issues.map(issue => issue.id));
+    return { issues: issuesWithValues, total };
+
 }
 
-export async function getIssuesWithValues(issues: { id: string; }[], total: number): Promise<{ issues: Issue[]; total: number; }> {
-    // 批量查询所有工单的单值属性
-    const singlePropertyValues = await prisma.property_single_value.findMany({
-        where: {
-            issue_id: { in: issues.map(issue => issue.id) }, // 直接内联映射
-            deletedAt: null
-        },
-        select: {
-            issue_id: true,
-            property_id: true,
-            property_type: true,
-            value: true
-        }
-    });
+export async function getIssuesWithValues(issueIDs: string[]): Promise<Issue[]> {
 
-    // 批量查询所有工单的多值属性
-    const multiPropertyValues = await prisma.property_multi_value.findMany({
-        where: {
-            issue_id: { in: issues.map(issue => issue.id) }, // 直接内联映射
-            deletedAt: null
-        },
-        select: {
-            issue_id: true,
-            property_id: true,
-            property_type: true,
-            value: true,
-            position: true
-        },
-        orderBy: {
-            position: 'asc'
-        }
-    });
+    // 并行查询工单的单值属性和多值属性
+    const [singlePropertyValues, multiPropertyValues] = await Promise.all([
+        prisma.property_single_value.findMany({
+            where: {
+                issue_id: { in: issueIDs },
+                deletedAt: null
+            },
+            select: {
+                issue_id: true,
+                property_id: true,
+                property_type: true,
+                value: true
+            }
+        }),
+        prisma.property_multi_value.findMany({
+            where: {
+                issue_id: { in: issueIDs },
+                deletedAt: null
+            },
+            select: {
+                issue_id: true,
+                property_id: true,
+                property_type: true,
+                value: true,
+                position: true
+            },
+            orderBy: {
+                position: 'asc'
+            }
+        })
+    ]);
 
     // 按工单ID分组数据
     const singleValuesByIssueId = new Map<string, Array<(typeof singlePropertyValues)[0]>>();
@@ -348,7 +224,6 @@ export async function getIssuesWithValues(issues: { id: string; }[], total: numb
         }
         singleValuesByIssueId.get(spv.issue_id)!.push(spv);
     }
-
     // 处理多值属性分组
     for (const mpv of multiPropertyValues) {
         if (!multiValuesByIssueId.has(mpv.issue_id)) {
@@ -358,18 +233,14 @@ export async function getIssuesWithValues(issues: { id: string; }[], total: numb
     }
 
     // 构建结果集
-    const issueData: Issue[] = [];
+    const issues: Issue[] = [];
+    for (const issueId of issueIDs) {
 
-    for (const issue of issues) {
-        // 获取该工单的所有单值属性
-        const issueSingleValues = singleValuesByIssueId.get(issue.id) || [];
-
-        // 获取该工单的所有多值属性
-        const issueMultiValues = multiValuesByIssueId.get(issue.id) || [];
+        const issueSingleValues = singleValuesByIssueId.get(issueId) || [];
+        const issueMultiValues = multiValuesByIssueId.get(issueId) || [];
 
         // 处理多值属性，将同一属性的多个值合并成数组
         const multiValueMap = new Map<string, string[]>();
-
         for (const mpv of issueMultiValues) {
             if (!multiValueMap.has(mpv.property_id)) {
                 multiValueMap.set(mpv.property_id, []);
@@ -378,13 +249,11 @@ export async function getIssuesWithValues(issues: { id: string; }[], total: numb
                 multiValueMap.get(mpv.property_id)?.push(mpv.value);
             }
         }
-
         // 转换为前端需要的格式，先处理单值属性
         const values: PropertyValue[] = issueSingleValues.map(pv => ({
             property_id: pv.property_id,
             value: pv.value
         }));
-
         // 添加多值属性
         for (const [propertyId, valueArray] of multiValueMap.entries()) {
             values.push({
@@ -392,15 +261,13 @@ export async function getIssuesWithValues(issues: { id: string; }[], total: numb
                 value: valueArray
             });
         }
-
         // 添加到工单数据中
-        issueData.push({
-            issue_id: issue.id,
+        issues.push({
+            issue_id: issueId,
             property_values: values
         });
     }
-
-    return { issues: issueData, total };
+    return issues;
 }
 
 interface SortConfig {
@@ -412,46 +279,29 @@ interface SortConfig {
  * 将排序配置转换为Prisma原始SQL
  *
  * @param sortConfigs 排序配置数组
- * @returns 包含原始SQL的对象或undefined
+ * @returns 包含原始 SQL 的对象或 undefined
  */
 export function buildOrderByParams(sortConfigs: SortConfig[]): string | undefined {
     if (!sortConfigs || sortConfigs.length === 0) {
-        return undefined; // 返回undefined表示使用默认排序
+        return undefined;
     }
 
-    // 出于业务的可扩展性考虑，数据库表结构采用了很彻底的 EAV 模型，相应的排序逻辑实现起来会比较复杂
-    // 若后期数据量增大，可以通过引入倒排索引或第三方中间件来优化解决
-
-    // 构建排序SQL表达式
     const orderExpressions = sortConfigs.map(sort => {
         const propertyId = sort.id;
+        const propertyType = PROPERTY_ID_TYPE_MAP[propertyId as SystemPropertyId];
         const direction = sort.desc ? 'DESC' : 'ASC';
 
-        // 使用 SQL 子查询获取属性值，用于排序
-        // 如果是 ID 类型的属性，则优先使用 number_value 排序
-        if (propertyId === SystemPropertyId.ID) {
-            return `(
-                SELECT psv."number_value"
-                FROM property_single_value psv
-                WHERE psv."issue_id" = issue.id
-                AND psv."property_id" = '${propertyId}'
-                AND psv."deletedAt" IS NULL
-                LIMIT 1
-            ) ${direction} NULLS LAST`;
-        } else {
-            return `(
-                SELECT 
-                    CASE 
-                        WHEN psv."number_value" IS NOT NULL THEN psv."number_value"::text 
-                        ELSE psv.value 
-                    END
-                FROM property_single_value psv
-                WHERE psv."issue_id" = issue.id
-                AND psv."property_id" = '${propertyId}'
-                AND psv."deletedAt" IS NULL
-                LIMIT 1
-            ) ${direction} NULLS LAST`;
-        }
+        const selectColumn = NUMBER_VALUE_TYPES.includes(propertyType) ? 'psv."number_value"' : 'psv."value"';
+        // 使用标量子查询获取对应的属性值，用于排序
+        return `(
+            SELECT 
+                ${selectColumn}
+            FROM property_single_value psv
+            WHERE psv."issue_id" = issue.id
+            AND psv."property_id" = '${propertyId}'
+            AND psv."deletedAt" IS NULL
+            LIMIT 1
+        ) ${direction} NULLS LAST`;
     });
 
     // 组合所有排序表达式
