@@ -25,7 +25,6 @@ export async function createIssueAction(prevState: { message: string }, data: z.
 
         await createIssue({ workspaceId: orgId, propertyValues });
 
-        revalidatePath('/issues');
         return {
             success: true,
             message: 'success'
@@ -36,6 +35,9 @@ export async function createIssueAction(prevState: { message: string }, data: z.
             success: false,
             message: 'Server Error'
         }
+    } finally {
+        revalidatePath('/issues');
+        redirect('/issues');
     }
 }
 
