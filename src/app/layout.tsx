@@ -1,8 +1,10 @@
 import { ClerkProvider } from "@clerk/nextjs";
-import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import ClientSidebar from "./components/ClientSidebar";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { Toaster } from "sonner";
+import { SidebarProvider, SidebarInset } from "@/components/shadcn/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,29 +28,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <NuqsAdapter>
-      <ClerkProvider>
-        <html lang="en">
-          <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-          >
-            <ClientSidebar />
-            {/* <header className="flex justify-end items-center p-4 gap-4 h-16">
-            <SignedOut>
-              <SignInButton />
-              <SignUpButton />
-            </SignedOut>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-          </header> */}
-            <main className="transition-all duration-300 sidebar-margin h-screen">
-              {children}
-            </main>
-
-          </body>
-        </html>
-      </ClerkProvider>
-    </NuqsAdapter>
+    <ClerkProvider>
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          <NuqsAdapter>
+            <SidebarProvider>
+              <AppSidebar />
+              <SidebarInset className="pt-0">{children}</SidebarInset>
+              <Toaster />
+            </SidebarProvider>
+          </NuqsAdapter>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

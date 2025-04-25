@@ -1,0 +1,20 @@
+/* 第三方组件有 BUG，绕过 mdxeditor 弹窗层级问题 */
+.mdxeditor-popup-container {
+  z-index: 9999;
+}
+
+.description-editor-container .mdxeditor {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
+}
+
+.description-editor-container .mdxeditor-root-contenteditable {
+  height: 100%;
+}
+
+.description-editor-container
+  .mdxeditor-root-contenteditable
+  > div:first-child {
+  height: 100%;
+}
