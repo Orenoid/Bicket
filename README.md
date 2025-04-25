@@ -43,7 +43,7 @@ npx prisma generate
 cp .env.example .env
 ```
 
-Then modify the `.env` file as needed. You might need to create a new Clerk project and add the `CLERK_SECRET_KEY` and `CLERK_PUBLISHABLE_KEY` to the `.env` file.
+Then modify the `.env` file as needed. You might need to create a new Clerk project and add the `CLERK_SECRET_KEY` and `CLERK_PUBLISHABLE_KEY` to the `.env` file. You also need to create or join an organization in Clerk first.
 
 5. **Start PostgreSQL with Docker Compose**
 
@@ -69,11 +69,17 @@ The application will be available at [http://localhost:3000](http://localhost:30
 
 ## Tech Stack
 
-- TypeScript
-- Next.js
-- React
+- TypeScript + Next.js + React
 - Prisma (ORM)
-- PostgreSQL
 - Tailwind CSS
 - React Icons
 - shadcn/ui
+- PostgreSQL
+
+## TODO
+
+- Some Next.js hydration issues to be resolved, but they don't significantly affect usage
+- Some UI components need to be replaced with shadcn/ui for consistent styling
+- Improve tooltip and toast functionality to enhance interactive feedback
+- Miners property needs to support scenarios with a large number of miners
+- Some legacy code needs to be cleaned up and replaced with new implementation
