@@ -33,7 +33,7 @@ export const AppliedFilterWrapper: React.FC<AppliedFilterWrapperProps> = ({
   children,
 }) => {
   return (
-    <Button
+    <Button asChild
       variant="outline"
       className="flex items-center px-3 py-1 mr-2 relative"
       onClick={(e) => {
@@ -41,26 +41,28 @@ export const AppliedFilterWrapper: React.FC<AppliedFilterWrapperProps> = ({
         onClick?.();
       }}
     >
-      <span className="font-medium text-gray-700 mr-1">
-        {propertyDefinition.name}
-      </span>
-      <div className="mr-1 border-l border-r border-gray-300 px-2">
-        <FilterComponent
-          filter={filter}
-          propertyDefinition={propertyDefinition}
-        />
+      <div>
+        <span className="font-medium text-gray-700 mr-1">
+          {propertyDefinition.name}
+        </span>
+        <div className="mr-1 border-l border-r border-gray-300 px-2">
+          <FilterComponent
+            filter={filter}
+            propertyDefinition={propertyDefinition}
+          />
+        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(filter.propertyId);
+          }}
+          className="text-gray-500 hover:text-gray-700 focus:outline-none rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
+          aria-label={`Remove ${propertyDefinition.name} filter`}
+        >
+          <FiX size={14} />
+        </button>
+        {children}
       </div>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onRemove(filter.propertyId);
-        }}
-        className="text-gray-500 hover:text-gray-700 focus:outline-none rounded-full hover:bg-gray-200 transition-colors cursor-pointer"
-        aria-label={`Remove ${propertyDefinition.name} filter`}
-      >
-        <FiX size={14} />
-      </button>
-      {children}
     </Button>
   );
 };
