@@ -43,7 +43,7 @@ npx prisma generate
 cp .env.example .env
 ```
 
-Then modify the `.env` file as needed. You might need to create a new Clerk project and add the `CLERK_SECRET_KEY` and `CLERK_PUBLISHABLE_KEY` to the `.env` file.
+Then modify the `.env` file as needed. You might need to create a new Clerk project and add the `CLERK_SECRET_KEY` and `CLERK_PUBLISHABLE_KEY` to the `.env` file. You also need to create or join an organization in Clerk first.
 
 5. **Start PostgreSQL with Docker Compose**
 
