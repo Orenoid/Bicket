@@ -29,6 +29,7 @@ export function registerPropertyTableCellComponents(
 export function getPropertyTableCellComponent(
   propertyType: string,
 ): PropertyTableCellComponent {
+  console.log('getPropertyTableCellComponent', propertyType);
   return Registry.getRegistry<PropertyTableCellComponent>(
     REGISTRY_NAMES.PROPERTY_TABLE_CELL,
   ).get(propertyType, DefaultPropertyCell);

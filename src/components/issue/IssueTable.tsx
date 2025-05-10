@@ -56,10 +56,11 @@ export function IssueTable({
         .filter((column) =>
           CAN_DISPLAY_IN_TABLE_PROPERTY_IDS.includes(
             column.id as SystemPropertyId,
-          ),
+          ) || column.id === 'plugin0001',
         ),
     [propertyDefinitions],
   );
+  console.log('columns', columns);
 
   // 提取 issue 列表中涉及的用户，批量预加载
   const userDataContextValue = useUserData(issues, propertyDefinitions);
@@ -67,15 +68,30 @@ export function IssueTable({
   // 把业务定义的 columns 转换为 TanStack Table 的 ColumnDef
   const tanstackColumns = useMemo<ColumnDef<Issue>[]>(() => {
     const renderCell = (column: TableColumn, issue: Issue) => {
-      const propertyValue = issue.property_values.find(
+      let propertyValue = issue.property_values.find(
         (p) => p.property_id === column.id,
       );
-      if (!propertyValue) return "";
+      if (!propertyValue) {
+        if (column.id === 'plugin0001') {
+          propertyValue = {
+            property_id: 'plugin0001',
+            value: 'whatever',
+          }
+        } else {
+          return ""
+        }
+      }
+      console.log('propertyValue', propertyValue);
       const propertyDef = propertyDefinitions.find((p) => p.id === column.id);
       if (!propertyDef) return "";
 
       // 从工厂方法中获取对应的单元格组件
+      if (propertyDef.type === 'plugin') {
+        console.log('propertyDef', propertyDef);
+        console.log('propertyDef.type', propertyDef.type);
+      }
       const CellComponent = getPropertyTableCellComponent(propertyDef.type);
+      // console.log('CellComponent', CellComponent);
       return (
         <UserDataContext.Provider value={userDataContextValue}>
           <CellComponent

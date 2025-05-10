@@ -32,6 +32,7 @@ export enum PropertyType {
   RELATIONSHIP = "relationship", // 关联类型
   RICH_TEXT = "rich_text", // 富文本类型
   MINERS = "miners", // 矿机列表类型
+  PLUGIN = "plugin", // 插件类型
 }
 
 /**

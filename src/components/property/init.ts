@@ -18,6 +18,7 @@ import {
   DatetimePropertyCell,
   MinersPropertyCell,
   MultiSelectPropertyCell,
+  PluginPropertyCell,
   SelectPropertyCell,
   TextPropertyCell,
   UserPropertyCell,
@@ -56,5 +57,6 @@ export default function init() {
     [PropertyType.MINERS]: MinersPropertyCell,
     [PropertyType.DATETIME]: DatetimePropertyCell,
     [PropertyType.USER]: UserPropertyCell,
+    [PropertyType.PLUGIN]: PluginPropertyCell,
   });
 }

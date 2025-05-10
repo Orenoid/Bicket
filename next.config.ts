@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   redirects: async () => {
@@ -21,6 +22,13 @@ const nextConfig: NextConfig = {
         hostname: "images.clerk.dev",
       },
     ],
+  },
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@plugins': path.resolve(__dirname, 'plugins'),
+    };
+    return config;
   },
 };
 

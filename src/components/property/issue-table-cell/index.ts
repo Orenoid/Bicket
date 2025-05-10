@@ -5,3 +5,4 @@ export { MultiSelectPropertyCell } from "./MultiSelectPropertyCell";
 export { SelectPropertyCell } from "./SelectPropertyCell";
 export { TextPropertyCell } from "./TextPropertyCell";
 export { UserPropertyCell } from "./UserPropertyCell";
+export { PluginPropertyCell } from "./PluginPropertyCell";
